@@ -1,0 +1,56 @@
+% Include header.tex with configuration
+\input{header}
+
+% Use colors for corporate design
+\input{custom-colors}
+
+\begin{document}
+
+\input{title}
+
+\makethesistitle
+
+% Start with roman page numbering
+\pagenumbering{Roman}
+
+% Comment out the following two lines before printing your final document
+\listoftodos
+\newpage
+
+% Print table of contents
+\tableofcontents
+
+\newpage
+
+% Print list of figures
+\listoffigures
+
+\newpage
+
+% Print list of tables
+\listoftables
+
+\newpage
+
+% Save current value of roman page number
+\newcounter{romanpagenumbers}
+\setcounter{romanpagenumbers}{\value{page}}
+
+% Change to arabic page numbers
+\pagenumbering{arabic}
+
+% --- Abstract ---
+\chapter{Abstract}
+\chapter{Related Work}
+
+\newpage
+
+% Continue with roman page numbering
+\pagenumbering{Roman}
+\setcounter{page}{\value{romanpagenumbers}}
+
+% Print the bibliography
+\printbibliography
+  
+% End of document
+\end{document}
