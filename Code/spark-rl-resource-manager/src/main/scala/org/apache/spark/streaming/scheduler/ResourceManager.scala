@@ -1,17 +1,17 @@
 package org.apache.spark.streaming.scheduler
 
-import org.apache.spark.{ExecutorAllocationClient, SparkConf, SparkContext, SparkException}
 import org.apache.spark.internal.Logging
-import org.apache.spark.scheduler.SparkListener
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler.ExecutorAllocationManager.isDynamicAllocationEnabled
+import org.apache.spark.{ExecutorAllocationClient, SparkConf, SparkContext, SparkException}
 
 abstract class ResourceManager(streamingContext: StreamingContext) extends Logging {
 
   import ResourceManager._
 
-  val sparkConf: SparkConf = streamingContext.conf
+  val sparkConf: SparkConf       = streamingContext.conf
   val sparkContext: SparkContext = streamingContext.sparkContext
+  val batchDuration: Long        = streamingContext.graph.batchDuration.milliseconds
 
   val minimumExecutors: Int = sparkConf.getInt(MinimumExecutorsKey, MinimumExecutorsDefault)
   val maximumExecutors: Int = sparkConf.getInt(MaximumExecutorsKey, MaximumExecutorsDefault)
@@ -22,13 +22,6 @@ abstract class ResourceManager(streamingContext: StreamingContext) extends Loggi
   val executorGranularity: Int = sparkConf.getInt(ExecutorGranularityKey, ExecutorGranularityDefault)
   val startupWaitTime: Long = sparkConf.getTimeAsMs(StartupWaitTimeKey, StartupWaitTimeDefault)
   val initialLearningPeriod: Long = sparkConf.getTimeAsMs(InitialLearningPeriodKey, InitialLearningPeriodDefault)
-  val gracePeriod: Long = sparkConf.getTimeAsMs(GracePeriodKey, GracePeriodDefault)
-
-  validateSettings()
-  logConfiguration()
-
-  // default listening infrastructure for spark-core and spark-streaming
-  val listener: SparkListener with StreamingListener = new SparkListener with StreamingListener {}
 
   // Interface for manipulating number of executors
   protected lazy val executorAllocator: ExecutorAllocationClient = sparkContext.schedulerBackend match {
@@ -41,19 +34,28 @@ abstract class ResourceManager(streamingContext: StreamingContext) extends Loggi
       )
   }
 
-  def start(): Unit = log.info("Started resource manager")
-  def stop(): Unit  = log.info("Stopped resource manager")
+  validateSettings()
+  logConfiguration()
 
-  def executors: Seq[String]        = executorAllocator.getExecutorIds
-  def receivers: Seq[String]        = streamingContext.scheduler.receiverTracker.allocatedExecutors.values.flatten.toSeq
+  val gracePeriod: Long = sparkConf.getTimeAsMs(GracePeriodKey, GracePeriodDefault)
+
+  // default listening infrastructure for spark-streaming
+  val listener: StreamingListener = new StreamingListener {}
+
+  def start(): Unit = log.info("Started resource manager")
+
+  def stop(): Unit = log.info("Stopped resource manager")
+
   def workingExecutors: Seq[String] = executors.diff(receivers)
+
+  def executors: Seq[String] = executorAllocator.getExecutorIds
+
+  def receivers: Seq[String] = streamingContext.scheduler.receiverTracker.allocatedExecutors.values.flatten.toSeq
 
   private def validateSettings(): Unit = {
     require(isDynamicAllocationEnabled(sparkConf))
-
     require(maximumExecutors >= minimumExecutors)
     require(minimumExecutors > 0)
-
     require(executorGranularity > 0)
   }
 
