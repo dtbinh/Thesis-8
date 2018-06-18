@@ -2,10 +2,10 @@ package com.sap.rl.window
 
 import org.scalatest.FunSuite
 
-class UnboundedWindowTest extends FunSuite {
+class UnboundedBlockingWindowTest extends FunSuite {
 
   test("AverageOfZeroElementsIsZero") {
-    val window = new UnboundedWindow
+    val window = new UnboundedBlockingWindow
 
     assert(window.averageOfFirstElements(10) == 0)
     assert(window.size() == 0)
@@ -13,7 +13,7 @@ class UnboundedWindowTest extends FunSuite {
   }
 
   test("AverageOfFiveElements") {
-    val window = new UnboundedWindow
+    val window = new UnboundedBlockingWindow
     window.add(12)
     window.add(10)
     window.add(110)
@@ -26,7 +26,7 @@ class UnboundedWindowTest extends FunSuite {
   }
 
   test("AverageOfTwoElementsOutOfFiveElements") {
-    val window = new UnboundedWindow
+    val window = new UnboundedBlockingWindow
     window.add(12)
     window.add(10)
     window.add(110)
@@ -39,7 +39,7 @@ class UnboundedWindowTest extends FunSuite {
   }
 
   test("AverageOfFiveElementsOutOfTwoElements") {
-    val window = new UnboundedWindow
+    val window = new UnboundedBlockingWindow
     window.add(110)
     window.add(0)
 
@@ -49,7 +49,7 @@ class UnboundedWindowTest extends FunSuite {
   }
 
   test("AppendTwoElements") {
-    val window = new UnboundedWindow
+    val window = new UnboundedBlockingWindow
     assert(window.size() == 0)
 
     window.add(12)
@@ -60,7 +60,7 @@ class UnboundedWindowTest extends FunSuite {
   }
 
   test("AppendNegativeElementShouldFail") {
-    val window = new UnboundedWindow
+    val window = new UnboundedBlockingWindow
     assert(window.size() == 0)
 
     window.add(12)
