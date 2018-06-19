@@ -9,10 +9,13 @@ abstract class ResourceManager(streamingContext: StreamingContext) extends Loggi
 
   import ResourceManager._
 
-  val sparkConf: SparkConf       = streamingContext.conf
+  val sparkConf: SparkConf = streamingContext.conf
   val sparkContext: SparkContext = streamingContext.sparkContext
-  val batchDuration: Long        = streamingContext.graph.batchDuration.milliseconds
+  val batchDuration: Long = streamingContext.graph.batchDuration.milliseconds
 
+  val coresPerTask: Int = sparkConf.getInt(CoresPerTaskKey, CoresPerTaskDefault)
+  val coresPerExecutor: Int = sparkConf.getInt(CoresPerExecutorKey, CoresPerExecutorDefault)
+  val backupExecutors: Int = sparkConf.getInt(BackupExecutorsKey, BackupExecutorsDefault)
   val minimumExecutors: Int = sparkConf.getInt(MinimumExecutorsKey, MinimumExecutorsDefault)
   val maximumExecutors: Int = sparkConf.getInt(MaximumExecutorsKey, MaximumExecutorsDefault)
   val minimumLatency: Long = sparkConf.getTimeAsMs(MinimumLatencyKey, MinimumLatencyDefault)
@@ -46,20 +49,27 @@ abstract class ResourceManager(streamingContext: StreamingContext) extends Loggi
 
   def stop(): Unit = log.info("Stopped resource manager")
 
-  def workingExecutors: Seq[String] = executors.diff(receivers)
+  def workerExecutors: Int = activeExecutors - receiverExecutors
 
-  def executors: Seq[String] = executorAllocator.getExecutorIds
+  def activeExecutors: Int = executorAllocator.getExecutorIds().size
 
-  def receivers: Seq[String] = streamingContext.scheduler.receiverTracker.allocatedExecutors.values.flatten.toSeq
+  def receiverExecutors: Int = streamingContext.scheduler.receiverTracker.allocatedExecutors.values.flatten.toSeq.size
 
   private def validateSettings(): Unit = {
+    require(coresPerExecutor == coresPerTask)
+    require(backupExecutors >= 0)
+
     require(isDynamicAllocationEnabled(sparkConf))
+
     require(maximumExecutors >= minimumExecutors)
     require(minimumExecutors > 0)
     require(executorGranularity > 0)
   }
 
   private def logConfiguration(): Unit = {
+    log.info("coresPerExecutor: {}", coresPerExecutor)
+    log.info("coresPerTask: {}", coresPerTask)
+    log.info("backupExecutors: {}", backupExecutors)
     log.info("minimumExecutors: {}", minimumExecutors)
     log.info("maximumExecutors: {}", maximumExecutors)
     log.info("minimumLatency: {}", minimumLatency)
@@ -74,6 +84,15 @@ abstract class ResourceManager(streamingContext: StreamingContext) extends Loggi
 }
 
 object ResourceManager {
+  final val CoresPerTaskKey = "spark.task.cpus"
+  final val CoresPerTaskDefault = 1
+
+  final val CoresPerExecutorKey = "spark.executor.cores"
+  final val CoresPerExecutorDefault = 0
+
+  final val BackupExecutorsKey = "spark.streaming.dynamicAllocation.backupExecutors"
+  final val BackupExecutorsDefault = 0
+
   final val MinimumExecutorsKey = "spark.streaming.dynamicAllocation.minExecutors"
   final val MinimumExecutorsDefault = 1
 
