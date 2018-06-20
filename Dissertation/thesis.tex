@@ -1,56 +1,69 @@
-% Include header.tex with configuration
-\input{header}
-
-% Use colors for corporate design
-\input{custom-colors}
+\documentclass[accentcolor=tud1b,bibliography=totoc,listof=totoc,oneside,numbersubsubsec,type=msc,fontsize=12pt,colorback]{tudthesis}
+\usepackage[english]{todonotes}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{multirow}
+\usepackage[german=quotes]{csquotes}
+\usepackage{psfrag}
+\usepackage[style=numeric,firstinits=true,backend=bibtex,maxbibnames=99,sorting=nty]{biblatex}
+\bibliography{bibliography}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usetikzlibrary{patterns}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{ctable}
+\usepackage{placeins}
+\usepackage{breakurl}
 
 \begin{document}
 
-\input{title}
+\thesistitle{Auto-Scaling Techniques for Spark Streaming}{}
+\author{Seyedmajid Azimi Gehraz}
+\department{Fachbereich Informatik}
+\group{Data Management}
+\date{06/16/2018}
+\referee{Prof. Dr. rer. nat. Carsten Binnig}{Dr. Thomas Heinze}{}
 
 \makethesistitle
 
-% Start with roman page numbering
 \pagenumbering{Roman}
 
-% Comment out the following two lines before printing your final document
 \listoftodos
 \newpage
-
-% Print table of contents
 \tableofcontents
-
 \newpage
-
-% Print list of figures
 \listoffigures
-
 \newpage
-
-% Print list of tables
 \listoftables
-
 \newpage
-
-% Save current value of roman page number
 \newcounter{romanpagenumbers}
 \setcounter{romanpagenumbers}{\value{page}}
 
-% Change to arabic page numbers
 \pagenumbering{arabic}
 
-% --- Abstract ---
 \chapter{Abstract}
-\chapter{Related Work}
+\chapter{Introduction to Auto-Scaling}
+\chapter{Spark Streaming}
+\chapter{Reinforcement Learning}
+\chapter{Design}
+\chapter{Implementation Detail}
+\chapter{Evaluation}
+\include{related-work}
+\chapter{Conclusion}
 
 \newpage
 
-% Continue with roman page numbering
 \pagenumbering{Roman}
 \setcounter{page}{\value{romanpagenumbers}}
 
-% Print the bibliography
 \printbibliography
-  
-% End of document
+
 \end{document}
