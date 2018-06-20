@@ -1,5 +1,4 @@
 \documentclass[accentcolor=tud1b,bibliography=totoc,listof=totoc,oneside,numbersubsubsec,type=msc,fontsize=12pt,colorback]{tudthesis}
-\usepackage[english]{todonotes}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
@@ -11,17 +10,31 @@
 \usepackage[style=numeric,firstinits=true,backend=bibtex,maxbibnames=99,sorting=nty]{biblatex}
 \bibliography{bibliography}
 \usepackage{tikz}
-\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{shapes,shapes.geometric,automata,positioning,arrows}
 \usepackage{pgfplots}
 \pgfplotsset{compat=newest}
 \usetikzlibrary{patterns}
 \usepackage{url}
 \usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{graphicx}
-\usepackage{subfig}
+\usepackage{subfigure}
 \usepackage{ctable}
 \usepackage{placeins}
 \usepackage{breakurl}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{listings}
+\lstset{
+    numbers = left, 
+    numberstyle = \scriptsize\bfseries, 
+    stepnumber = 1, 
+    numbersep = 5pt,
+    tabsize = 2,
+    literate = {\ \ }{{\ }}1,
+    keywordstyle = \bfseries,
+    basicstyle = \ttfamily,
+    frame = tb
+}
 
 \begin{document}
 
@@ -36,8 +49,6 @@
 
 \pagenumbering{Roman}
 
-\listoftodos
-\newpage
 \tableofcontents
 \newpage
 \listoffigures
