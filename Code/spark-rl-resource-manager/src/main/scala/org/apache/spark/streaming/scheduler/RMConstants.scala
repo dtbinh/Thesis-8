@@ -8,19 +8,30 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
 
   import RMConstants._
 
-  val CoresPerTask: Int = sparkConf.getInt(CoresPerTaskKey, CoresPerTaskDefault)
-  val CoresPerExecutor: Int = sparkConf.getInt(CoresPerExecutorKey, CoresPerExecutorDefault)
-  val BackupExecutors: Int = sparkConf.getInt(BackupExecutorsKey, BackupExecutorsDefault)
-  val MinimumExecutors: Int = sparkConf.getInt(MinimumExecutorsKey, MinimumExecutorsDefault)
-  val MaximumExecutors: Int = sparkConf.getInt(MaximumExecutorsKey, MaximumExecutorsDefault)
-  val MinimumLatency: Int = sparkConf.getTimeAsMs(MinimumLatencyKey, MinimumLatencyDefault).toInt
-  val MaximumLatency: Int = sparkConf.getTimeAsMs(MaximumLatencyKey, MaximumLatencyDefault).toInt
-  val TargetLatency: Int = sparkConf.getTimeAsMs(TargetLatencyKey, TargetLatencyDefault).toInt
-  val LatencyGranularity: Int = sparkConf.getTimeAsMs(LatencyGranularityKey, LatencyGranularityDefault).toInt
-  val ExecutorGranularity: Int = sparkConf.getInt(ExecutorGranularityKey, ExecutorGranularityDefault).toInt
-  val StartupWaitTime: Int = sparkConf.getTimeAsMs(StartupWaitTimeKey, StartupWaitTimeDefault).toInt
-  val GracePeriod: Int = sparkConf.getTimeAsMs(GracePeriodKey, GracePeriodDefault).toInt
-  val WindowSize: Int = sparkConf.getInt(WindowSizeKey, WindowSizeDefault)
+  final val CoresPerTask: Int = sparkConf.getInt(CoresPerTaskKey, CoresPerTaskDefault)
+  final val CoresPerExecutor: Int = sparkConf.getInt(CoresPerExecutorKey, CoresPerExecutorDefault)
+  final val BackupExecutors: Int = sparkConf.getInt(BackupExecutorsKey, BackupExecutorsDefault)
+
+  final val MinimumExecutors: Int = sparkConf.getInt(MinimumExecutorsKey, MinimumExecutorsDefault)
+  final val MaximumExecutors: Int = sparkConf.getInt(MaximumExecutorsKey, MaximumExecutorsDefault)
+
+  final val MinimumLatency: Int = sparkConf.getTimeAsMs(MinimumLatencyKey, MinimumLatencyDefault).toInt
+  final val MaximumLatency: Int = sparkConf.getTimeAsMs(MaximumLatencyKey, MaximumLatencyDefault).toInt
+  final val TargetLatency: Int = sparkConf.getTimeAsMs(TargetLatencyKey, TargetLatencyDefault).toInt
+  final val LatencyGranularity: Int = sparkConf.getTimeAsMs(LatencyGranularityKey, LatencyGranularityDefault).toInt
+
+  final val ExecutorGranularity: Int = sparkConf.getInt(ExecutorGranularityKey, ExecutorGranularityDefault).toInt
+
+  final val StartupWaitTime: Int = sparkConf.getTimeAsMs(StartupWaitTimeKey, StartupWaitTimeDefault).toInt
+  final val GracePeriod: Int = sparkConf.getTimeAsMs(GracePeriodKey, GracePeriodDefault).toInt
+
+  final val WindowSize: Int = sparkConf.getInt(WindowSizeKey, WindowSizeDefault)
+  final val LearningFactor: Double = sparkConf.getDouble(LearningFactorKey, LearningFactorDefault)
+  final val DiscountFactor: Double = sparkConf.getDouble(DiscountFactorKey, DiscountFactorDefault)
+
+  final val CoarseMinimumLatency: Int = MinimumLatency / LatencyGranularity
+  final val CoarseTargetLatency: Int = TargetLatency / LatencyGranularity
+  final val CoarseMaximumLatency: Int = MaximumLatency / LatencyGranularity
 
   validateSettings()
   logConfiguration()
@@ -35,6 +46,9 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
     require(MinimumExecutors > 0)
     require(ExecutorGranularity > 0)
     require(WindowSize > 0)
+
+    require(LearningFactor >= 0 && LearningFactor <= 1)
+    require(DiscountFactor >= 0 && DiscountFactor <= 1)
   }
 
   private def logConfiguration(): Unit = {
@@ -51,6 +65,11 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
     log.info("StartupWaitTime: {}", StartupWaitTime)
     log.info("GracePeriod: {}", GracePeriod)
     log.info("WindowSize: {}", WindowSize)
+    log.info("LearningFactor: {}", LearningFactor)
+    log.info("DiscountFactor: {}", DiscountFactor)
+    log.info("CoarseMinimumLatency: {}", CoarseMinimumLatency)
+    log.info("CoarseTargetLatency: {}", CoarseTargetLatency)
+    log.info("CoarseMaximumLatency: {}", CoarseMaximumLatency)
   }
 }
 
@@ -96,4 +115,10 @@ object RMConstants {
 
   final val WindowSizeKey = "spark.streaming.dynamicAllocation.windowSize"
   final val WindowSizeDefault = 30
+
+  final val LearningFactorKey = "spark.streaming.dynamicAllocation.learningFactor"
+  final val LearningFactorDefault = 0.5
+
+  final val DiscountFactorKey = "spark.streaming.dynamicAllocation.discountFactor"
+  final val DiscountFactorDefault = 0.9
 }
