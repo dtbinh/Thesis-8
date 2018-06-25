@@ -2,7 +2,7 @@ package org.apache.spark.streaming.scheduler
 
 import org.apache.spark.streaming.StreamingContext
 
-class SparkResourceManager(ssc: StreamingContext) extends ResourceManager(ssc) {
+class SparkResourceManager(constants: RMConstants, ssc: StreamingContext) extends ResourceManager(constants, ssc) {
   override val listener: ExecutorAllocationManager = new ExecutorAllocationManager(
     executorAllocator,
     ssc.scheduler.receiverTracker,
@@ -23,5 +23,12 @@ class SparkResourceManager(ssc: StreamingContext) extends ResourceManager(ssc) {
   override def stop(): Unit = {
     super.stop()
     listener.stop()
+  }
+}
+
+object SparkResourceManager {
+  def apply(ssc: StreamingContext): SparkResourceManager = {
+    val constants: RMConstants = RMConstants(ssc.conf)
+    new SparkResourceManager(constants, ssc)
   }
 }

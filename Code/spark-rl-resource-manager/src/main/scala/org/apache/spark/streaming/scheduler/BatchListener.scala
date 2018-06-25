@@ -1,16 +1,14 @@
 package org.apache.spark.streaming.scheduler
 
-import com.sap.rl.window.Window
 import org.apache.spark.internal.Logging
 
-abstract class BatchListener(val window: Window) extends StreamingListener with Logging {
+trait BatchListener extends StreamingListener with Logging {
 
-  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
-    val totalDelay: Long = batchCompleted.batchInfo.totalDelay.get
+  var streamingStartTime: Long = 0
 
-    log.info(s"batch finished successfully with delay ${totalDelay}")
-    log.debug(batchCompleted.batchInfo.toString)
+  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
+    streamingStartTime = streamingStarted.time
 
-    window.add(totalDelay)
+    log.info(s"streaming was started at ${streamingStartTime}")
   }
 }
