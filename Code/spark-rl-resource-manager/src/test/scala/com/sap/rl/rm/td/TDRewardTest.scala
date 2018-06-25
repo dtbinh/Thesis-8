@@ -4,13 +4,16 @@ import com.sap.rl.rm.{Action, State}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.scheduler.RMConstants
 import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.apache.spark.streaming.scheduler.RMConstants._
+import com.sap.rl.TestCommons._
+import com.sap.rl.implicits._
+import com.sap.rl.util.Precision
 
-class TDStateSpaceTest extends FunSuite with BeforeAndAfter {
-
-  import org.apache.spark.streaming.scheduler.RMConstants._
-  import com.sap.rl.TestCommons._
+class TDRewardTest extends FunSuite with BeforeAndAfter {
 
   var sparkConf: SparkConf = _
+
+  implicit val p: Precision = Precision()
 
   before {
     sparkConf = new SparkConf()
@@ -28,21 +31,26 @@ class TDStateSpaceTest extends FunSuite with BeforeAndAfter {
       .set(MaximumLatencyKey, "10000")
   }
 
-  test("testInitialization") {
-    val constants: RMConstants = RMConstants(sparkConf)
-    import constants._
-
-    val stateSpace = TDStateSpace(constants)
-
-    val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity)
-    assert(stateSpace.value.size == expectedSpaceSize)
-  }
-
-  test("bestActionFor") {
+  test("rewardForLowerLatency") {
     val constants: RMConstants = RMConstants(sparkConf)
     val stateSpace = TDStateSpace(constants)
+    val rewardFunc: TDReward = TDReward(constants, stateSpace)
 
-    assert(QValue(Action.ScaleOut, 1) == stateSpace.value(State(12, 150))(0))
-    assert(QValue(Action.ScaleIn, 1) == stateSpace.value(State(12, 1))(2))
+    val reward: Double = rewardFunc.forAction(State(10, 12), Action.ScaleIn, State(9, 15))
+    val expectedReward: Double = 1.toDouble / 9
+
+    assert(expectedReward ~= reward)
   }
+
+  test("rewardForHigherLatency") {
+    val constants: RMConstants = RMConstants(sparkConf)
+    val stateSpace = TDStateSpace(constants)
+    val rewardFunc: TDReward = TDReward(constants, stateSpace)
+
+    val reward: Double = rewardFunc.forAction(State(10, 12), Action.ScaleOut, State(12, 40))
+    val expectedReward: Double = 0
+
+    assert(expectedReward ~= reward)
+  }
+
 }
