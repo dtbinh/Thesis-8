@@ -35,3 +35,7 @@ class UnboundedBlockingWindow extends Window {
     sum.toDouble / numberOfElementsToPop
   }
 }
+
+object UnboundedBlockingWindow {
+  def apply(): UnboundedBlockingWindow = new UnboundedBlockingWindow()
+}
