@@ -44,41 +44,57 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
           if (batchTime > (lastTimeDecisionMade + GracePeriod)) {
             log.info(s"Batch ${batchTime} -- NOT IN grace period")
 
-            synchronized {
-              runningSum = runningSum + info.totalDelay.get.toInt
-              numberOfBatches += 1
+            runningSum = runningSum + info.totalDelay.get.toInt
+            numberOfBatches += 1
 
-              if (numberOfBatches == WindowSize) {
-                val avg = runningSum.toDouble / numberOfBatches
-                val normalizedAverageLatency = (avg / LatencyGranularity).toInt
+            log.info(s"runningSum: ${runningSum}, numberOfBatches: ${numberOfBatches}")
 
-                runningSum = 0
-                numberOfBatches = 0
+            if (numberOfBatches == WindowSize) {
+              val avg = runningSum.toDouble / numberOfBatches
+              val normalizedAverageLatency = (avg / LatencyGranularity).toInt
 
-                // build the state variable
-                val currentState = State(TDResourceManager.this.numberOfWorkerExecutors, normalizedAverageLatency)
+              runningSum = 0
+              numberOfBatches = 0
 
-                // do nothing and just initialize to no action
-                if (lastState == null) {
-                  lastState = currentState
-                  lastTakenAction = Action.NoAction
-                } else {
-                  // calculate reward
-                  val rewardForLastAction: Double = calculateRewardFor(lastState, lastTakenAction, currentState)
+              // build the state variable
+              val currentState = State(TDResourceManager.this.numberOfWorkerExecutors, normalizedAverageLatency)
 
-                  // update QValue for last state
-                  updateQValue(lastState, lastTakenAction, rewardForLastAction)
+              log.info(s"Current state -- ${currentState}")
 
-                  // take new action
-                  val actionToTake = whatIsTheNextActionFor(currentState)
-                  // request change
-                  reconfigure(actionToTake)
+              // do nothing and just initialize to no action
+              if (lastState == null) {
+                lastState = currentState
+                lastTakenAction = Action.NoAction
 
-                  // store current state and action
-                  lastState = currentState
-                  lastTakenAction = actionToTake
-                }
+                log.info("First window completed -- initialized")
+              } else {
+                // calculate reward
+                val rewardForLastAction: Double = calculateRewardFor(lastState, lastTakenAction, currentState)
+
+                // update QValue for last state
+                updateQValue(lastState, lastTakenAction, rewardForLastAction)
+
+                log.info(s"updated [[ ${lastState}, ${lastTakenAction} ]] with reward ${rewardForLastAction}")
+
+                // take new action
+                val actionToTake = whatIsTheNextActionFor(currentState)
+
+                log.info(s"taking action ${actionToTake} for ${currentState}")
+
+                // request change
+                reconfigure(actionToTake)
+
+                // store current state and action
+                lastState = currentState
+                lastTakenAction = actionToTake
+
+                log.info("stored cuurent state/action")
               }
+
+              lastTimeDecisionMade = System.currentTimeMillis()
+              log.info(s"set lastTimeDecisionMade to ${lastTimeDecisionMade}")
+            } else {
+              log.info(s"window not full yet. window size: ${numberOfBatches}")
             }
           } else {
             log.info(s"Batch ${batchTime} -- IN grace period")
