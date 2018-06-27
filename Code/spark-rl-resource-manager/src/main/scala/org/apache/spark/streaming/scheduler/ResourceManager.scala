@@ -28,9 +28,12 @@ abstract class ResourceManager(constants: RMConstants, streamingContext: Streami
 
   def stop(): Unit = log.info("Stopped resource manager")
 
-  def workerExecutors: Int = activeExecutors - receiverExecutors
+  def numberOfWorkerExecutors: Int = numberOfActiveExecutors - numberOfReceiverExecutors
+  def workerExecutors: Seq[String] = activeExecutors.diff(receiverExecutors)
 
-  def activeExecutors: Int = executorAllocator.getExecutorIds().size
+  def numberOfActiveExecutors: Int = activeExecutors.size
+  def activeExecutors: Seq[String] = executorAllocator.getExecutorIds()
 
-  def receiverExecutors: Int = streamingContext.scheduler.receiverTracker.allocatedExecutors.values.flatten.toSeq.size
+  def numberOfReceiverExecutors: Int = receiverExecutors.size
+  def receiverExecutors: Seq[String] = streamingContext.scheduler.receiverTracker.allocatedExecutors.values.flatten.toSeq
 }

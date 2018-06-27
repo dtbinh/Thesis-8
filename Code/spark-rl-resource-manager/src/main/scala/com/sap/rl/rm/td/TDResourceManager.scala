@@ -1,13 +1,24 @@
 package com.sap.rl.rm.td
 
+import com.sap.rl.rm.Action.Action
+import com.sap.rl.rm.{Action, State}
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler._
 
-class TDResourceManager(val constants: RMConstants, val streamingContext: StreamingContext) extends ResourceManager(constants, streamingContext) {
+import scala.util.Random.shuffle
+
+class TDResourceManager(constants: RMConstants, streamingContext: StreamingContext) extends ResourceManager(constants, streamingContext) {
 
   var lastTimeDecisionMade: Long = 0
-  var runningSum: Long = 0
+  var runningSum: Int = 0
   var numberOfBatches: Int = 0
+
+  var lastState: State = _
+  var lastTakenAction: Action = _
+
+  val stateSpace = TDStateSpace(constants)
+  val policy = TDPolicy(stateSpace)
+  val reward = TDReward(constants, stateSpace)
 
   import constants._
 
@@ -34,17 +45,39 @@ class TDResourceManager(val constants: RMConstants, val streamingContext: Stream
             log.info(s"Batch ${batchTime} -- NOT IN grace period")
 
             synchronized {
-              runningSum = runningSum + info.totalDelay.get
+              runningSum = runningSum + info.totalDelay.get.toInt
               numberOfBatches += 1
 
               if (numberOfBatches == WindowSize) {
-                val avg: Double = runningSum.toDouble / numberOfBatches
-                val normalizedAverageLatency: Long = (avg / LatencyGranularity).toLong
+                val avg = runningSum.toDouble / numberOfBatches
+                val normalizedAverageLatency = (avg / LatencyGranularity).toInt
 
                 runningSum = 0
                 numberOfBatches = 0
 
                 // build the state variable
+                val currentState = State(TDResourceManager.this.numberOfWorkerExecutors, normalizedAverageLatency)
+
+                // do nothing and just initialize to no action
+                if (lastState == null) {
+                  lastState = currentState
+                  lastTakenAction = Action.NoAction
+                } else {
+                  // calculate reward
+                  val rewardForLastAction: Double = calculateRewardFor(lastState, lastTakenAction, currentState)
+
+                  // update QValue for last state
+                  updateQValue(lastState, lastTakenAction, rewardForLastAction)
+
+                  // take new action
+                  val actionToTake = whatIsTheNextActionFor(currentState)
+                  // request change
+                  reconfigure(actionToTake)
+
+                  // store current state and action
+                  lastState = currentState
+                  lastTakenAction = actionToTake
+                }
               }
             }
           } else {
@@ -55,6 +88,28 @@ class TDResourceManager(val constants: RMConstants, val streamingContext: Stream
         }
       }
     }
+  }
+
+  private def reconfigure(action: Action): Unit = {
+    if (action == Action.ScaleIn) {
+      executorAllocator.killExecutors(shuffle(workerExecutors).take(ExecutorGranularity))
+    } else if (action == Action.ScaleOut){
+      executorAllocator.requestExecutors(ExecutorGranularity)
+    } else {
+      // do nothing, log
+    }
+  }
+
+  private def whatIsTheNextActionFor(state: State): Action = {
+    policy.nextActionFrom(state)
+  }
+
+  private def calculateRewardFor(lastState: State, lastAction: Action, currentState: State): Double = {
+    reward.forAction(lastState, lastAction, currentState)
+  }
+
+  private def updateQValue(state: State, action: Action, expectedReward: Double): Unit = {
+    stateSpace.updateQValueForAction(state, action, expectedReward)
   }
 }
 

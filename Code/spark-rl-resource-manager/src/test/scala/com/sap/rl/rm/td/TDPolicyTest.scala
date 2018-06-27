@@ -6,7 +6,7 @@ import com.sap.rl.util.Precision
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.scheduler.RMConstants
 import org.apache.spark.streaming.scheduler.RMConstants._
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FunSuite}
+import org.scalatest.{BeforeAndAfter, FunSuite}
 
 class TDPolicyTest extends FunSuite with BeforeAndAfter {
 

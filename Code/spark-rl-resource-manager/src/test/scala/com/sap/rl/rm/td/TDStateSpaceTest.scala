@@ -35,14 +35,14 @@ class TDStateSpaceTest extends FunSuite with BeforeAndAfter {
     val stateSpace = TDStateSpace(constants)
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity)
-    assert(stateSpace.value.size == expectedSpaceSize)
+    assert(stateSpace.size == expectedSpaceSize)
   }
 
   test("bestActionFor") {
     val constants: RMConstants = RMConstants(sparkConf)
     val stateSpace = TDStateSpace(constants)
 
-    assert(QValue(Action.ScaleOut, 1) == stateSpace.value(State(12, 150))(0))
-    assert(QValue(Action.ScaleIn, 1) == stateSpace.value(State(12, 1))(2))
+    assert(1 == stateSpace(State(12, 150))(Action.ScaleOut))
+    assert(1 == stateSpace(State(12, 1))(Action.ScaleIn))
   }
 }
