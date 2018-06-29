@@ -8,9 +8,9 @@ import scala.collection.mutable
 
 class TDStateSpace(value: mutable.HashMap[State, mutable.HashMap[Action, Double]]) {
 
-  def updateQValueForAction(state: State, action: Action, expectedReward: Double): Unit = {
+  def updateQValueForAction(state: State, action: Action, qVal: Double): Unit = {
     val qValues = value(state)
-    qValues(action) = expectedReward
+    qValues(action) = qVal
   }
 
   def apply(s: State): mutable.HashMap[Action, Double] = value(s)
@@ -35,9 +35,9 @@ object TDStateSpace {
         space += (
           State(exe, lat) ->
             mutable.HashMap(
-              Action.ScaleOut -> 0,
-              Action.NoAction -> 0,
-              Action.ScaleIn  -> 1
+              Action.ScaleOut -> NoReward,
+              Action.NoAction -> NoReward,
+              Action.ScaleIn  -> BestReward
             )
           )
       } else if (lat >= CoarseMinimumLatency && lat < CoarseTargetLatency) {
@@ -45,9 +45,9 @@ object TDStateSpace {
         space += (
           State(exe, lat) ->
             mutable.HashMap(
-              Action.ScaleOut -> 0,
-              Action.NoAction -> 1,
-              Action.ScaleIn  -> 0
+              Action.ScaleOut -> NoReward,
+              Action.NoAction -> BestReward,
+              Action.ScaleIn  -> NoReward
             )
           )
       } else {
@@ -55,9 +55,9 @@ object TDStateSpace {
         space += (
           State(exe, lat) ->
             mutable.HashMap(
-              Action.ScaleOut -> 1,
-              Action.NoAction -> 0,
-              Action.ScaleIn  -> 0
+              Action.ScaleOut -> BestReward,
+              Action.NoAction -> NoReward,
+              Action.ScaleIn  -> NoReward
             )
           )
       }

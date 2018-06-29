@@ -17,7 +17,7 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
   var lastTakenAction: Action = _
 
   val stateSpace = TDStateSpace(constants)
-  val policy = TDPolicy(stateSpace)
+  val policy = TDPolicy(constants, stateSpace)
   val reward = TDReward(constants, stateSpace)
 
   import constants._
@@ -71,15 +71,13 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
                 // calculate reward
                 val rewardForLastAction: Double = calculateRewardFor(lastState, lastTakenAction, currentState)
 
-                // update QValue for last state
-                updateQValue(lastState, lastTakenAction, rewardForLastAction)
-
-                log.info(s"updated [[ ${lastState}, ${lastTakenAction} ]] with reward ${rewardForLastAction}")
-
                 // take new action
-                val actionToTake = whatIsTheNextActionFor(currentState)
-
+                val actionToTake = whatIsTheNextActionFor(lastState, lastTakenAction, currentState)
                 log.info(s"taking action ${actionToTake} for ${currentState}")
+
+                // update QValue for last state
+                updateQValue(lastState, lastTakenAction, rewardForLastAction, currentState, actionToTake)
+                log.info(s"updated [[ ${lastState}, ${lastTakenAction} ]] with reward ${rewardForLastAction}")
 
                 // request change
                 reconfigure(actionToTake)
@@ -106,26 +104,45 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
     }
   }
 
-  private def reconfigure(action: Action): Unit = {
-    if (action == Action.ScaleIn) {
-      executorAllocator.killExecutors(shuffle(workerExecutors).take(ExecutorGranularity))
-    } else if (action == Action.ScaleOut){
-      executorAllocator.requestExecutors(ExecutorGranularity)
+  private def reconfigure(actionToTake: Action): Unit = {
+    if (actionToTake == Action.ScaleIn) {
+      if (numberOfWorkerExecutors - ExecutorGranularity >= MinimumLatency) {
+        val added: Seq[String] = executorAllocator.killExecutors(shuffle(workerExecutors).take(ExecutorGranularity))
+        log.info(s"Added executors: ${added}")
+      } else {
+        log.error(s"Less than ${MinimumExecutors} after ScaleIn")
+      }
+    } else if (actionToTake == Action.ScaleOut) {
+      if (numberOfWorkerExecutors + ExecutorGranularity <= MaximumExecutors) {
+        val opResult: Boolean = executorAllocator.requestExecutors(ExecutorGranularity)
+        if (opResult) {
+          log.info(s"OK. Requested ${ExecutorGranularity} executors")
+        } else {
+          log.error(s"Can not request ${ExecutorGranularity} executors")
+        }
+      } else {
+        log.error(s"More than ${MaximumExecutors} after ScaleOut")
+      }
     } else {
-      // do nothing, log
+      log.info("NoAction has been selected. Nothing to reconfigure...")
     }
   }
 
-  private def whatIsTheNextActionFor(state: State): Action = {
-    policy.nextActionFrom(state)
+  private def whatIsTheNextActionFor(lastState: State, lastAction: Action, currentState: State): Action = {
+    policy.nextActionFrom(lastState, lastAction, currentState)
   }
 
   private def calculateRewardFor(lastState: State, lastAction: Action, currentState: State): Double = {
     reward.forAction(lastState, lastAction, currentState)
   }
 
-  private def updateQValue(state: State, action: Action, expectedReward: Double): Unit = {
-    stateSpace.updateQValueForAction(state, action, expectedReward)
+  private def updateQValue(lastState: State, lastAction: Action, rewardForLastAction: Double, currentState: State, actionToTake: Action): Unit = {
+    // TODO calculate correct QValue
+    val oldQVal: Double = stateSpace(lastState)(lastAction)
+    val currentStateQVal: Double = stateSpace(currentState)(actionToTake)
+
+    val newQVal: Double = ((1 - LearningFactor) * oldQVal) + (LearningFactor * (rewardForLastAction + (DiscountFactor * currentStateQVal)))
+    stateSpace.updateQValueForAction(lastState, lastAction, newQVal)
   }
 }
 

@@ -1,22 +1,33 @@
 package com.sap.rl.rm.td
 
 import com.sap.rl.rm.Action.Action
-import com.sap.rl.rm.{Reward, State}
+import com.sap.rl.rm.{Action, Reward, State}
 import org.apache.spark.streaming.scheduler.RMConstants
 
 class TDReward(constants: RMConstants, stateSpace: TDStateSpace) extends Reward {
 
   import constants._
 
-  override def forAction(previousState: State, takenAction: Action, currentState: State): Double = {
-    val currentLatency: Int = currentState.latency
-    val currentExecutors: Int = currentState.numberOfExecutors
+  override def forAction(lastState: State, lastAction: Action, currentState: State): Double = {
+    var reward: Double = 0
 
-    if (currentLatency >= CoarseTargetLatency) {
-      (CoarseTargetLatency - currentLatency).toDouble / currentLatency
-    } else {
-      1.toDouble / currentExecutors
+    if (lastState.latency > CoarseTargetLatency || currentState.latency > CoarseTargetLatency) {
+      if (lastAction == Action.ScaleOut) {
+        reward = BestReward
+      } else {
+        reward = (CoarseTargetLatency - currentState.latency).toDouble / currentState.latency
+      }
+    } else if (lastState.latency < CoarseTargetLatency && currentState.latency < CoarseTargetLatency) {
+      if (lastAction == Action.ScaleOut) {
+        reward = -BestReward
+      } else if (currentState.latency < CoarseMinimumLatency && lastAction == Action.ScaleIn) {
+        reward = BestReward
+      } else {
+        reward = BestReward / currentState.numberOfExecutors
+      }
     }
+
+    reward
   }
 }
 

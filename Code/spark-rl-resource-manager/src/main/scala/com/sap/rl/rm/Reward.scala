@@ -4,6 +4,6 @@ import com.sap.rl.rm.Action.Action
 
 trait Reward {
 
-  def forAction(previousState: State, takenAction: Action, currentState: State): Double
+  def forAction(lastState: State, lastAction: Action, currentState: State): Double
 
 }

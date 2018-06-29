@@ -33,6 +33,9 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
   final val CoarseTargetLatency: Int = TargetLatency / LatencyGranularity
   final val CoarseMaximumLatency: Int = MaximumLatency / LatencyGranularity
 
+  final val BestReward: Double = sparkConf.getDouble(BestRewardKey, BestRewardDefault)
+  final val NoReward: Double = sparkConf.getDouble(NoRewardKey, NoRewardDefault)
+
   validateSettings()
   logConfiguration()
 
@@ -49,27 +52,31 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
 
     require(LearningFactor >= 0 && LearningFactor <= 1)
     require(DiscountFactor >= 0 && DiscountFactor <= 1)
+
+    require(BestReward > NoReward)
   }
 
   private def logConfiguration(): Unit = {
-    log.info("CoresPerExecutor: {}", CoresPerExecutor)
-    log.info("CoresPerTask: {}", CoresPerTask)
-    log.info("BackupExecutors: {}", BackupExecutors)
-    log.info("MinimumExecutors: {}", MinimumExecutors)
-    log.info("MaximumExecutors: {}", MaximumExecutors)
-    log.info("MinimumLatency: {}", MinimumLatency)
-    log.info("MaximumLatency: {}", MaximumLatency)
-    log.info("TargetLatency: {}", TargetLatency)
-    log.info("LatencyGranularity: {}", LatencyGranularity)
-    log.info("ExecutorGranularity: {}", ExecutorGranularity)
-    log.info("StartupWaitTime: {}", StartupWaitTime)
-    log.info("GracePeriod: {}", GracePeriod)
-    log.info("WindowSize: {}", WindowSize)
-    log.info("LearningFactor: {}", LearningFactor)
-    log.info("DiscountFactor: {}", DiscountFactor)
-    log.info("CoarseMinimumLatency: {}", CoarseMinimumLatency)
-    log.info("CoarseTargetLatency: {}", CoarseTargetLatency)
-    log.info("CoarseMaximumLatency: {}", CoarseMaximumLatency)
+    log.info(s"CoresPerExecutor: ${CoresPerExecutor}")
+    log.info(s"CoresPerTask: ${CoresPerTask}")
+    log.info(s"BackupExecutors: ${BackupExecutors}")
+    log.info(s"MinimumExecutors: ${MinimumExecutors}")
+    log.info(s"MaximumExecutors: ${MaximumExecutors}")
+    log.info(s"MinimumLatency: ${MinimumLatency}")
+    log.info(s"MaximumLatency: ${MaximumLatency}")
+    log.info(s"TargetLatency: ${TargetLatency}")
+    log.info(s"LatencyGranularity: ${LatencyGranularity}")
+    log.info(s"ExecutorGranularity: ${ExecutorGranularity}")
+    log.info(s"StartupWaitTime: ${StartupWaitTime}")
+    log.info(s"GracePeriod: ${GracePeriod}")
+    log.info(s"WindowSize: ${WindowSize}")
+    log.info(s"LearningFactor: ${LearningFactor}")
+    log.info(s"DiscountFactor: ${DiscountFactor}")
+    log.info(s"CoarseMinimumLatency: ${CoarseMinimumLatency}")
+    log.info(s"CoarseTargetLatency: ${CoarseTargetLatency}")
+    log.info(s"CoarseMaximumLatency: ${CoarseMaximumLatency}")
+    log.info(s"BestReward: ${BestReward}")
+    log.info(s"NoReward: ${NoReward}")
   }
 }
 
@@ -121,4 +128,11 @@ object RMConstants {
 
   final val DiscountFactorKey = "spark.streaming.dynamicAllocation.discountFactor"
   final val DiscountFactorDefault = 0.9
+
+  final val BestRewardKey = "spark.streaming.dynamicAllocation.bestReward"
+  final val BestRewardDefault = 1.0
+
+  final val NoRewardKey = "spark.streaming.dynamicAllocation.noReward"
+  final val NoRewardDefault = 0
+
 }

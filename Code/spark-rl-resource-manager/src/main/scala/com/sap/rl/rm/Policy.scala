@@ -4,6 +4,6 @@ import com.sap.rl.rm.Action.Action
 
 trait Policy {
 
-  def nextActionFrom(currentState: State): Action
+  def nextActionFrom(lastState: State, lastAction: Action, currentState: State): Action
 
 }
