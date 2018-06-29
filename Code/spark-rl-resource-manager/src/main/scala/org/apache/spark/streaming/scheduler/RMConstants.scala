@@ -57,26 +57,32 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
   }
 
   private def logConfiguration(): Unit = {
-    log.info(s"CoresPerExecutor: ${CoresPerExecutor}")
-    log.info(s"CoresPerTask: ${CoresPerTask}")
-    log.info(s"BackupExecutors: ${BackupExecutors}")
-    log.info(s"MinimumExecutors: ${MinimumExecutors}")
-    log.info(s"MaximumExecutors: ${MaximumExecutors}")
-    log.info(s"MinimumLatency: ${MinimumLatency}")
-    log.info(s"MaximumLatency: ${MaximumLatency}")
-    log.info(s"TargetLatency: ${TargetLatency}")
-    log.info(s"LatencyGranularity: ${LatencyGranularity}")
-    log.info(s"ExecutorGranularity: ${ExecutorGranularity}")
-    log.info(s"StartupWaitTime: ${StartupWaitTime}")
-    log.info(s"GracePeriod: ${GracePeriod}")
-    log.info(s"WindowSize: ${WindowSize}")
-    log.info(s"LearningFactor: ${LearningFactor}")
-    log.info(s"DiscountFactor: ${DiscountFactor}")
-    log.info(s"CoarseMinimumLatency: ${CoarseMinimumLatency}")
-    log.info(s"CoarseTargetLatency: ${CoarseTargetLatency}")
-    log.info(s"CoarseMaximumLatency: ${CoarseMaximumLatency}")
-    log.info(s"BestReward: ${BestReward}")
-    log.info(s"NoReward: ${NoReward}")
+    val config: String =
+      """ --- Configuration ---
+        | CoresPerExecutor: ${CoresPerExecutor}
+        | CoresPerTask: ${CoresPerTask}
+        | BackupExecutors: ${BackupExecutors}
+        | MinimumExecutors: ${MinimumExecutors}
+        | MaximumExecutors: ${MaximumExecutors}
+        | MinimumLatency: ${MinimumLatency}
+        | MaximumLatency: ${MaximumLatency}
+        | TargetLatency: ${TargetLatency}
+        | LatencyGranularity: ${LatencyGranularity}
+        | ExecutorGranularity: ${ExecutorGranularity}
+        | StartupWaitTime: ${StartupWaitTime}
+        | GracePeriod: ${GracePeriod}
+        | WindowSize: ${WindowSize}
+        | LearningFactor: ${LearningFactor}
+        | DiscountFactor: ${DiscountFactor}
+        | CoarseMinimumLatency: ${CoarseMinimumLatency}
+        | CoarseTargetLatency: ${CoarseTargetLatency}
+        | CoarseMaximumLatency: ${CoarseMaximumLatency}
+        | BestReward: ${BestReward}
+        | NoReward: ${NoReward}
+        | --- Configuration ---
+      """.stripMargin
+
+    log.info(config)
   }
 }
 

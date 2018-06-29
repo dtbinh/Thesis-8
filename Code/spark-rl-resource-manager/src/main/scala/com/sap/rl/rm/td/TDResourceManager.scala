@@ -21,6 +21,7 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
   val reward = TDReward(constants, stateSpace)
 
   import constants._
+  import com.sap.rl.rm.LogStatus._
 
   override val listener: StreamingListener = new BatchListener {
 
@@ -28,28 +29,24 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
       val info: BatchInfo = batchCompleted.batchInfo
       val batchTime: Long = info.batchTime.milliseconds
 
-      // log everything
-      log.info(s"Received successful batch ${batchTime} ms with completion time")
-      log.info(info.toString)
-
       if (info.totalDelay.isEmpty) {
-        log.info(s"Batch ${batchTime} -- IS empty")
+        log.info(s"$BATCH_EMPTY -- BatchTime = $batchTime [ms]")
       } else {
-        log.info(s"Batch ${batchTime} -- ISN'T empty")
+        log.info(s"$BATCH_OK -- BatchTime = $batchTime [ms]")
 
         if (batchTime > (streamingStartTime + StartupWaitTime)) {
-          log.info(s"Batch ${batchTime} -- AFTER startup phase")
+          log.info(s"$NOT_START_UP -- BatchTime = $batchTime [ms]")
 
           // if we are not in grace period, check for window size
           if (batchTime > (lastTimeDecisionMade + GracePeriod)) {
-            log.info(s"Batch ${batchTime} -- NOT IN grace period")
+            log.info(s"$NOT_GRACE_PERIOD -- BatchTime = $batchTime [ms]")
 
             runningSum = runningSum + info.totalDelay.get.toInt
             numberOfBatches += 1
 
-            log.info(s"runningSum: ${runningSum}, numberOfBatches: ${numberOfBatches}")
-
             if (numberOfBatches == WindowSize) {
+              log.info(s"$WINDOW_FULL -- (RunningSum,NumberOfBatches)=($runningSum,$numberOfBatches)")
+
               val avg = runningSum.toDouble / numberOfBatches
               val normalizedAverageLatency = (avg / LatencyGranularity).toInt
 
@@ -59,25 +56,21 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
               // build the state variable
               val currentState = State(TDResourceManager.this.numberOfWorkerExecutors, normalizedAverageLatency)
 
-              log.info(s"Current state -- ${currentState}")
-
               // do nothing and just initialize to no action
               if (lastState == null) {
                 lastState = currentState
                 lastTakenAction = Action.NoAction
 
-                log.info("First window completed -- initialized")
+                log.info(s"$FIRST_WINDOW -- Initialized")
               } else {
                 // calculate reward
                 val rewardForLastAction: Double = calculateRewardFor(lastState, lastTakenAction, currentState)
 
                 // take new action
                 val actionToTake = whatIsTheNextActionFor(lastState, lastTakenAction, currentState)
-                log.info(s"taking action ${actionToTake} for ${currentState}")
 
                 // update QValue for last state
                 updateQValue(lastState, lastTakenAction, rewardForLastAction, currentState, actionToTake)
-                log.info(s"updated [[ ${lastState}, ${lastTakenAction} ]] with reward ${rewardForLastAction}")
 
                 // request change
                 reconfigure(actionToTake)
@@ -85,20 +78,18 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
                 // store current state and action
                 lastState = currentState
                 lastTakenAction = actionToTake
-
-                log.info("stored cuurent state/action")
               }
 
               lastTimeDecisionMade = System.currentTimeMillis()
-              log.info(s"set lastTimeDecisionMade to ${lastTimeDecisionMade}")
+              log.info(s"$DECIDED -- LastTimeDecisionMade = $lastTimeDecisionMade")
             } else {
-              log.info(s"window not full yet. window size: ${numberOfBatches}")
+              log.info(s"$NOT_WINDOW_FULL -- WindowSize = $numberOfBatches")
             }
           } else {
-            log.info(s"Batch ${batchTime} -- IN grace period")
+            log.info(s"$GRACE_PERIOD -- BatchTime = $batchTime [ms]")
           }
         } else {
-          log.info(s"Batch ${batchTime} -- BEFORE startup phase")
+          log.info(s"$START_UP -- BatchTime = $batchTime [ms]")
         }
       }
     }
@@ -107,24 +98,24 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
   private def reconfigure(actionToTake: Action): Unit = {
     if (actionToTake == Action.ScaleIn) {
       if (numberOfWorkerExecutors - ExecutorGranularity >= MinimumLatency) {
-        val added: Seq[String] = executorAllocator.killExecutors(shuffle(workerExecutors).take(ExecutorGranularity))
-        log.info(s"Added executors: ${added}")
+        val killed: Seq[String] = executorAllocator.killExecutors(shuffle(workerExecutors).take(ExecutorGranularity))
+        log.info(s"$EXEC_KILL_OK -- Killed = $killed")
       } else {
-        log.error(s"Less than ${MinimumExecutors} after ScaleIn")
+        log.error(s"$EXEC_KILL_NOT_ENOUGH")
       }
     } else if (actionToTake == Action.ScaleOut) {
       if (numberOfWorkerExecutors + ExecutorGranularity <= MaximumExecutors) {
         val opResult: Boolean = executorAllocator.requestExecutors(ExecutorGranularity)
         if (opResult) {
-          log.info(s"OK. Requested ${ExecutorGranularity} executors")
+          log.info(s"$EXEC_ADD_OK")
         } else {
-          log.error(s"Can not request ${ExecutorGranularity} executors")
+          log.error(s"$EXEC_ADD_ERR")
         }
       } else {
-        log.error(s"More than ${MaximumExecutors} after ScaleOut")
+        log.error(s"$EXEC_ADD_EXCESSIVE")
       }
     } else {
-      log.info("NoAction has been selected. Nothing to reconfigure...")
+      log.info(s"$EXEC_NO_ACTION")
     }
   }
 
@@ -137,12 +128,26 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
   }
 
   private def updateQValue(lastState: State, lastAction: Action, rewardForLastAction: Double, currentState: State, actionToTake: Action): Unit = {
-    // TODO calculate correct QValue
     val oldQVal: Double = stateSpace(lastState)(lastAction)
     val currentStateQVal: Double = stateSpace(currentState)(actionToTake)
 
     val newQVal: Double = ((1 - LearningFactor) * oldQVal) + (LearningFactor * (rewardForLastAction + (DiscountFactor * currentStateQVal)))
     stateSpace.updateQValueForAction(lastState, lastAction, newQVal)
+
+    log.info(s""" --- QValue-Update-Begin ---
+                | ==========================
+                | lastState=$lastState
+                | lastAction=$lastAction
+                | oldQValue=$oldQVal
+                | reward=$rewardForLastAction
+                | ==========================
+                | currentState=$currentState
+                | actionTotake=$actionToTake
+                | currentStateQValue=$currentStateQVal
+                | ==========================
+                | newQValue=$newQVal
+                | ==========================
+                | --- QValue-Update-End ---""".stripMargin)
   }
 }
 
