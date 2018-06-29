@@ -4,7 +4,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.{ExecutorAllocationClient, SparkConf, SparkContext, SparkException}
 
-abstract class ResourceManager(constants: RMConstants, streamingContext: StreamingContext) extends Logging {
+abstract class ResourceManager(constants: RMConstants, streamingContext: StreamingContext) extends StreamingListener with Logging {
 
   val sparkConf: SparkConf = streamingContext.conf
   val sparkContext: SparkContext = streamingContext.sparkContext
@@ -20,9 +20,6 @@ abstract class ResourceManager(constants: RMConstants, streamingContext: Streami
            |YARN or Mesos).""".stripMargin
       )
   }
-
-  // default listening infrastructure for spark-streaming
-  val listener: StreamingListener = new BatchListener { }
 
   def start(): Unit = log.info("Started resource manager")
 

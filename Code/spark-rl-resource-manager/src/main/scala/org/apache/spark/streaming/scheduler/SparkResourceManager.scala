@@ -3,17 +3,10 @@ package org.apache.spark.streaming.scheduler
 import org.apache.spark.streaming.StreamingContext
 
 class SparkResourceManager(constants: RMConstants, ssc: StreamingContext) extends ResourceManager(constants, ssc) {
-  override val listener: ExecutorAllocationManager = new ExecutorAllocationManager(
-    executorAllocator,
-    ssc.scheduler.receiverTracker,
-    sparkConf,
-    batchDuration,
-    ssc.scheduler.clock
-  ) {
-    override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
-      super.onBatchCompleted(batchCompleted)
-    }
-  }
+  val listener: ExecutorAllocationManager =
+    new ExecutorAllocationManager(executorAllocator, ssc.scheduler.receiverTracker, sparkConf, batchDuration, ssc.scheduler.clock)
+
+  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = listener.onBatchCompleted(batchCompleted)
 
   override def start(): Unit = {
     super.start()

@@ -40,7 +40,7 @@ class StreamingContextWrapper(
   @throws(classOf[IllegalStateException])
   private def startResourceManager(): Unit = {
     resourceManager = createResourceManager(this)
-    addStreamingListener(resourceManager.listener)
+    addStreamingListener(resourceManager)
     resourceManager.start()
   }
 
