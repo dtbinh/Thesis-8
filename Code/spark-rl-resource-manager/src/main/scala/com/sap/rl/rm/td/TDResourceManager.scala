@@ -1,6 +1,5 @@
 package com.sap.rl.rm.td
 
-import com.sap.rl.rm.Action.Action
 import com.sap.rl.rm.{Action, State}
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler._
@@ -11,6 +10,7 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
 
   import constants._
   import com.sap.rl.rm.LogStatus._
+  import Action._
 
   var streamingStartTime: Long = 0
   var lastTimeDecisionMade: Long = 0
@@ -95,7 +95,7 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
 
   private def init(currentState: State): Unit = {
     lastState = currentState
-    lastTakenAction = Action.NoAction
+    lastTakenAction = NoAction
 
     log.info(s"$FIRST_WINDOW -- Initialized")
     setDecisionTime()
@@ -107,9 +107,9 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
   }
 
   private def reconfigure(actionToTake: Action): Unit = actionToTake match {
-    case Action.ScaleIn => scaleIn()
-    case Action.ScaleOut => scaleOut()
-    case Action.NoAction => noAction()
+    case ScaleIn => scaleIn()
+    case ScaleOut => scaleOut()
+    case NoAction => noAction()
   }
 
   private def scaleIn(): Unit = {
