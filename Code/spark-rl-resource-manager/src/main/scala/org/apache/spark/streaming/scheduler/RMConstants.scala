@@ -1,12 +1,16 @@
 package org.apache.spark.streaming.scheduler
 
+import org.apache.log4j.LogManager
 import org.apache.spark.SparkConf
-import org.apache.spark.internal.Logging
 import org.apache.spark.streaming.scheduler.ExecutorAllocationManager.isDynamicAllocationEnabled
 
-class RMConstants(sparkConf: SparkConf) extends Logging {
+class RMConstants(sparkConf: SparkConf) {
 
   import RMConstants._
+
+  @transient private lazy val log = LogManager.getLogger(this.getClass)
+
+  final val one: Int = 1
 
   final val CoresPerTask: Int = sparkConf.getInt(CoresPerTaskKey, CoresPerTaskDefault)
   final val CoresPerExecutor: Int = sparkConf.getInt(CoresPerExecutorKey, CoresPerExecutorDefault)
@@ -19,8 +23,6 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
   final val MaximumLatency: Int = sparkConf.getTimeAsMs(MaximumLatencyKey, MaximumLatencyDefault).toInt
   final val TargetLatency: Int = sparkConf.getTimeAsMs(TargetLatencyKey, TargetLatencyDefault).toInt
   final val LatencyGranularity: Int = sparkConf.getTimeAsMs(LatencyGranularityKey, LatencyGranularityDefault).toInt
-
-  final val ExecutorGranularity: Int = sparkConf.getInt(ExecutorGranularityKey, ExecutorGranularityDefault).toInt
 
   final val StartupWaitTime: Int = sparkConf.getTimeAsMs(StartupWaitTimeKey, StartupWaitTimeDefault).toInt
   final val GracePeriod: Int = sparkConf.getTimeAsMs(GracePeriodKey, GracePeriodDefault).toInt
@@ -47,7 +49,6 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
 
     require(MaximumExecutors >= MinimumExecutors)
     require(MinimumExecutors > 0)
-    require(ExecutorGranularity > 0)
     require(WindowSize > 0)
 
     require(LearningFactor >= 0 && LearningFactor <= 1)
@@ -58,7 +59,7 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
 
   private def logConfiguration(): Unit = {
     val config: String =
-      """ --- Configuration ---
+      s""" --- Configuration ---
         | CoresPerExecutor: ${CoresPerExecutor}
         | CoresPerTask: ${CoresPerTask}
         | BackupExecutors: ${BackupExecutors}
@@ -68,7 +69,6 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
         | MaximumLatency: ${MaximumLatency}
         | TargetLatency: ${TargetLatency}
         | LatencyGranularity: ${LatencyGranularity}
-        | ExecutorGranularity: ${ExecutorGranularity}
         | StartupWaitTime: ${StartupWaitTime}
         | GracePeriod: ${GracePeriod}
         | WindowSize: ${WindowSize}
@@ -79,8 +79,7 @@ class RMConstants(sparkConf: SparkConf) extends Logging {
         | CoarseMaximumLatency: ${CoarseMaximumLatency}
         | BestReward: ${BestReward}
         | NoReward: ${NoReward}
-        | --- Configuration ---
-      """.stripMargin
+        | --- Configuration ---""".stripMargin
 
     log.info(config)
   }
@@ -117,9 +116,6 @@ object RMConstants {
   final val LatencyGranularityKey = "spark.streaming.dynamicAllocation.latencyGranularity"
   final val LatencyGranularityDefault = "10ms"
 
-  final val ExecutorGranularityKey = "spark.streaming.dynamicAllocation.executorGranularity"
-  final val ExecutorGranularityDefault = 1
-
   final val StartupWaitTimeKey = "spark.streaming.dynamicAllocation.startupWaitTime"
   final val StartupWaitTimeDefault = "60s"
 
@@ -140,5 +136,4 @@ object RMConstants {
 
   final val NoRewardKey = "spark.streaming.dynamicAllocation.noReward"
   final val NoRewardDefault = 0
-
 }

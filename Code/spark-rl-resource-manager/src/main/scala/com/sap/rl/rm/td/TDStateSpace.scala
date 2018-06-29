@@ -20,6 +20,7 @@ class TDStateSpace(value: mutable.HashMap[State, mutable.HashMap[Action, Double]
   def size: Int = value.size
 }
 
+// TODO: initialize to better values for edge cases
 object TDStateSpace {
   def apply(constants: RMConstants): TDStateSpace = {
     import constants._

@@ -17,11 +17,12 @@ object LogStatus extends Enumeration {
   val DECIDED = Value
 
   val EXEC_KILL_OK = Value
-  val EXEC_KILL_NOT_ENOUGH = Value
 
   val EXEC_ADD_OK = Value
   val EXEC_ADD_ERR = Value
-  val EXEC_ADD_EXCESSIVE = Value
+
+  val EXEC_EXCESSIVE = Value
+  val EXEC_NOT_ENOUGH = Value
 
   val EXEC_NO_ACTION = Value
 }

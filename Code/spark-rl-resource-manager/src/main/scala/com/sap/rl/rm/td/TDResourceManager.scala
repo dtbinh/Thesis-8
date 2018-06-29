@@ -1,6 +1,7 @@
 package com.sap.rl.rm.td
 
 import com.sap.rl.rm.{Action, State}
+import org.apache.log4j.LogManager
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler._
 
@@ -11,6 +12,8 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
   import constants._
   import com.sap.rl.rm.LogStatus._
   import Action._
+
+  @transient private lazy val log = LogManager.getLogger(this.getClass)
 
   var streamingStartTime: Long = 0
   var lastTimeDecisionMade: Long = 0
@@ -27,7 +30,7 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     streamingStartTime = streamingStarted.time
 
-    log.info(s"${STREAM_STARTED} -- StartTime = ${streamingStartTime}")
+    log.info(s"$STREAM_STARTED -- StartTime = $streamingStartTime")
   }
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
@@ -113,28 +116,13 @@ class TDResourceManager(constants: RMConstants, streamingContext: StreamingConte
   }
 
   private def scaleIn(): Unit = {
-    if (numberOfWorkerExecutors - ExecutorGranularity >= MinimumLatency) {
-      val killed: Seq[String] = executorAllocator.killExecutors(shuffle(workerExecutors).take(ExecutorGranularity))
-      log.info(s"$EXEC_KILL_OK -- Killed = $killed")
-
-      return
-    }
-
-    log.error(s"$EXEC_KILL_NOT_ENOUGH")
+    val killed: Seq[String] = executorAllocator.killExecutors(shuffle(workerExecutors).take(one))
+    log.info(s"$EXEC_KILL_OK -- Killed = $killed")
   }
 
   private def scaleOut(): Unit = {
-    if (numberOfWorkerExecutors + ExecutorGranularity <= MaximumExecutors) {
-      if (executorAllocator.requestExecutors(ExecutorGranularity)) {
-        log.info(s"$EXEC_ADD_OK")
-        return
-      }
-
-      log.error(s"$EXEC_ADD_ERR")
-      return
-    }
-
-    log.error(s"$EXEC_ADD_EXCESSIVE")
+    if (executorAllocator.requestExecutors(one)) log.info(s"$EXEC_ADD_OK")
+    else log.error(s"$EXEC_ADD_ERR")
   }
 
   private def noAction(): Unit = log.info(s"$EXEC_NO_ACTION")

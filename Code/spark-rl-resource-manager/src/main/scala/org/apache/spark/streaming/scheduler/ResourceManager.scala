@@ -1,10 +1,12 @@
 package org.apache.spark.streaming.scheduler
 
-import org.apache.spark.internal.Logging
+import org.apache.log4j.LogManager
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.{ExecutorAllocationClient, SparkConf, SparkContext, SparkException}
 
-abstract class ResourceManager(constants: RMConstants, streamingContext: StreamingContext) extends StreamingListener with Logging {
+abstract class ResourceManager(constants: RMConstants, streamingContext: StreamingContext) extends StreamingListener {
+
+  @transient private lazy val log = LogManager.getLogger(this.getClass)
 
   val sparkConf: SparkConf = streamingContext.conf
   val sparkContext: SparkContext = streamingContext.sparkContext
