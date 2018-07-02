@@ -37,6 +37,7 @@ class RMConstants(sparkConf: SparkConf) {
 
   final val BestReward: Double = sparkConf.getDouble(BestRewardKey, BestRewardDefault)
   final val NoReward: Double = sparkConf.getDouble(NoRewardKey, NoRewardDefault)
+  final val NegativeRewardMultiplier = sparkConf.getInt(NegativeRewardMultiplierKey, NegativeRewardMultiplierDefault)
 
   validateSettings()
   logConfiguration()
@@ -53,6 +54,8 @@ class RMConstants(sparkConf: SparkConf) {
 
     require(LearningFactor >= 0 && LearningFactor <= 1)
     require(DiscountFactor >= 0 && DiscountFactor <= 1)
+
+    require(NegativeRewardMultiplier > 0)
 
     require(BestReward > NoReward)
   }
@@ -79,6 +82,7 @@ class RMConstants(sparkConf: SparkConf) {
         | CoarseMaximumLatency: $CoarseMaximumLatency
         | BestReward: $BestReward
         | NoReward: $NoReward
+        | NegativeRewardMultiplier: $NegativeRewardMultiplier
         | --- Configuration ---""".stripMargin
 
     log.info(config)
@@ -136,4 +140,7 @@ object RMConstants {
 
   final val NoRewardKey = "spark.streaming.dynamicAllocation.noReward"
   final val NoRewardDefault = 0
+
+  final val NegativeRewardMultiplierKey = "spark.streaming.dynamicAllocation.negativeRewardMultiplier"
+  final val NegativeRewardMultiplierDefault = 5
 }

@@ -1,6 +1,7 @@
 package com.sap.rl.rm.td
 
-import com.sap.rl.rm.{Action, State}
+import com.sap.rl.rm.Action._
+import com.sap.rl.rm.State
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.scheduler.RMConstants
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -36,10 +37,12 @@ class TDRewardTest extends FunSuite with BeforeAndAfter {
     val stateSpace = TDStateSpace(constants)
     val rewardFunc: TDReward = TDReward(constants, stateSpace)
 
-    val reward: Double = rewardFunc.forAction(State(10, 12), Action.ScaleIn, State(9, 15))
-    val expectedReward: Double = 1.toDouble / 9
+    import constants._
 
-    assert(expectedReward ~= reward)
+    assert(-BestReward ~= rewardFunc.forAction(State(10, 12), ScaleOut, State(9, 15)))
+    assert(BestReward ~= rewardFunc.forAction(State(10, 20), ScaleIn, State(9, 10)))
+    assert(BestReward / 20 ~= rewardFunc.forAction(State(20, 10), NoAction, State(20, 11)))
+    assert(BestReward ~= rewardFunc.forAction(State(10, 12), ScaleOut, State(11, 50)))
   }
 
   test("rewardForHigherLatency") {
@@ -47,10 +50,9 @@ class TDRewardTest extends FunSuite with BeforeAndAfter {
     val stateSpace = TDStateSpace(constants)
     val rewardFunc: TDReward = TDReward(constants, stateSpace)
 
-    val reward: Double = rewardFunc.forAction(State(10, 12), Action.ScaleOut, State(12, 40))
-    val expectedReward: Double = 0
+    import constants._
 
-    assert(expectedReward ~= reward)
+    assert(BestReward ~= rewardFunc.forAction(State(10, 12), ScaleOut, State(12, 40)))
+    assert(-0.121 ~= rewardFunc.forAction(State(10, 12), NoAction, State(10, 41)))
   }
-
 }

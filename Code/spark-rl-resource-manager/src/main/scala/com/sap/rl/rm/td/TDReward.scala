@@ -11,7 +11,7 @@ class TDReward(constants: RMConstants, stateSpace: TDStateSpace) extends Reward 
   override def forAction(lastState: State, lastAction: Action, currentState: State): Double = {
     if (lastState.latency >= CoarseTargetLatency || currentState.latency >= CoarseTargetLatency) {
       if (lastAction == ScaleOut) BestReward
-      else (CoarseTargetLatency - currentState.latency).toDouble / currentState.latency
+      else NegativeRewardMultiplier * (CoarseTargetLatency - currentState.latency).toDouble / currentState.latency
     } else {
       if (lastAction == ScaleOut) -BestReward
       else if (currentState.latency < CoarseMinimumLatency && lastAction == Action.ScaleIn) BestReward
