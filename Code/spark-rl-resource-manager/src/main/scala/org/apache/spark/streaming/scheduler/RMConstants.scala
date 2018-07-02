@@ -60,25 +60,25 @@ class RMConstants(sparkConf: SparkConf) {
   private def logConfiguration(): Unit = {
     val config: String =
       s""" --- Configuration ---
-        | CoresPerExecutor: ${CoresPerExecutor}
-        | CoresPerTask: ${CoresPerTask}
-        | BackupExecutors: ${BackupExecutors}
-        | MinimumExecutors: ${MinimumExecutors}
-        | MaximumExecutors: ${MaximumExecutors}
-        | MinimumLatency: ${MinimumLatency}
-        | MaximumLatency: ${MaximumLatency}
-        | TargetLatency: ${TargetLatency}
-        | LatencyGranularity: ${LatencyGranularity}
-        | StartupWaitTime: ${StartupWaitTime}
-        | GracePeriod: ${GracePeriod}
-        | WindowSize: ${WindowSize}
-        | LearningFactor: ${LearningFactor}
-        | DiscountFactor: ${DiscountFactor}
-        | CoarseMinimumLatency: ${CoarseMinimumLatency}
-        | CoarseTargetLatency: ${CoarseTargetLatency}
-        | CoarseMaximumLatency: ${CoarseMaximumLatency}
-        | BestReward: ${BestReward}
-        | NoReward: ${NoReward}
+        | CoresPerExecutor: $CoresPerExecutor
+        | CoresPerTask: $CoresPerTask
+        | BackupExecutors: $BackupExecutors
+        | MinimumExecutors: $MinimumExecutors
+        | MaximumExecutors: $MaximumExecutors
+        | MinimumLatency: $MinimumLatency
+        | MaximumLatency: $MaximumLatency
+        | TargetLatency: $TargetLatency
+        | LatencyGranularity: $LatencyGranularity
+        | StartupWaitTime: $StartupWaitTime
+        | GracePeriod: $GracePeriod
+        | WindowSize: $WindowSize
+        | LearningFactor: $LearningFactor
+        | DiscountFactor: $DiscountFactor
+        | CoarseMinimumLatency: $CoarseMinimumLatency
+        | CoarseTargetLatency: $CoarseTargetLatency
+        | CoarseMaximumLatency: $CoarseMaximumLatency
+        | BestReward: $BestReward
+        | NoReward: $NoReward
         | --- Configuration ---""".stripMargin
 
     log.info(config)
