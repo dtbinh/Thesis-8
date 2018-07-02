@@ -1,7 +1,8 @@
 package com.sap.rl.rm.td
 
+import com.sap.rl.rm.Action._
 import com.sap.rl.TestCommons.{DynamicResourceAllocationEnabledKey, DynamicResourceAllocationTestingKey}
-import com.sap.rl.rm.{Action, Policy, State}
+import com.sap.rl.rm.{Policy, State}
 import com.sap.rl.util.Precision
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.scheduler.RMConstants
@@ -29,22 +30,17 @@ class TDPolicyTest extends FunSuite with BeforeAndAfter {
       .set(TargetLatencyKey, "800")
       .set(MaximumLatencyKey, "10000")
   }
-//
-//  test("testBestActionWithLatency120") {
-//    val constants: RMConstants = RMConstants(sparkConf)
-//    val stateSpace = TDStateSpace(constants)
-//    val policy: Policy = TDPolicy(constants, stateSpace)
-//
-//    val bestAction = policy.nextActionFrom(State(12, 120))
-//    assert(bestAction == Action.ScaleOut)
-//  }
-//
-//  test("testBestActionWithLatency10") {
-//    val constants: RMConstants = RMConstants(sparkConf)
-//    val stateSpace = TDStateSpace(constants)
-//    val policy: Policy = TDPolicy(constants, stateSpace)
-//
-//    val bestAction = policy.nextActionFrom(State(12, 10))
-//    assert(bestAction == Action.ScaleIn)
-//  }
+
+  test("testBestActionWithLatency") {
+    val constants: RMConstants = RMConstants(sparkConf)
+    val stateSpace = TDStateSpace(constants)
+    val policy: Policy = TDPolicy(constants, stateSpace)
+
+    import constants._
+
+    assert(ScaleIn != policy.nextActionFrom(State(12, 16), ScaleOut, State(12, 17)))
+    assert(ScaleOut != policy.nextActionFrom(State(10, 5), ScaleIn, State(10, 4)))
+    assert(ScaleIn == policy.nextActionFrom(State(12, 10), ScaleIn, State(11, 10)))
+    assert(ScaleIn != policy.nextActionFrom(State(MinimumExecutors, 10), NoAction, State(MinimumExecutors, 11)))
+  }
 }
