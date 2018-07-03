@@ -1,17 +1,18 @@
 package com.sap.rl.rm.td
 
-import com.sap.rl.rm.{Action, State}
+import com.sap.rl.rm.Action._
+import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
+import com.sap.rl.rm.{State, StateSpace}
 import org.apache.log4j.LogManager
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler._
+import com.sap.rl.rm.LogStatus._
 
 import scala.util.Random.shuffle
 
 class TemporalDifferenceResourceManager(constants: RMConstants, streamingContext: StreamingContext) extends ResourceManager(constants, streamingContext) {
 
   import constants._
-  import com.sap.rl.rm.LogStatus._
-  import Action._
 
   @transient private lazy val log = LogManager.getLogger(this.getClass)
 
@@ -23,9 +24,9 @@ class TemporalDifferenceResourceManager(constants: RMConstants, streamingContext
   var lastState: State = _
   var lastTakenAction: Action = _
 
-  val stateSpace = TemporalDifferenceStateSpace(constants)
-  val policy = TemporalDifferencePolicy(constants, stateSpace)
-  val reward = TemporalDifferenceReward(constants, stateSpace)
+  val stateSpace = StateSpace(constants)
+  val policy = DefaultPolicy(constants, stateSpace)
+  val reward = DefaultReward(constants, stateSpace)
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     streamingStartTime = streamingStarted.time

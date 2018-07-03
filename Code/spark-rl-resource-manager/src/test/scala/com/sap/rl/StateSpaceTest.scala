@@ -1,15 +1,15 @@
-package com.sap.rl.rm.td
+package com.sap.rl
 
 import com.sap.rl.rm.Action._
-import com.sap.rl.rm.State
+import com.sap.rl.rm.{State, StateSpace}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.scheduler.RMConstants
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
-class TemporalDifferenceStateSpaceTest extends FunSuite with BeforeAndAfter {
+class StateSpaceTest extends FunSuite with BeforeAndAfter {
 
-  import org.apache.spark.streaming.scheduler.RMConstants._
   import com.sap.rl.TestCommons._
+  import org.apache.spark.streaming.scheduler.RMConstants._
 
   var sparkConf: SparkConf = _
 
@@ -33,7 +33,7 @@ class TemporalDifferenceStateSpaceTest extends FunSuite with BeforeAndAfter {
     val constants: RMConstants = RMConstants(sparkConf)
     import constants._
 
-    val stateSpace = TemporalDifferenceStateSpace(constants)
+    val stateSpace = StateSpace(constants)
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity)
     assert(stateSpace.size == expectedSpaceSize)
@@ -41,7 +41,7 @@ class TemporalDifferenceStateSpaceTest extends FunSuite with BeforeAndAfter {
 
   test("bestActionFor") {
     val constants: RMConstants = RMConstants(sparkConf)
-    val stateSpace = TemporalDifferenceStateSpace(constants)
+    val stateSpace = StateSpace(constants)
     import constants._
 
     assert(BestReward == stateSpace(State(MinimumExecutors, CoarseMinimumLatency - 1))(NoAction))

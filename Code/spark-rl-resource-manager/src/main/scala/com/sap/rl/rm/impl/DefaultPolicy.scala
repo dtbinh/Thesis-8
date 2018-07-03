@@ -1,15 +1,15 @@
-package com.sap.rl.rm.td
+package com.sap.rl.rm.impl
 
-import com.sap.rl.rm.{Action, Policy, State}
+import com.sap.rl.rm.{Policy, State, StateSpace}
 import org.apache.log4j.LogManager
 import org.apache.spark.streaming.scheduler.RMConstants
+import com.sap.rl.rm.Action._
+import com.sap.rl.rm.LogStatus._
 
-class TemporalDifferencePolicy(constants: RMConstants, stateSpace: TemporalDifferenceStateSpace) extends Policy {
+class DefaultPolicy(constants: RMConstants, stateSpace: StateSpace) extends Policy {
 
   @transient private lazy val log = LogManager.getLogger(this.getClass)
 
-  import Action._
-  import com.sap.rl.rm.LogStatus._
   import constants._
 
   override def nextActionFrom(lastState: State, lastAction: Action, currentState: State): Action = {
@@ -57,6 +57,6 @@ class TemporalDifferencePolicy(constants: RMConstants, stateSpace: TemporalDiffe
   }
 }
 
-object TemporalDifferencePolicy {
-  def apply(constants: RMConstants, stateSpace: TemporalDifferenceStateSpace): TemporalDifferencePolicy = new TemporalDifferencePolicy(constants, stateSpace)
+object DefaultPolicy {
+  def apply(constants: RMConstants, stateSpace: StateSpace): DefaultPolicy = new DefaultPolicy(constants, stateSpace)
 }

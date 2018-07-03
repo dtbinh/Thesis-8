@@ -1,15 +1,16 @@
-package com.sap.rl.rm.td
+package com.sap.rl
 
-import com.sap.rl.rm.Action._
 import com.sap.rl.TestCommons.{DynamicResourceAllocationEnabledKey, DynamicResourceAllocationTestingKey}
-import com.sap.rl.rm.{Policy, State}
+import com.sap.rl.rm.Action._
+import com.sap.rl.rm.impl.DefaultPolicy
+import com.sap.rl.rm.{Policy, State, StateSpace}
 import com.sap.rl.util.Precision
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.scheduler.RMConstants
 import org.apache.spark.streaming.scheduler.RMConstants._
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
-class TemporalDifferencePolicyTest extends FunSuite with BeforeAndAfter {
+class DefaultPolicyTest extends FunSuite with BeforeAndAfter {
 
   var sparkConf: SparkConf = _
 
@@ -33,8 +34,8 @@ class TemporalDifferencePolicyTest extends FunSuite with BeforeAndAfter {
 
   test("testBestActionWithLatency") {
     val constants: RMConstants = RMConstants(sparkConf)
-    val stateSpace = TemporalDifferenceStateSpace(constants)
-    val policy: Policy = TemporalDifferencePolicy(constants, stateSpace)
+    val stateSpace = StateSpace(constants)
+    val policy: Policy = DefaultPolicy(constants, stateSpace)
 
     import constants._
 

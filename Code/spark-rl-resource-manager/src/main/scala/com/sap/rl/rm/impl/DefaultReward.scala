@@ -1,12 +1,12 @@
-package com.sap.rl.rm.td
+package com.sap.rl.rm.impl
 
-import com.sap.rl.rm.{Action, Reward, State}
+import com.sap.rl.rm.Action._
+import com.sap.rl.rm.{Reward, State, StateSpace}
 import org.apache.spark.streaming.scheduler.RMConstants
 
-class TemporalDifferenceReward(constants: RMConstants, stateSpace: TemporalDifferenceStateSpace) extends Reward {
+class DefaultReward(constants: RMConstants, stateSpace: StateSpace) extends Reward {
 
   import constants._
-  import Action._
 
   override def forAction(lastState: State, lastAction: Action, currentState: State): Double = {
     if (lastState.latency >= CoarseTargetLatency || currentState.latency >= CoarseTargetLatency) {
@@ -14,12 +14,12 @@ class TemporalDifferenceReward(constants: RMConstants, stateSpace: TemporalDiffe
       else NegativeRewardMultiplier * (CoarseTargetLatency - currentState.latency).toDouble / currentState.latency
     } else {
       if (lastAction == ScaleOut) -BestReward
-      else if (currentState.latency < CoarseMinimumLatency && lastAction == Action.ScaleIn) BestReward
+      else if (currentState.latency < CoarseMinimumLatency && lastAction == ScaleIn) BestReward
       else BestReward / currentState.numberOfExecutors
     }
   }
 }
 
-object TemporalDifferenceReward {
-  def apply(constants: RMConstants, stateSpace: TemporalDifferenceStateSpace): TemporalDifferenceReward = new TemporalDifferenceReward(constants, stateSpace)
+object DefaultReward {
+  def apply(constants: RMConstants, stateSpace: StateSpace): DefaultReward = new DefaultReward(constants, stateSpace)
 }

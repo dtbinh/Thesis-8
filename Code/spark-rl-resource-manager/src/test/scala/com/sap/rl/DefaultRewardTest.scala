@@ -1,16 +1,17 @@
-package com.sap.rl.rm.td
+package com.sap.rl
 
-import com.sap.rl.rm.Action._
-import com.sap.rl.rm.State
-import org.apache.spark.SparkConf
-import org.apache.spark.streaming.scheduler.RMConstants
-import org.scalatest.{BeforeAndAfter, FunSuite}
-import org.apache.spark.streaming.scheduler.RMConstants._
 import com.sap.rl.TestCommons._
 import com.sap.rl.implicits._
+import com.sap.rl.rm.Action._
+import com.sap.rl.rm.{State, StateSpace}
+import com.sap.rl.rm.impl.DefaultReward
 import com.sap.rl.util.Precision
+import org.apache.spark.SparkConf
+import org.apache.spark.streaming.scheduler.RMConstants
+import org.apache.spark.streaming.scheduler.RMConstants._
+import org.scalatest.{BeforeAndAfter, FunSuite}
 
-class TemporalDifferenceRewardTest extends FunSuite with BeforeAndAfter {
+class DefaultRewardTest extends FunSuite with BeforeAndAfter {
 
   var sparkConf: SparkConf = _
 
@@ -34,8 +35,8 @@ class TemporalDifferenceRewardTest extends FunSuite with BeforeAndAfter {
 
   test("rewardForLowerLatency") {
     val constants: RMConstants = RMConstants(sparkConf)
-    val stateSpace = TemporalDifferenceStateSpace(constants)
-    val rewardFunc: TemporalDifferenceReward = TemporalDifferenceReward(constants, stateSpace)
+    val stateSpace = StateSpace(constants)
+    val rewardFunc: DefaultReward = DefaultReward(constants, stateSpace)
 
     import constants._
 
@@ -47,8 +48,8 @@ class TemporalDifferenceRewardTest extends FunSuite with BeforeAndAfter {
 
   test("rewardForHigherLatency") {
     val constants: RMConstants = RMConstants(sparkConf)
-    val stateSpace = TemporalDifferenceStateSpace(constants)
-    val rewardFunc: TemporalDifferenceReward = TemporalDifferenceReward(constants, stateSpace)
+    val stateSpace = StateSpace(constants)
+    val rewardFunc: DefaultReward = DefaultReward(constants, stateSpace)
 
     import constants._
 

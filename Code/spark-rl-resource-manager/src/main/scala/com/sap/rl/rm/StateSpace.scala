@@ -1,14 +1,12 @@
-package com.sap.rl.rm.td
+package com.sap.rl.rm
 
 import com.sap.rl.rm.Action._
-import com.sap.rl.rm.{Action, State}
 import org.apache.spark.streaming.scheduler.RMConstants
 
+import scala.collection.mutable
 import scala.collection.mutable.{HashMap => MutableHashMap}
 
-import scala.collection.mutable
-
-class TemporalDifferenceStateSpace(value: MutableHashMap[State, MutableHashMap[Action, Double]]) {
+class StateSpace(value: MutableHashMap[State, MutableHashMap[Action, Double]]) {
 
   def updateQValueForAction(state: State, action: Action, qVal: Double): Unit = {
     val qValues = value(state)
@@ -43,8 +41,8 @@ class TemporalDifferenceStateSpace(value: MutableHashMap[State, MutableHashMap[A
   }
 }
 
-object TemporalDifferenceStateSpace {
-  def apply(constants: RMConstants): TemporalDifferenceStateSpace = {
+object StateSpace {
+  def apply(constants: RMConstants): StateSpace = {
     import constants._
 
     val space: MutableHashMap[State, MutableHashMap[Action, Double]] = MutableHashMap()
@@ -71,7 +69,7 @@ object TemporalDifferenceStateSpace {
       }
     }
 
-    new TemporalDifferenceStateSpace(space)
+    new StateSpace(space)
   }
 
   private def add(
