@@ -1,6 +1,6 @@
 package org.apache.spark.streaming.scheduler
 
-import com.sap.rl.rm.Action.{Action, NoAction, ScaleIn, ScaleOut}
+import com.sap.rl.rm.Action._
 import com.sap.rl.rm.LogStatus._
 import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
 import com.sap.rl.rm.{Policy, Reward, State, StateSpace}
@@ -124,7 +124,6 @@ abstract class ResourceManager(constants: RMConstants, streamingContext: Streami
     log.info(s"$FIRST_WINDOW -- Initialized")
     setDecisionTime()
   }
-
 
   def setDecisionTime(): Unit = {
     lastTimeDecisionMade = System.currentTimeMillis()

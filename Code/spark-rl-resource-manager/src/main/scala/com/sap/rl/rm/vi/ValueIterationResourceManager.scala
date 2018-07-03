@@ -11,7 +11,16 @@ class ValueIterationResourceManager(constants: RMConstants, streamingContext: St
 
   @transient private lazy val log = LogManager.getLogger(this.getClass)
 
-  def specialize(): Unit = {
+  override def specialize(): Unit = {
+    super.specialize()
 
+
+  }
+}
+
+object ValueIterationResourceManager {
+  def apply(ssc: StreamingContext): ValueIterationResourceManager = {
+    val constants: RMConstants = RMConstants(ssc.sparkContext.getConf)
+    new ValueIterationResourceManager(constants, ssc)
   }
 }

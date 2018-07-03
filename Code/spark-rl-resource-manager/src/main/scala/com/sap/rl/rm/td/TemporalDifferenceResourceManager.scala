@@ -13,7 +13,7 @@ class TemporalDifferenceResourceManager(constants: RMConstants, streamingContext
 
   override def specialize(): Unit = {
     super.specialize()
-    
+
     val oldQVal: Double = stateSpace(lastState)(lastAction)
     val currentStateQVal: Double = stateSpace(currentState)(actionToTake)
 
