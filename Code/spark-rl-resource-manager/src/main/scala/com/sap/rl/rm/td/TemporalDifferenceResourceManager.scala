@@ -1,57 +1,29 @@
 package com.sap.rl.rm.td
 
 import com.sap.rl.rm.Action._
-import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
-import com.sap.rl.rm.{State, StateSpace}
+import com.sap.rl.rm.LogStatus._
+import com.sap.rl.rm.State
 import org.apache.log4j.LogManager
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler._
-import com.sap.rl.rm.LogStatus._
 
-import scala.util.Random.shuffle
-
-class TemporalDifferenceResourceManager(constants: RMConstants, streamingContext: StreamingContext) extends ResourceManager(constants, streamingContext) {
+class TemporalDifferenceResourceManager(constants: RMConstants, streamingContext: StreamingContext)
+  extends ResourceManager(constants, streamingContext) {
 
   import constants._
 
   @transient private lazy val log = LogManager.getLogger(this.getClass)
 
-  var streamingStartTime: Long = 0
-  var lastTimeDecisionMade: Long = 0
   var runningSum: Int = 0
   var numberOfBatches: Int = 0
 
   var lastState: State = _
   var lastTakenAction: Action = _
 
-  val stateSpace = StateSpace(constants)
-  val policy = DefaultPolicy(constants, stateSpace)
-  val reward = DefaultReward(constants, stateSpace)
-
-  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
-    streamingStartTime = streamingStarted.time
-
-    log.info(s"$STREAM_STARTED -- StartTime = $streamingStartTime")
-  }
-
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
+    super.onBatchCompleted(batchCompleted)
+
     val info: BatchInfo = batchCompleted.batchInfo
-    val batchTime: Long = info.batchTime.milliseconds
-
-    if (info.totalDelay.isEmpty) {
-      log.info(s"$BATCH_EMPTY -- BatchTime = $batchTime [ms]")
-      return
-    }
-    if (batchTime <= (streamingStartTime + StartupWaitTime)) {
-      log.info(s"$START_UP -- BatchTime = $batchTime [ms]")
-      return
-    }
-    if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
-      log.info(s"$GRACE_PERIOD -- BatchTime = $batchTime [ms]")
-      return
-    }
-
-    log.info(s"$BATCH_OK -- BatchTime = $batchTime [ms]")
 
     runningSum = runningSum + info.totalDelay.get.toInt
     numberOfBatches += 1
@@ -105,37 +77,6 @@ class TemporalDifferenceResourceManager(constants: RMConstants, streamingContext
     setDecisionTime()
   }
 
-  private def setDecisionTime(): Unit = {
-    lastTimeDecisionMade = System.currentTimeMillis()
-    log.info(s"$DECIDED -- LastTimeDecisionMade = $lastTimeDecisionMade")
-  }
-
-  private def reconfigure(actionToTake: Action): Unit = actionToTake match {
-    case ScaleIn => scaleIn()
-    case ScaleOut => scaleOut()
-    case NoAction => noAction()
-  }
-
-  private def scaleIn(): Unit = {
-    val killed: Seq[String] = executorAllocator.killExecutors(shuffle(workerExecutors).take(one))
-    log.info(s"$EXEC_KILL_OK -- Killed = $killed")
-  }
-
-  private def scaleOut(): Unit = {
-    if (executorAllocator.requestExecutors(one)) log.info(s"$EXEC_ADD_OK")
-    else log.error(s"$EXEC_ADD_ERR")
-  }
-
-  private def noAction(): Unit = log.info(s"$EXEC_NO_ACTION")
-
-  private def whatIsTheNextActionFor(lastState: State, lastAction: Action, currentState: State): Action = {
-    policy.nextActionFrom(lastState, lastAction, currentState)
-  }
-
-  private def calculateRewardFor(lastState: State, lastAction: Action, currentState: State): Double = {
-    reward.forAction(lastState, lastAction, currentState)
-  }
-
   private def updateQValue(lastState: State, lastAction: Action, rewardForLastAction: Double, currentState: State, actionToTake: Action): Unit = {
     val oldQVal: Double = stateSpace(lastState)(lastAction)
     val currentStateQVal: Double = stateSpace(currentState)(actionToTake)
@@ -143,20 +84,21 @@ class TemporalDifferenceResourceManager(constants: RMConstants, streamingContext
     val newQVal: Double = ((1 - LearningFactor) * oldQVal) + (LearningFactor * (rewardForLastAction + (DiscountFactor * currentStateQVal)))
     stateSpace.updateQValueForAction(lastState, lastAction, newQVal)
 
-    log.info(s""" --- QValue-Update-Begin ---
-                | ==========================
-                | lastState=$lastState
-                | lastAction=$lastAction
-                | oldQValue=$oldQVal
-                | reward=$rewardForLastAction
-                | ==========================
-                | currentState=$currentState
-                | actionTotake=$actionToTake
-                | currentStateQValue=$currentStateQVal
-                | ==========================
-                | newQValue=$newQVal
-                | ==========================
-                | --- QValue-Update-End ---""".stripMargin)
+    log.info(
+      s""" --- QValue-Update-Begin ---
+         | ==========================
+         | lastState=$lastState
+         | lastAction=$lastAction
+         | oldQValue=$oldQVal
+         | reward=$rewardForLastAction
+         | ==========================
+         | currentState=$currentState
+         | actionTotake=$actionToTake
+         | currentStateQValue=$currentStateQVal
+         | ==========================
+         | newQValue=$newQVal
+         | ==========================
+         | --- QValue-Update-End ---""".stripMargin)
   }
 }
 
@@ -166,4 +108,3 @@ object TemporalDifferenceResourceManager {
     new TemporalDifferenceResourceManager(constants, ssc)
   }
 }
-
