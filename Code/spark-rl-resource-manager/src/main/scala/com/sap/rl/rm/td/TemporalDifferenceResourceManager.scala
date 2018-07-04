@@ -1,15 +1,15 @@
 package com.sap.rl.rm.td
 
-import org.apache.log4j.LogManager
+import com.sap.rl.rm.ResourceManager
+import org.apache.log4j.{LogManager, Logger}
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler._
 
-class TemporalDifferenceResourceManager(constants: RMConstants, streamingContext: StreamingContext)
-  extends ResourceManager(constants, streamingContext) {
+class TemporalDifferenceResourceManager(val constants: RMConstants, val streamingContext: StreamingContext) extends ResourceManager {
 
   import constants._
 
-  @transient private lazy val log = LogManager.getLogger(this.getClass)
+  @transient lazy val log: Logger = LogManager.getLogger(this.getClass)
 
   override def specialize(): Unit = {
     super.specialize()

@@ -1,7 +1,7 @@
 package org.apache.spark.streaming
 
+import com.sap.rl.rm.ResourceManager
 import org.apache.spark.streaming.StreamingContextWrapper.{DynamicResourceAllocationEnabledKey, StopSparkContextByDefaultKey}
-import org.apache.spark.streaming.scheduler.ResourceManager
 import org.apache.spark.{SparkContext, SparkDriverExecutionException}
 
 class StreamingContextWrapper(

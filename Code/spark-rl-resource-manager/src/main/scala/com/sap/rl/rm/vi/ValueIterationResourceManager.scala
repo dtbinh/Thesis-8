@@ -1,20 +1,16 @@
 package com.sap.rl.rm.vi
 
-import org.apache.log4j.LogManager
+import com.sap.rl.rm.ResourceManager
+import org.apache.log4j.{LogManager, Logger}
 import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.scheduler.{RMConstants, ResourceManager}
+import org.apache.spark.streaming.scheduler.RMConstants
 
-class ValueIterationResourceManager(constants: RMConstants, streamingContext: StreamingContext)
-  extends ResourceManager(constants, streamingContext) {
+class ValueIterationResourceManager(val constants: RMConstants, val streamingContext: StreamingContext) extends ResourceManager {
 
-  import constants._
-
-  @transient private lazy val log = LogManager.getLogger(this.getClass)
+  @transient lazy val log: Logger = LogManager.getLogger(this.getClass)
 
   override def specialize(): Unit = {
     super.specialize()
-
-
   }
 }
 

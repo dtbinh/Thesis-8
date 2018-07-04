@@ -1,6 +1,6 @@
 package org.apache.spark.streaming
 
-import org.apache.spark.streaming.scheduler.ResourceManager
+import com.sap.rl.rm.ResourceManager
 
 /**
  * Package object containing class extension for StreamingContext instantiation with custom

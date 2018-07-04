@@ -1,36 +1,23 @@
-package org.apache.spark.streaming.scheduler
+package com.sap.rl.rm
 
 import com.sap.rl.rm.Action._
 import com.sap.rl.rm.LogStatus._
 import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
-import com.sap.rl.rm.{Policy, Reward, State, StateSpace}
-import org.apache.log4j.LogManager
-import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.{ExecutorAllocationClient, SparkConf, SparkContext, SparkException}
+import org.apache.log4j.Logger
+import org.apache.spark.streaming.scheduler._
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.util.Random.shuffle
 
-abstract class ResourceManager(constants: RMConstants, streamingContext: StreamingContext) extends StreamingListener {
+abstract class ResourceManager extends StreamingListener with ExecutorAllocator {
 
-  import constants._
-
-  // Interface for manipulating number of executors
-  protected lazy val executorAllocator: ExecutorAllocationClient = sparkContext.schedulerBackend match {
-    case backend: ExecutorAllocationClient => backend
-    case _ =>
-      throw new SparkException(
-        """|Dynamic resource allocation doesn't work in local mode. Please consider using
-           |scheduler extending CoarseGrainedSchedulerBackend (such as Spark Standalone,
-           |YARN or Mesos).""".stripMargin
-      )
-  }
-  @transient private lazy val log = LogManager.getLogger(this.getClass)
-  protected val sparkConf: SparkConf = streamingContext.conf
-  protected val sparkContext: SparkContext = streamingContext.sparkContext
-  protected val batchDuration: Long = streamingContext.graph.batchDuration.milliseconds
-  protected val stateSpace: StateSpace = createStateSpace
-  protected val policy: Policy = createPolicy
-  protected val reward: Reward = createReward
+  protected lazy val sparkContext: SparkContext = streamingContext.sparkContext
+  protected lazy val sparkConf: SparkConf = sparkContext.getConf
+  protected lazy val stateSpace: StateSpace = createStateSpace
+  protected lazy val policy: Policy = createPolicy
+  protected lazy val reward: Reward = createReward
+  protected val log: Logger
+  protected val constants: RMConstants
   protected var streamingStartTime: Long = 0
   protected var lastTimeDecisionMade: Long = 0
   protected var runningSum: Int = 0
@@ -40,6 +27,8 @@ abstract class ResourceManager(constants: RMConstants, streamingContext: Streami
   protected var currentState: State = _
   protected var rewardForLastAction: Double = 0
   protected var actionToTake: Action = _
+
+  import constants._
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     streamingStartTime = streamingStarted.time
@@ -137,14 +126,12 @@ abstract class ResourceManager(constants: RMConstants, streamingContext: Streami
   }
 
   def scaleIn(): Unit = {
-    val killed: Seq[String] = executorAllocator.killExecutors(shuffle(workerExecutors).take(one))
+    val killed: Seq[String] = removeExecutors(shuffle(workerExecutors).take(one))
     log.info(s"$EXEC_KILL_OK -- Killed = $killed")
   }
 
-  def workerExecutors: Seq[String] = activeExecutors.diff(receiverExecutors)
-
   def scaleOut(): Unit = {
-    if (executorAllocator.requestExecutors(one)) log.info(s"$EXEC_ADD_OK")
+    if (addExecutors(one)) log.info(s"$EXEC_ADD_OK")
     else log.error(s"$EXEC_ADD_ERR")
   }
 
@@ -154,15 +141,7 @@ abstract class ResourceManager(constants: RMConstants, streamingContext: Streami
 
   def calculateRewardFor(): Double = reward.forAction(lastState, lastAction, currentState)
 
-  def numberOfWorkerExecutors: Int = numberOfActiveExecutors - numberOfReceiverExecutors
-
-  def numberOfActiveExecutors: Int = activeExecutors.size
-
-  def activeExecutors: Seq[String] = executorAllocator.getExecutorIds()
-
-  def numberOfReceiverExecutors: Int = receiverExecutors.size
-
-  def receiverExecutors: Seq[String] = streamingContext.scheduler.receiverTracker.allocatedExecutors.values.flatten.toSeq
+  def specialize(): Unit = {}
 
   def start(): Unit = log.info("Started resource manager")
 
@@ -173,6 +152,4 @@ abstract class ResourceManager(constants: RMConstants, streamingContext: Streami
   def createPolicy: Policy = DefaultPolicy(constants, stateSpace)
 
   def createReward: Reward = DefaultReward(constants, stateSpace)
-
-  def specialize(): Unit = { }
 }
