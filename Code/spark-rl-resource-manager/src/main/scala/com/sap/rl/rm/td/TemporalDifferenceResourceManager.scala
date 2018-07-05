@@ -8,16 +8,16 @@ class TemporalDifferenceResourceManager(val constants: RMConstants, val streamin
 
   import constants._
 
-  @transient lazy val log: Logger = LogManager.getLogger(this.getClass)
+  @transient override lazy val log: Logger = LogManager.getLogger(this.getClass)
 
   override def specialize(): Unit = {
     super.specialize()
 
-    val oldQVal: Double = stateSpace(lastState)(lastAction)
-    val currentStateQVal: Double = stateSpace(currentState)(actionToTake)
+    val oldQVal: Double = stateSpace(lastState.get)(lastAction.get)
+    val currentStateQVal: Double = stateSpace(currentState.get)(actionToTake.get)
 
-    val newQVal: Double = ((1 - LearningFactor) * oldQVal) + (LearningFactor * (rewardForLastAction + (DiscountFactor * currentStateQVal)))
-    stateSpace.updateQValueForAction(lastState, lastAction, newQVal)
+    val newQVal: Double = ((1 - LearningFactor) * oldQVal) + (LearningFactor * (rewardForLastAction.get + (DiscountFactor * currentStateQVal)))
+    stateSpace.updateQValueForAction(lastState.get, lastAction.get, newQVal)
 
     log.info(
       s""" --- QValue-Update-Begin ---
@@ -38,8 +38,7 @@ class TemporalDifferenceResourceManager(val constants: RMConstants, val streamin
 }
 
 object TemporalDifferenceResourceManager {
-  def apply(ssc: StreamingContext): TemporalDifferenceResourceManager = {
-    val constants: RMConstants = RMConstants(ssc.sparkContext.getConf)
+  def apply(constants: RMConstants, ssc: StreamingContext): TemporalDifferenceResourceManager = {
     new TemporalDifferenceResourceManager(constants, ssc)
   }
 }

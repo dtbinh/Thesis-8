@@ -2,11 +2,12 @@ package org.apache.spark.streaming.scheduler
 
 import com.sap.rl.rm.{RMConstants, ResourceManager}
 import org.apache.log4j.{LogManager, Logger}
+import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerApplicationStart}
 import org.apache.spark.streaming.StreamingContext
 
 class SparkResourceManager(val constants: RMConstants, val streamingContext: StreamingContext) extends ResourceManager {
 
-  @transient lazy val log: Logger = LogManager.getLogger(this.getClass)
+  @transient override lazy val log: Logger = LogManager.getLogger(this.getClass)
   private val batchDuration: Long = streamingContext.graph.batchDuration.milliseconds
 
   val listener: ExecutorAllocationManager = new ExecutorAllocationManager(executorAllocator,
@@ -17,20 +18,19 @@ class SparkResourceManager(val constants: RMConstants, val streamingContext: Str
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = listener.onBatchCompleted(batchCompleted)
 
-  override def start(): Unit = {
-    super.start()
+  override def onApplicationStart(applicationStart: SparkListenerApplicationStart): Unit = {
+    super[ResourceManager].onApplicationStart(applicationStart)
     listener.start()
   }
 
-  override def stop(): Unit = {
-    super.stop()
+  override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
+    super[ResourceManager].onApplicationEnd(applicationEnd)
     listener.stop()
   }
 }
 
 object SparkResourceManager {
-  def apply(ssc: StreamingContext): SparkResourceManager = {
-    val constants: RMConstants = RMConstants(ssc.conf)
+  def apply(constants: RMConstants, ssc: StreamingContext): SparkResourceManager = {
     new SparkResourceManager(constants, ssc)
   }
 }

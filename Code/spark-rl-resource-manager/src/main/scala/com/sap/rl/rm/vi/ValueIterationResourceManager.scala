@@ -6,7 +6,7 @@ import org.apache.spark.streaming.StreamingContext
 
 class ValueIterationResourceManager(val constants: RMConstants, val streamingContext: StreamingContext) extends ResourceManager {
 
-  @transient lazy val log: Logger = LogManager.getLogger(this.getClass)
+  @transient override lazy val log: Logger = LogManager.getLogger(this.getClass)
 
   override def specialize(): Unit = {
     super.specialize()
@@ -14,8 +14,7 @@ class ValueIterationResourceManager(val constants: RMConstants, val streamingCon
 }
 
 object ValueIterationResourceManager {
-  def apply(ssc: StreamingContext): ValueIterationResourceManager = {
-    val constants: RMConstants = RMConstants(ssc.sparkContext.getConf)
+  def apply(constants: RMConstants, ssc: StreamingContext): ValueIterationResourceManager = {
     new ValueIterationResourceManager(constants, ssc)
   }
 }

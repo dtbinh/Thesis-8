@@ -3,26 +3,31 @@ package com.sap.rl.rm
 object LogStatus extends Enumeration {
   type Status = Value
 
-  val STREAM_STARTED = Value
+  val APP_STARTED: Status = Value
+  val APP_ENDED: Status = Value
 
-  val BATCH_EMPTY = Value
-  val BATCH_OK = Value
-  val START_UP = Value
-  val GRACE_PERIOD = Value
+  val RM_STOPPED: Status = Value
+  val STREAMING_STARTED: Status = Value
+  val STREAMING_STOPPED: Status = Value
 
-  val FIRST_WINDOW = Value
-  val WINDOW_FULL = Value
-  val WINDOW_ADDED = Value
+  val BATCH_EMPTY: Status = Value
+  val BATCH_OK: Status = Value
+  val START_UP: Status = Value
+  val GRACE_PERIOD: Status = Value
 
-  val DECIDED = Value
+  val FIRST_WINDOW: Status = Value
+  val WINDOW_FULL: Status = Value
+  val WINDOW_ADDED: Status = Value
 
-  val EXEC_KILL_OK = Value
+  val DECIDED: Status = Value
 
-  val EXEC_ADD_OK = Value
-  val EXEC_ADD_ERR = Value
+  val EXEC_KILL_OK: Status = Value
 
-  val EXEC_EXCESSIVE = Value
-  val EXEC_NOT_ENOUGH = Value
+  val EXEC_ADD_OK: Status = Value
+  val EXEC_ADD_ERR: Status = Value
 
-  val EXEC_NO_ACTION = Value
+  val EXEC_EXCESSIVE: Status = Value
+  val EXEC_NOT_ENOUGH: Status = Value
+
+  val EXEC_NO_ACTION: Status = Value
 }
