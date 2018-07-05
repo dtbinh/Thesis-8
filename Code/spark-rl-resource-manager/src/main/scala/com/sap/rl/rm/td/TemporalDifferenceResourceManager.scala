@@ -1,9 +1,8 @@
 package com.sap.rl.rm.td
 
-import com.sap.rl.rm.ResourceManager
+import com.sap.rl.rm.{RMConstants, ResourceManager}
 import org.apache.log4j.{LogManager, Logger}
 import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.scheduler._
 
 class TemporalDifferenceResourceManager(val constants: RMConstants, val streamingContext: StreamingContext) extends ResourceManager {
 

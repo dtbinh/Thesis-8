@@ -3,12 +3,11 @@ package com.sap.rl
 import com.sap.rl.TestCommons._
 import com.sap.rl.implicits._
 import com.sap.rl.rm.Action._
-import com.sap.rl.rm.{State, StateSpace}
+import com.sap.rl.rm.RMConstants._
 import com.sap.rl.rm.impl.DefaultReward
+import com.sap.rl.rm.{RMConstants, State, StateSpace}
 import com.sap.rl.util.Precision
 import org.apache.spark.SparkConf
-import org.apache.spark.streaming.scheduler.RMConstants
-import org.apache.spark.streaming.scheduler.RMConstants._
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 class DefaultRewardTest extends FunSuite with BeforeAndAfter {

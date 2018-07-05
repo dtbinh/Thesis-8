@@ -1,15 +1,14 @@
 package com.sap.rl
 
 import com.sap.rl.rm.Action._
-import com.sap.rl.rm.{State, StateSpace}
+import com.sap.rl.rm.RMConstants._
+import com.sap.rl.rm.{RMConstants, State, StateSpace}
 import org.apache.spark.SparkConf
-import org.apache.spark.streaming.scheduler.RMConstants
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 class StateSpaceTest extends FunSuite with BeforeAndAfter {
 
   import com.sap.rl.TestCommons._
-  import org.apache.spark.streaming.scheduler.RMConstants._
 
   var sparkConf: SparkConf = _
 

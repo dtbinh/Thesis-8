@@ -1,7 +1,6 @@
 package com.sap.rl.rm
 
 import com.sap.rl.rm.Action._
-import org.apache.spark.streaming.scheduler.RMConstants
 
 import scala.collection.mutable
 import scala.collection.mutable.{HashMap => MutableHashMap}

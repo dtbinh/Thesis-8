@@ -1,10 +1,9 @@
 package com.sap.rl.rm.impl
 
-import com.sap.rl.rm.{Policy, State, StateSpace}
-import org.apache.log4j.LogManager
-import org.apache.spark.streaming.scheduler.RMConstants
 import com.sap.rl.rm.Action._
 import com.sap.rl.rm.LogStatus._
+import com.sap.rl.rm.{Policy, RMConstants, State, StateSpace}
+import org.apache.log4j.LogManager
 
 class DefaultPolicy(constants: RMConstants, stateSpace: StateSpace) extends Policy {
 
@@ -22,7 +21,7 @@ class DefaultPolicy(constants: RMConstants, stateSpace: StateSpace) extends Poli
     }
 
     if (currentState.numberOfExecutors > MinimumExecutors &&
-        currentState.latency < CoarseMinimumLatency) return ScaleIn
+      currentState.latency < CoarseMinimumLatency) return ScaleIn
 
     val currentExecutors = currentState.numberOfExecutors
     val qValues = currentExecutors match {
@@ -49,11 +48,21 @@ class DefaultPolicy(constants: RMConstants, stateSpace: StateSpace) extends Poli
 
     // monotonicity property
     if (currentState.latency < lastState.latency && lastAction == ScaleIn)
-      qValues.filterKeys { _ != ScaleOut }.maxBy { _._2 }._1
+      qValues.filterKeys {
+        _ != ScaleOut
+      }.maxBy {
+        _._2
+      }._1
     else if (currentState.latency > lastState.latency && lastAction == ScaleOut)
-      qValues.filterKeys { _ != ScaleIn }.maxBy { _._2 }._1
+      qValues.filterKeys {
+        _ != ScaleIn
+      }.maxBy {
+        _._2
+      }._1
     else
-      qValues.maxBy { _._2 }._1
+      qValues.maxBy {
+        _._2
+      }._1
   }
 }
 

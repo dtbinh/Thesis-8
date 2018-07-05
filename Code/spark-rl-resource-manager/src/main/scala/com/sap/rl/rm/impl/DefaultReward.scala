@@ -1,8 +1,7 @@
 package com.sap.rl.rm.impl
 
 import com.sap.rl.rm.Action._
-import com.sap.rl.rm.{Reward, State, StateSpace}
-import org.apache.spark.streaming.scheduler.RMConstants
+import com.sap.rl.rm.{RMConstants, Reward, State, StateSpace}
 
 class DefaultReward(constants: RMConstants, stateSpace: StateSpace) extends Reward {
 
