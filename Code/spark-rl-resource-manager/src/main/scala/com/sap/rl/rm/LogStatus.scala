@@ -6,6 +6,11 @@ object LogStatus extends Enumeration {
   val APP_STARTED: Status = Value
   val APP_ENDED: Status = Value
 
+  val SPARK_EXEC_ADDED: Status = Value
+  val SPARK_EXEC_REMOVED: Status = Value
+  val SPARK_EXEC_BLACKLISTED: Status = Value
+  val SPARK_EXEC_UNBLACKLISTED: Status = Value
+
   val RM_STOPPED: Status = Value
   val STREAMING_STARTED: Status = Value
   val STREAMING_STOPPED: Status = Value

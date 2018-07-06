@@ -4,7 +4,7 @@ import com.sap.rl.rm.Action._
 import com.sap.rl.rm.LogStatus._
 import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
 import org.apache.log4j.Logger
-import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerApplicationStart}
+import org.apache.spark.scheduler._
 import org.apache.spark.streaming.scheduler._
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -31,6 +31,30 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
   protected var resourceManagerStopped: Option[Boolean] = None
 
   import constants._
+
+  override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = {
+    super.onExecutorAdded(executorAdded)
+
+    log.info(s"$SPARK_EXEC_ADDED -- (ID,Time) = (${executorAdded.executorId},${executorAdded.time}")
+  }
+
+  override def onExecutorRemoved(executorRemoved: SparkListenerExecutorRemoved): Unit = {
+    super.onExecutorRemoved(executorRemoved)
+
+    log.info(s"$SPARK_EXEC_REMOVED -- (ID,Time) = (${executorRemoved.executorId},${executorRemoved.time}")
+  }
+
+  override def onExecutorBlacklisted(executorBlacklisted: SparkListenerExecutorBlacklisted): Unit = {
+    super.onExecutorBlacklisted(executorBlacklisted)
+
+    log.info(s"$SPARK_EXEC_BLACKLISTED -- (ID,Time) = (${executorBlacklisted.executorId},${executorBlacklisted.time}")
+  }
+
+  override def onExecutorUnblacklisted(executorUnblacklisted: SparkListenerExecutorUnblacklisted): Unit = {
+    super.onExecutorUnblacklisted(executorUnblacklisted)
+
+    log.info(s"$SPARK_EXEC_UNBLACKLISTED -- (ID,Time) = (${executorUnblacklisted.executorId},${executorUnblacklisted.time}")
+  }
 
   override def onApplicationStart(applicationStart: SparkListenerApplicationStart): Unit = {
     super.onApplicationStart(applicationStart)

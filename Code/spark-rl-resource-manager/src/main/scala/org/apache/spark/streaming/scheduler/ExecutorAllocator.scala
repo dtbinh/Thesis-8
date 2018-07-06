@@ -7,7 +7,7 @@ trait ExecutorAllocator {
 
   // Interface for manipulating number of executors
   protected lazy val executorAllocator: ExecutorAllocationClient = streamingContext.sparkContext.schedulerBackend match {
-    case backend: ExecutorAllocationClient => backend
+    case backend: ExecutorAllocationClient => backend.asInstanceOf[ExecutorAllocationClient]
     case _ =>
       throw new SparkException(
         """|Dynamic resource allocation doesn't work in local mode. Please consider using
