@@ -8,12 +8,11 @@ import org.scalatest.FunSuite
 
 class StateSpaceTest extends FunSuite {
 
-  var sparkConf: SparkConf = generateSparkConf()
+  val sparkConf: SparkConf = createSparkConf()
+  val constants: RMConstants = createRMConstants(sparkConf)
+  import constants._
 
   test("testInitialization") {
-    val constants: RMConstants = RMConstants(sparkConf)
-    import constants._
-
     val stateSpace = StateSpace(constants)
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) *
@@ -23,9 +22,7 @@ class StateSpaceTest extends FunSuite {
   }
 
   test("bestActionFor") {
-    val constants: RMConstants = RMConstants(sparkConf)
     val stateSpace = StateSpace(constants)
-    import constants._
 
     assert(BestReward == stateSpace(State(MinimumExecutors, CoarseMinimumLatency - 1, 10))(NoAction))
     assert(BestReward == stateSpace(State(12, 150, 10))(ScaleOut))

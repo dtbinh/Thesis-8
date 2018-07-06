@@ -26,10 +26,11 @@ class RMConstants(sparkConf: SparkConf) {
   final val CoarseMaximumLatency: Int = MaximumLatency / LatencyGranularity
   final val BestReward: Double = sparkConf.getDouble(BestRewardKey, BestRewardDefault)
   final val NoReward: Double = sparkConf.getDouble(NoRewardKey, NoRewardDefault)
-  final val NegativeRewardMultiplier = sparkConf.getInt(NegativeRewardMultiplierKey, NegativeRewardMultiplierDefault)
+  final val RewardMultiplier = sparkConf.getInt(RewardMultiplierKey, RewardMultiplierDefault)
   final val MaximumIncomingMessages = sparkConf.getInt(MaximumIncomingMessagesKey, MaximumIncomingMessagesDefault)
   final val IncomingMessagesGranularity = sparkConf.getInt(IncomingMessagesGranularityKey, IncomingMessagesGranularityDefault)
   final val CoarseMaximumIncomingMessages = MaximumIncomingMessages / IncomingMessagesGranularity
+  final val LatencyYellowZoneSteps: Int = sparkConf.getInt(LatencyYellowZoneStepsKey, LatencyYellowZoneStepsDefault)
   @transient private lazy val log = LogManager.getLogger(this.getClass)
 
   validateSettings()
@@ -46,7 +47,7 @@ class RMConstants(sparkConf: SparkConf) {
     require(LearningFactor >= 0 && LearningFactor <= 1)
     require(DiscountFactor >= 0 && DiscountFactor <= 1)
 
-    require(NegativeRewardMultiplier > 0)
+    require(RewardMultiplier > 0)
 
     require(BestReward > NoReward)
 
@@ -77,9 +78,10 @@ class RMConstants(sparkConf: SparkConf) {
          | CoarseMaximumLatency: $CoarseMaximumLatency
          | BestReward: $BestReward
          | NoReward: $NoReward
-         | NegativeRewardMultiplier: $NegativeRewardMultiplier
+         | RewardMultiplier: $RewardMultiplier
          | MaximumIncomingMessages: $MaximumIncomingMessages
          | IncomingMessagesGranularity: $IncomingMessagesGranularity
+         | LatencyYellowZoneSteps: $LatencyYellowZoneSteps
          | --- Configuration ---""".stripMargin
 
     log.info(config)
@@ -129,12 +131,14 @@ object RMConstants {
   final val BestRewardDefault = 1.0
   final val NoRewardKey = "spark.streaming.dynamicAllocation.noReward"
   final val NoRewardDefault = 0
-  final val NegativeRewardMultiplierKey = "spark.streaming.dynamicAllocation.negativeRewardMultiplier"
-  final val NegativeRewardMultiplierDefault = 5
+  final val RewardMultiplierKey = "spark.streaming.dynamicAllocation.RewardMultiplier"
+  final val RewardMultiplierDefault = 5
   final val MaximumIncomingMessagesKey = "spark.streaming.dynamicAllocation.maximumIncomingMessages"
   final val MaximumIncomingMessagesDefault = 20000
   final val IncomingMessagesGranularityKey = "spark.streaming.dynamicAllocation.incomingMessagesGranularity"
   final val IncomingMessagesGranularityDefault = 200
+  final val LatencyYellowZoneStepsKey = "spark.streaming.dynamicAllocation.latencyYellowZoneSteps"
+  final val LatencyYellowZoneStepsDefault = 5
 
   def apply(sparkConf: SparkConf): RMConstants = new RMConstants(sparkConf)
 }

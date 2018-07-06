@@ -1,6 +1,8 @@
 package com.sap.rl
 
+import com.sap.rl.rm.RMConstants
 import com.sap.rl.rm.RMConstants._
+import com.sap.rl.util.Precision
 import org.apache.log4j.BasicConfigurator
 import org.apache.spark.SparkConf
 
@@ -9,7 +11,9 @@ object TestCommons {
   // configure log4j
   BasicConfigurator.configure()
 
-  def generateSparkConf(): SparkConf = new SparkConf()
+  implicit val p: Precision = Precision()
+
+  def createSparkConf(): SparkConf = new SparkConf()
     .setMaster("local[2]")
     .setAppName(this.getClass.getSimpleName)
     .set(CoresPerTaskKey, "1")
@@ -22,4 +26,6 @@ object TestCommons {
     .set(MaximumLatencyKey, "10000")
     .set(MaximumIncomingMessagesKey, "10000")
     .set(IncomingMessagesGranularityKey, "400")
+
+  def createRMConstants(sparkConf: SparkConf): RMConstants = RMConstants(sparkConf)
 }
