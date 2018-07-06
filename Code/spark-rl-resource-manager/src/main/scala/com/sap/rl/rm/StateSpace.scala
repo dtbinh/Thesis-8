@@ -16,8 +16,6 @@ class StateSpace(value: MutableHashMap[State, MutableHashMap[Action, Double]]) {
 
   def apply(s: State, a: Action): Double = value(s)(a)
 
-  def size: Int = value.size
-
   override def toString: String = {
     val content = StringBuilder.newBuilder
     val sep = System.getProperty("line.separator")
@@ -38,6 +36,8 @@ class StateSpace(value: MutableHashMap[State, MutableHashMap[Action, Double]]) {
        | ----------------
      """.stripMargin
   }
+
+  def size: Int = value.size
 }
 
 object StateSpace {
@@ -49,21 +49,22 @@ object StateSpace {
     for {
       exe <- MinimumExecutors to MaximumExecutors
       lat <- 0 until CoarseMaximumLatency
+      incomingMsg <- 0 until CoarseMaximumIncomingMessages
     } {
       if (lat < CoarseMinimumLatency) {
         // prefer to scale-in, in case scaleIn is not possible, do nothing
         exe match {
-          case MinimumExecutors => add(space, exe, lat, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = NoReward)
-          case _ => add(space, exe, lat, scaleOutReward = NoReward, noActionReward = NoReward, scaleInReward = BestReward)
+          case MinimumExecutors => add(space, exe, lat, incomingMsg, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = NoReward)
+          case _ => add(space, exe, lat, incomingMsg, scaleOutReward = NoReward, noActionReward = NoReward, scaleInReward = BestReward)
         }
       } else if (lat >= CoarseMinimumLatency && lat < CoarseTargetLatency) {
         // prefer no-action
-        add(space, exe, lat, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = NoReward)
+        add(space, exe, lat, incomingMsg, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = NoReward)
       } else {
         // prefer to scale-out, in case there is not enough executors, prefer NoAction
         exe match {
-          case MaximumExecutors=> add(space, exe, lat, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = NoReward)
-          case _ => add(space, exe, lat, scaleOutReward = BestReward, noActionReward = NoReward, scaleInReward = NoReward)
+          case MaximumExecutors => add(space, exe, lat, incomingMsg, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = NoReward)
+          case _ => add(space, exe, lat, incomingMsg, scaleOutReward = BestReward, noActionReward = NoReward, scaleInReward = NoReward)
         }
       }
     }
@@ -75,17 +76,18 @@ object StateSpace {
                    stateSpace: MutableHashMap[State, MutableHashMap[Action, Double]],
                    numberOfExecutors: Int,
                    latency: Int,
+                   incomingMsgs: Int,
                    scaleOutReward: Double,
                    noActionReward: Double,
                    scaleInReward: Double
                  ): Unit = {
 
     stateSpace += (
-      State(numberOfExecutors, latency) ->
+      State(numberOfExecutors, latency, incomingMsgs) ->
         mutable.HashMap(
           ScaleOut -> scaleOutReward,
           NoAction -> noActionReward,
-          ScaleIn  -> scaleInReward
+          ScaleIn -> scaleInReward
         )
       )
   }

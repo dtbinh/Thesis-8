@@ -7,7 +7,6 @@ class RMConstants(sparkConf: SparkConf) {
 
   import RMConstants._
 
-  final val one: Int = 1
   final val CoresPerTask: Int = sparkConf.getInt(CoresPerTaskKey, CoresPerTaskDefault)
   final val CoresPerExecutor: Int = sparkConf.getInt(CoresPerExecutorKey, CoresPerExecutorDefault)
   final val BackupExecutors: Int = sparkConf.getInt(BackupExecutorsKey, BackupExecutorsDefault)
@@ -28,6 +27,9 @@ class RMConstants(sparkConf: SparkConf) {
   final val BestReward: Double = sparkConf.getDouble(BestRewardKey, BestRewardDefault)
   final val NoReward: Double = sparkConf.getDouble(NoRewardKey, NoRewardDefault)
   final val NegativeRewardMultiplier = sparkConf.getInt(NegativeRewardMultiplierKey, NegativeRewardMultiplierDefault)
+  final val MaximumIncomingMessages = sparkConf.getInt(MaximumIncomingMessagesKey, MaximumIncomingMessagesDefault)
+  final val IncomingMessagesGranularity = sparkConf.getInt(IncomingMessagesGranularityKey, IncomingMessagesGranularityDefault)
+  final val CoarseMaximumIncomingMessages = MaximumIncomingMessages / IncomingMessagesGranularity
   @transient private lazy val log = LogManager.getLogger(this.getClass)
 
   validateSettings()
@@ -47,6 +49,10 @@ class RMConstants(sparkConf: SparkConf) {
     require(NegativeRewardMultiplier > 0)
 
     require(BestReward > NoReward)
+
+    require(MaximumIncomingMessages > IncomingMessagesGranularity)
+    require(MaximumIncomingMessages > 0)
+    require(IncomingMessagesGranularity > 0)
   }
 
   private def logConfiguration(): Unit = {
@@ -72,6 +78,8 @@ class RMConstants(sparkConf: SparkConf) {
          | BestReward: $BestReward
          | NoReward: $NoReward
          | NegativeRewardMultiplier: $NegativeRewardMultiplier
+         | MaximumIncomingMessages: $MaximumIncomingMessages
+         | IncomingMessagesGranularity: $IncomingMessagesGranularity
          | --- Configuration ---""".stripMargin
 
     log.info(config)
@@ -79,6 +87,15 @@ class RMConstants(sparkConf: SparkConf) {
 }
 
 object RMConstants {
+
+  final val One: Int = 1
+
+  final val LessThan: Int = -1
+  final val GreaterThan: Int = 1
+  final val Equal: Int = 0
+
+  final val IsInvalid: Boolean = true
+  final val IsValid: Boolean = !IsInvalid
 
   final val CoresPerTaskKey = "spark.task.cpus"
   final val CoresPerTaskDefault = 1
@@ -114,6 +131,10 @@ object RMConstants {
   final val NoRewardDefault = 0
   final val NegativeRewardMultiplierKey = "spark.streaming.dynamicAllocation.negativeRewardMultiplier"
   final val NegativeRewardMultiplierDefault = 5
+  final val MaximumIncomingMessagesKey = "spark.streaming.dynamicAllocation.maximumIncomingMessages"
+  final val MaximumIncomingMessagesDefault = 20000
+  final val IncomingMessagesGranularityKey = "spark.streaming.dynamicAllocation.incomingMessagesGranularity"
+  final val IncomingMessagesGranularityDefault = 200
 
   def apply(sparkConf: SparkConf): RMConstants = new RMConstants(sparkConf)
 }

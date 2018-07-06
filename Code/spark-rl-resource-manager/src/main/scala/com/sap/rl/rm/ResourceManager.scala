@@ -7,6 +7,7 @@ import org.apache.log4j.Logger
 import org.apache.spark.scheduler._
 import org.apache.spark.streaming.scheduler._
 import org.apache.spark.{SparkConf, SparkContext}
+import RMConstants._
 
 import scala.util.Random.shuffle
 
@@ -23,6 +24,7 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
   protected var lastTimeDecisionMade: Option[Long] = None
   protected var runningSum: Option[Int] = None
   protected var numberOfBatches: Option[Int] = None
+  protected var incomingMessages: Option[Int] = None
   protected var lastState: Option[State] = None
   protected var lastAction: Option[Action] = None
   protected var currentState: Option[State] = None
@@ -59,7 +61,12 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
   override def onApplicationStart(applicationStart: SparkListenerApplicationStart): Unit = {
     super.onApplicationStart(applicationStart)
 
+    // initialize variables
     resourceManagerStopped = Some(false)
+    runningSum = Some(0)
+    numberOfBatches = Some(0)
+    incomingMessages = Some(0)
+
     log.info(s"$APP_STARTED -- ApplicationStartTime = ${applicationStart.time}")
   }
 
@@ -77,6 +84,13 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
     log.info(s"$STREAMING_STARTED -- StreamingStartTime = $streamingStartTime")
   }
 
+  def isResourceManagerStopped: Boolean = resourceManagerStopped match {
+    case None | Some(false) =>
+      log.warn(s"$RM_STOPPED")
+      true
+    case _ => false
+  }
+
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
     if (isResourceManagerStopped) return
     if (isStreamingStopped) return
@@ -84,10 +98,11 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
     val info: BatchInfo = batchCompleted.batchInfo
 
     // check if batch is valid
-    if (!isValidBatch(info)) return
+    if (isInvalidBatch(info)) return
 
     runningSum = Some(runningSum.get + info.totalDelay.get.toInt)
     numberOfBatches = Some(numberOfBatches.get + 1)
+    incomingMessages = Some(incomingMessages.get + info.numRecords.toInt)
 
     if (numberOfBatches.get < WindowSize) {
       log.info(s"$WINDOW_ADDED -- (RunningSum,NumberOfBatches) = ($runningSum,$numberOfBatches)")
@@ -95,14 +110,18 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
     }
     log.info(s"$WINDOW_FULL -- (RunningSum,NumberOfBatches) = ($runningSum,$numberOfBatches)")
 
+    val currentNumberOfExecutors: Int = numberOfWorkerExecutors
     val currentLatency: Int = runningSum.get / (numberOfBatches.get * LatencyGranularity)
+    val currentIncomingMessages: Int = incomingMessages.get / (numberOfBatches.get * IncomingMessagesGranularity)
 
     // reset
     runningSum = Some(0)
     numberOfBatches = Some(0)
+    incomingMessages = Some(0)
 
     // build the state variable
-    currentState = Some(State(numberOfWorkerExecutors, currentLatency))
+    currentState = Some(State(currentNumberOfExecutors, currentLatency, currentIncomingMessages))
+    if (isInvalidState(currentState.get)) return
 
     // do nothing and just initialize to no action
     if (lastState == null) {
@@ -129,24 +148,36 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
     setDecisionTime()
   }
 
-  def isValidBatch(info: BatchInfo): Boolean = {
+  def isInvalidBatch(info: BatchInfo): Boolean = {
     val batchTime: Long = info.batchTime.milliseconds
 
-    val isValid: Boolean = if (info.totalDelay.isEmpty) {
-      log.info(s"$BATCH_EMPTY -- BatchTime = $batchTime [ms]")
-      false
+    if (info.processingDelay.isEmpty) {
+      log.warn(s"$BATCH_EMPTY -- BatchTime = $batchTime [ms]")
+      IsInvalid
     } else if (batchTime <= (streamingStartTime.get + StartupWaitTime)) {
       log.info(s"$START_UP -- BatchTime = $batchTime [ms]")
-      false
+      IsInvalid
     } else if (batchTime <= (lastTimeDecisionMade.get + GracePeriod)) {
       log.info(s"$GRACE_PERIOD -- BatchTime = $batchTime [ms]")
-      false
+      IsInvalid
     } else {
       log.info(s"$BATCH_OK -- BatchTime = $batchTime [ms]")
-      true
+      IsValid
     }
+  }
 
-    isValid
+  def isInvalidState(state: State): Boolean = if (state.numberOfExecutors > MaximumExecutors) {
+    log.warn(s"$INVALID_STATE_EXCESSIVE_EXECUTORS -- $state")
+    IsInvalid
+  } else if (state.latency >= CoarseMaximumLatency) {
+    log.warn(s"$INVALID_STATE_EXCESSIVE_LATENCY -- $state")
+    IsInvalid
+  } else if (state.incomingMessages >= CoarseMaximumIncomingMessages) {
+    log.warn(s"$INVALID_STATE_EXCESSIVE_INCOMING_MESSAGES -- $state")
+    IsInvalid
+  } else {
+    log.info(s"$STATE_OK -- $state")
+    IsValid
   }
 
   def init(): Unit = {
@@ -169,12 +200,12 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
   }
 
   def scaleIn(): Unit = {
-    val killed: Seq[String] = removeExecutors(shuffle(workerExecutors).take(one))
+    val killed: Seq[String] = removeExecutors(shuffle(workerExecutors).take(One))
     log.info(s"$EXEC_KILL_OK -- Killed = $killed")
   }
 
   def scaleOut(): Unit = {
-    if (addExecutors(one)) log.info(s"$EXEC_ADD_OK")
+    if (addExecutors(One)) log.info(s"$EXEC_ADD_OK")
     else log.error(s"$EXEC_ADD_ERR")
   }
 
@@ -186,23 +217,16 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
 
   def specialize(): Unit = {}
 
-  def createStateSpace: StateSpace = StateSpace(constants)
-
-  def createPolicy: Policy = DefaultPolicy(constants, stateSpace)
-
-  def createReward: Reward = DefaultReward(constants, stateSpace)
-
-  def isResourceManagerStopped: Boolean = resourceManagerStopped match {
-    case None | Some(false) =>
-      log.warn(s"$RM_STOPPED")
-      true
-    case _ => false
-  }
-
   def isStreamingStopped: Boolean = streamingStartTime match {
     case None =>
       log.warn(s"$STREAMING_STOPPED")
       true
     case _ => false
   }
+
+  def createStateSpace: StateSpace = StateSpace(constants)
+
+  def createPolicy: Policy = DefaultPolicy(constants, stateSpace)
+
+  def createReward: Reward = DefaultReward(constants, stateSpace)
 }
