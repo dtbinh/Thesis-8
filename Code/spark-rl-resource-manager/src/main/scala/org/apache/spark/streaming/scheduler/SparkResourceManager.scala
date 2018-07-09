@@ -1,6 +1,5 @@
 package org.apache.spark.streaming.scheduler
 
-import com.sap.rl.rm.LogStatus._
 import com.sap.rl.rm.{RMConstants, ResourceManager}
 import org.apache.log4j.{LogManager, Logger}
 import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerApplicationStart}
@@ -27,21 +26,12 @@ class SparkResourceManager(val constants: RMConstants, val streamingContext: Str
     listener.stop()
   }
 
-  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
-    super.onStreamingStarted(streamingStarted)
-  }
-
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
+    super.onBatchCompleted(batchCompleted)
     listener.onBatchCompleted(batchCompleted)
 
     // count and log SLO violations
-    if (super.isSLOViolated(batchCompleted.batchInfo)) {
-      super.incrementSLOViolations()
-      log.warn(
-        s""" --- $SLO_VIOLATION ---
-           | SLOViolations=${numberOfSLOViolations.get()}
-     """.stripMargin)
-    }
+    logAndCountSLOInfo(batchCompleted.batchInfo)
   }
 }
 

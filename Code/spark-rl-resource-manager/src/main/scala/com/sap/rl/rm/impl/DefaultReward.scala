@@ -1,53 +1,32 @@
 package com.sap.rl.rm.impl
 
+import java.lang.Math.abs
+
 import com.sap.rl.rm.Action._
+import com.sap.rl.rm.RMConstants._
 import com.sap.rl.rm.{RMConstants, Reward, State, StateSpace}
-import org.apache.log4j.LogManager
 
 class DefaultReward(constants: RMConstants, stateSpace: StateSpace) extends Reward {
 
   import constants._
 
-  @transient private lazy val log = LogManager.getLogger(this.getClass)
-
   override def forAction(lastState: State, lastAction: Action, currentState: State): Double = {
-    if (isInDangerZone(lastState, currentState)) {
-      if (lastAction == ScaleOut) {
-        log.info("")
-        BestReward
-      }
+    if (isStateInDangerZone(currentState))
+      if (lastAction == ScaleOut)
+        abs(dangerZoneLatencyDifference(currentState))
       else
-        // if we are in danger zone, no matter which action to take, it is still bad.
-        RewardMultiplier * (CoarseTargetLatency - currentState.latency).toDouble / currentState.latency
-    } else {
-      // if we are in absolute safe zone, ScaleIn has the best reward
-      if (isInAbsoluteSafeZone(lastState, currentState) && lastAction == ScaleIn) BestReward
-      // prefer scale-out when we are in danger zone
-      else if (isStateInYellowZone(currentState) && isLoadIncreasing(lastState, currentState))
-        if (lastAction == ScaleOut) BestReward
-        else -BestReward
-      else if (lastAction == ScaleOut) -BestReward
-      else if (isLoadDecreasing(lastState, currentState) && lastAction == NoAction) -BestReward
-      else BestReward / currentState.numberOfExecutors
-    }
+        dangerZoneLatencyDifference(currentState)
+    else
+      safeZoneLatencyDifference(currentState) * LatencyGranularity / currentState.numberOfExecutors
   }
 
-  def isInDangerZone(lastState: State, currentState: State): Boolean =
-    lastState.latency >= CoarseTargetLatency || currentState.latency >= CoarseTargetLatency
+  def incomingMessageDifference(lastState: State, currentState: State): Int = currentState.incomingMessages - lastState.incomingMessages
 
-  def isInAbsoluteSafeZone(lastState: State, currentState: State): Boolean =
-    lastState.latency < CoarseMinimumLatency && currentState.latency < CoarseMinimumLatency
+  def dangerZoneLatencyDifference(s: State): Double = CoarseTargetLatency - (s.latency + One)
 
-  def isBothStatesInYellowZone(lastState: State, currentState: State): Boolean =
-    isStateInYellowZone(lastState) && isStateInYellowZone(currentState)
+  def safeZoneLatencyDifference(s: State): Double = CoarseTargetLatency - s.latency
 
-  def isStateInYellowZone(s: State): Boolean = s.latency >= CoarseTargetLatency - LatencyYellowZoneSteps
-
-  def isLoadIncreasing(lastState: State, currentState: State): Boolean =
-    currentState.incomingMessages > lastState.incomingMessages
-
-  def isLoadDecreasing(lastState: State, currentState: State): Boolean =
-    currentState.incomingMessages < lastState.incomingMessages
+  def isStateInDangerZone(s: State): Boolean = s.latency >= CoarseTargetLatency
 }
 
 object DefaultReward {

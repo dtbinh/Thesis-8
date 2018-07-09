@@ -4,6 +4,7 @@ import com.sap.rl.rm.Action._
 import com.sap.rl.rm.LogStatus._
 import com.sap.rl.rm.RMConstants._
 import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
+import org.apache.log4j.Logger
 import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted}
 
 import scala.util.Random.shuffle
@@ -22,12 +23,14 @@ trait RLResourceManager extends ResourceManager {
   protected var rewardForLastAction: Double = 0
   protected var actionToTake: Action = _
   protected var lastTimeDecisionMade: Long = 0
+  protected val log: Logger
 
   import constants._
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
-    val info: BatchInfo = batchCompleted.batchInfo
+    super.onBatchCompleted(batchCompleted)
 
+    val info: BatchInfo = batchCompleted.batchInfo
     // check if batch is valid
     if (isInvalidBatch(info)) return
 
@@ -56,7 +59,7 @@ trait RLResourceManager extends ResourceManager {
     if (isInvalidState(currentState)) return
 
     // count and log SLO violations
-    logAndCountSLOViolation(info)
+    logAndCountSLOInfo(info)
 
     // do nothing and just initialize to no action
     if (lastState == null) {
@@ -83,27 +86,11 @@ trait RLResourceManager extends ResourceManager {
     setDecisionTime()
   }
 
-  def logAndCountSLOViolation(info: BatchInfo): Unit = {
-    // log current and last state, as well
-    if (super.isSLOViolated(info)) {
-      super.incrementSLOViolations()
-      log.warn(
-        s""" --- $SLO_VIOLATION ---
-           | SLOViolations=${numberOfSLOViolations.get()}
-           | lastState=$lastState
-           | lastAction=$lastAction
-           | currentState=$currentState""".stripMargin)
-    }
-  }
-
   def isInvalidBatch(info: BatchInfo): Boolean = {
     val batchTime: Long = info.batchTime.milliseconds
 
     if (info.processingDelay.isEmpty) {
       log.warn(s"$BATCH_EMPTY -- BatchTime = $batchTime [ms]")
-      IsInvalid
-    } else if (batchTime <= (streamingStartTime + StartupWaitTime)) {
-      log.info(s"$START_UP -- BatchTime = $batchTime [ms]")
       IsInvalid
     } else if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
       log.info(s"$GRACE_PERIOD -- BatchTime = $batchTime [ms]")

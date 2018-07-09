@@ -12,23 +12,22 @@ class DefaultRewardTest extends FunSuite {
 
   val sparkConf: SparkConf = createSparkConf()
   val constants: RMConstants = RMConstants(sparkConf)
-  import constants._
 
   test("rewardForLowerLatency") {
     val stateSpace = StateSpace(constants)
     val rewardFunc: DefaultReward = DefaultReward(constants, stateSpace)
 
-    assert(-BestReward ~= rewardFunc.forAction(State(10, 12, 10), ScaleOut, State(9, 15, 10)))
-    assert(BestReward ~= rewardFunc.forAction(State(10, 20, 10), ScaleIn, State(9, 10, 10)))
-    assert(BestReward / 20 ~= rewardFunc.forAction(State(20, 10, 10), NoAction, State(20, 11, 10)))
-    assert(BestReward ~= rewardFunc.forAction(State(10, 12, 10), ScaleOut, State(11, 50, 10)))
+    assert(rewardFunc.forAction(State(10, 12, 10), ScaleOut, State(11, 15, 10)) ~= 45.4545)
+    assert(rewardFunc.forAction(State(10, 20, 10), ScaleIn, State(9, 10, 10)) ~= 66.6666)
+    assert(rewardFunc.forAction(State(20, 10, 10), NoAction, State(20, 11, 10)) ~= 29)
   }
 
   test("rewardForHigherLatency") {
     val stateSpace = StateSpace(constants)
     val rewardFunc: DefaultReward = DefaultReward(constants, stateSpace)
 
-    assert(BestReward ~= rewardFunc.forAction(State(10, 12, 10), ScaleOut, State(12, 40, 10)))
-    assert(-0.121 ~= rewardFunc.forAction(State(10, 12, 10), NoAction, State(10, 41, 10)))
+    assert(rewardFunc.forAction(State(10, 12, 10), ScaleOut, State(11, 50, 10)) ~= 11)
+    assert(rewardFunc.forAction(State(10, 12, 10), ScaleIn, State(9, 40, 10)) ~= -1)
+    assert(rewardFunc.forAction(State(10, 12, 10), NoAction, State(10, 41, 10)) ~= -2)
   }
 }

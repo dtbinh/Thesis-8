@@ -10,11 +10,10 @@ object LogStatus extends Enumeration {
   val SPARK_EXEC_ADDED: Status = Value
   val SPARK_EXEC_REMOVED: Status = Value
 
-  val SLO_VIOLATION: Status = Value
+  val SLO_INFO: Status = Value
 
   val BATCH_EMPTY: Status = Value
   val BATCH_OK: Status = Value
-  val START_UP: Status = Value
   val GRACE_PERIOD: Status = Value
 
   val FIRST_WINDOW: Status = Value

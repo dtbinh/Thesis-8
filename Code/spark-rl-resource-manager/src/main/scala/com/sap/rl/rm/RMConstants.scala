@@ -16,7 +16,6 @@ class RMConstants(sparkConf: SparkConf) {
   final val MaximumLatency: Int = sparkConf.getTimeAsMs(MaximumLatencyKey, MaximumLatencyDefault).toInt
   final val TargetLatency: Int = sparkConf.getTimeAsMs(TargetLatencyKey, TargetLatencyDefault).toInt
   final val LatencyGranularity: Int = sparkConf.getTimeAsMs(LatencyGranularityKey, LatencyGranularityDefault).toInt
-  final val StartupWaitTime: Int = sparkConf.getTimeAsMs(StartupWaitTimeKey, StartupWaitTimeDefault).toInt
   final val GracePeriod: Int = sparkConf.getTimeAsMs(GracePeriodKey, GracePeriodDefault).toInt
   final val WindowSize: Int = sparkConf.getInt(WindowSizeKey, WindowSizeDefault)
   final val LearningFactor: Double = sparkConf.getDouble(LearningFactorKey, LearningFactorDefault)
@@ -26,7 +25,6 @@ class RMConstants(sparkConf: SparkConf) {
   final val CoarseMaximumLatency: Int = MaximumLatency / LatencyGranularity
   final val BestReward: Double = sparkConf.getDouble(BestRewardKey, BestRewardDefault)
   final val NoReward: Double = sparkConf.getDouble(NoRewardKey, NoRewardDefault)
-  final val RewardMultiplier = sparkConf.getInt(RewardMultiplierKey, RewardMultiplierDefault)
   final val MaximumIncomingMessages = sparkConf.getInt(MaximumIncomingMessagesKey, MaximumIncomingMessagesDefault)
   final val IncomingMessagesGranularity = sparkConf.getInt(IncomingMessagesGranularityKey, IncomingMessagesGranularityDefault)
   final val CoarseMaximumIncomingMessages = MaximumIncomingMessages / IncomingMessagesGranularity
@@ -47,8 +45,6 @@ class RMConstants(sparkConf: SparkConf) {
     require(LearningFactor >= 0 && LearningFactor <= 1)
     require(DiscountFactor >= 0 && DiscountFactor <= 1)
 
-    require(RewardMultiplier > 0)
-
     require(BestReward > NoReward)
 
     require(MaximumIncomingMessages > IncomingMessagesGranularity)
@@ -68,7 +64,6 @@ class RMConstants(sparkConf: SparkConf) {
          | MaximumLatency: $MaximumLatency
          | TargetLatency: $TargetLatency
          | LatencyGranularity: $LatencyGranularity
-         | StartupWaitTime: $StartupWaitTime
          | GracePeriod: $GracePeriod
          | WindowSize: $WindowSize
          | LearningFactor: $LearningFactor
@@ -78,7 +73,6 @@ class RMConstants(sparkConf: SparkConf) {
          | CoarseMaximumLatency: $CoarseMaximumLatency
          | BestReward: $BestReward
          | NoReward: $NoReward
-         | RewardMultiplier: $RewardMultiplier
          | MaximumIncomingMessages: $MaximumIncomingMessages
          | IncomingMessagesGranularity: $IncomingMessagesGranularity
          | LatencyYellowZoneSteps: $LatencyYellowZoneSteps
@@ -91,6 +85,7 @@ class RMConstants(sparkConf: SparkConf) {
 object RMConstants {
 
   final val One: Int = 1
+  final val Zero: Int = 0
 
   final val LessThan: Int = -1
   final val GreaterThan: Int = 1
@@ -117,8 +112,6 @@ object RMConstants {
   final val TargetLatencyDefault = "800ms"
   final val LatencyGranularityKey = "spark.streaming.dynamicAllocation.latencyGranularity"
   final val LatencyGranularityDefault = "10ms"
-  final val StartupWaitTimeKey = "spark.streaming.dynamicAllocation.startupWaitTime"
-  final val StartupWaitTimeDefault = "60s"
   final val GracePeriodKey = "spark.streaming.dynamicAllocation.gracePeriodKey"
   final val GracePeriodDefault = "60s"
   final val WindowSizeKey = "spark.streaming.dynamicAllocation.windowSize"
@@ -131,8 +124,6 @@ object RMConstants {
   final val BestRewardDefault = 1.0
   final val NoRewardKey = "spark.streaming.dynamicAllocation.noReward"
   final val NoRewardDefault = 0
-  final val RewardMultiplierKey = "spark.streaming.dynamicAllocation.RewardMultiplier"
-  final val RewardMultiplierDefault = 5
   final val MaximumIncomingMessagesKey = "spark.streaming.dynamicAllocation.maximumIncomingMessages"
   final val MaximumIncomingMessagesDefault = 20000
   final val IncomingMessagesGranularityKey = "spark.streaming.dynamicAllocation.incomingMessagesGranularity"
