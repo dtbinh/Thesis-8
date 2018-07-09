@@ -17,10 +17,16 @@ class DefaultReward(constants: RMConstants, stateSpace: StateSpace) extends Rewa
       else
         dangerZoneLatencyDifference(currentState)
     else
+      // TODO: LatencyGranularity or incomingMessages?
       safeZoneLatencyDifference(currentState) * LatencyGranularity / currentState.numberOfExecutors
   }
 
-  def incomingMessageDifference(lastState: State, currentState: State): Int = currentState.incomingMessages - lastState.incomingMessages
+  def incomingMessageDifference(lastState: State, currentState: State): Int = {
+    val diff: Int = lastState.incomingMessages - currentState.incomingMessages
+    if (diff == Zero) One
+    else if (diff > Zero) diff
+    else Zero
+  }
 
   def dangerZoneLatencyDifference(s: State): Double = CoarseTargetLatency - (s.latency + One)
 

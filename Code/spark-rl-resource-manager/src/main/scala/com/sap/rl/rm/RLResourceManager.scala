@@ -140,6 +140,7 @@ trait RLResourceManager extends ResourceManager {
   }
 
   def scaleOut(): Unit = {
+    // TODO: ScaleOut at fixed or exponential steps?
     if (addExecutors(One)) log.info(s"$EXEC_ADD_OK")
     else log.error(s"$EXEC_ADD_ERR")
   }
