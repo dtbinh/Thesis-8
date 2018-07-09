@@ -4,6 +4,7 @@ import org.apache.spark.scheduler._
 
 // Since SparkListener is not a trait, it can't be mixed in to Resourcemanager
 trait SparkListenerTrait extends SparkListenerInterface {
+
   override def onStageCompleted(stageCompleted: SparkListenerStageCompleted): Unit = {}
 
   override def onStageSubmitted(stageSubmitted: SparkListenerStageSubmitted): Unit = {}

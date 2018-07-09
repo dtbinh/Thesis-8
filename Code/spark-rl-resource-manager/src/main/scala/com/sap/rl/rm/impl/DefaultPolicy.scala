@@ -12,16 +12,7 @@ class DefaultPolicy(constants: RMConstants, stateSpace: StateSpace) extends Poli
   import constants._
 
   override def nextActionFrom(lastState: State, lastAction: Action, currentState: State): Action = {
-    if (currentState.latency >= CoarseTargetLatency) {
-      log.warn(
-        s""" --- SLO VIOLATION ---
-           | lastState=$lastState
-           | lastAction=$lastAction
-           | currentState=$currentState""".stripMargin)
-    }
-
-    if (currentState.numberOfExecutors > MinimumExecutors &&
-      currentState.latency < CoarseMinimumLatency) return ScaleIn
+    if (currentState.numberOfExecutors > MinimumExecutors && currentState.latency < CoarseMinimumLatency) return ScaleIn
 
     val currentExecutors = currentState.numberOfExecutors
     val qValues = currentExecutors match {
