@@ -2,7 +2,7 @@
 \label{related}
 \section{Introduction}
 
-Dynamic resource allocation in cloud environments has been studied extensively in literature. In this chapter prior work will be discussed and explored. It is organized as follows. Section~\ref{related:thb} delves into threshold-based techniques. Section~\ref{related:tsa} investigates techniques based on time-series analysis. Section~\ref{related:qt} analyses techniques based on queuing theory. Section~\ref{related:rl} explores Reinforcement Learning techniques comprehensively. Finally, section~\ref{related:con} concludes.
+Dynamic resource allocation in cloud environments has been studied extensively in literature. In this chapter prior work will be discussed and explored. It is organized as follows. Section~\ref{related:thb} delves into threshold-based techniques. Section~\ref{related:tsa} investigates techniques based on time-series analysis. Section~\ref{related:qt} analyses techniques based on queuing theory. Section~\ref{related:rl} explores Reinforcement Learning techniques comprehensively. Finally, section~\ref{related:sum} concludes.
 
 \section{Threshold-Based Techniques}
 \label{related:thb}
@@ -54,6 +54,6 @@ In order to mitigate the problem of large state space in Reinforcement Learning,
 \end{itemize}
 
 \section{Summary}
-\label{related:con}
+\label{related:sum}
 
 In this chapter prior work on auto-scaling scaling has been discussed and evaluated. First, threshold-based approaches are investigated. Simple threshold-based approaches are intuitive and simple to understand by application developers and are widely supported by cloud providers. However, adjusting thresholds is a tricky and error-prone process. Then, time-series analysis techniques are explored. As confirmed by other authors, advanced seasonal forecasting is a computationally intensive process, which makes it less suitable for streaming workloads. Queuing theory approaches are suitable for stationary networks with a known probability distribution for workload and service time. Reinforcement Learning techniques has the benefit that it requires zero knowledge about the environment which helps to gradually adapt to changes in environment.
