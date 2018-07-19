@@ -17,5 +17,17 @@ Prior to this thesis a number of studies have been performed on elastic stream p
 
 This thesis will focus on dynamic resource allocation in the context of Apache Spark. An extensible framework will be developed based on a prior work by \textcite{Michal:2017}. This thesis will extend the existing prototype and implement multiple Auto-Scaling techniques for Apache Spark Streaming and will evaluate these techniques using real-world workloads. The ultimate goal is to identify how the architecture of Spark Streaming influences the performance of the different Auto-Scaling techniques.
 
+\section{Requirements of Thesis}
+Since Auto-Scaling is a quite wide realm, this thesis focuses on Apache Spark Streaming with a couple of predefined requirements. Any proposed solution must adhere to the following requirements and limitations to a large extent.
+\begin{itemize}
+    \item \textbf{Online Decision Making}. Since Spark Streaming is an online data stream processing system, any proposed solution shall apply scaling decisions in an online manner without causing any downtime on target system.
+    \item \textbf{QoS Guarantees}. Scaling decisions shall avoid violating predefined SLOs as much as possible. Understandably, violating SLOs is an inevitable incident. However, this should be kept under an acceptable level.
+    \item \textbf{Extendibility}. Any proposed solution shall provide some degree of extendibility such that, future modifications can be applied without any major code refactoring.
+    \item \textbf{Reconfigurability}. Any proposed solution should be easily configurable by administration or \emph{devops} team.
+    \item \textbf{Workload Independence}. Any proposed solution should not impose any assumption on type of workload running under Apache Spark Streaming.
+    \item \textbf{Computationally Feasible}. As mentioned in first requirement, any proposed solution should be computationally feasible such that it could generate results in order of seconds.
+    \item \textbf{Without Spark Core Modification}. In order to make the solution extensible as much as possible, any proposed solution, is not allowed to modify \lstinline$spark-core$ or \lstinline$spark-streaming$ packages.
+\end{itemize}
+
 \section{Summary}
 As mentioned this thesis will focus on dynamic resource allocation in the context of Apache Spark. The thesis is organized as follows. Chapter~\ref{intro-auto-scale} introduces and explains basics of Auto-Scaling techniques. Chapter~\ref{spark} introduces the architecture of Apache Spark Streaming. Chapter~\ref{design} explains structure and design considerations of this thesis. Chapter~\ref{detail} discusses implementation details and challenges faced during implementation. Chapter~\ref{eval} evaluates the implementation under different workloads. Chapter~\ref{related} includes discussion of prior and related work. Finally, chapter~\ref{conc} concludes.

@@ -22,7 +22,7 @@ The term \emph{cost} refers to any form of expenditure that users pay in order t
 \end{itemize}
 Service Level Objectives are typically determined and defined by business requirements. Defining effective and meaningful SLOs is a challenge on its own. However, it is out of the scope of this thesis. 
 
-From a high level point of view, Auto-Scaling is a \emph{trade-off} amongst cost and violation of SLOs. To make an effective decision, an Auto-Scaler needs to consider application and its environment:
+From a high level point of view, Auto-Scaling is a \emph{trade-off} amongst cost and violation of SLOs. Resource \emph{under-provisioning} will degrade performance and leads to SLO violations, while on the other hand, resource \emph{over-provisioning} leads to idle resources, hence unnecessary costs. To make an effective decision, an Auto-Scaler needs to consider application and its environment:
 \begin{itemize}
     \item \textbf{Infrastructure pricing model}. Some infrastructure providers charge customers hourly. That is, if customer acquires a resource at 10:30AM and releases it at 11:30AM, the customer is charged for two hours. Some other service providers might charge on minute basis. Pricing model has a huge impact on decisions made by Auto-Scaler system, since it makes some decisions pointless.
     \item \textbf{Service level objectives}. Each application has its own set of objectives that should be adhered by Auto-Scaling system. These SLOs might be defined and applied at \emph{soft} and \emph{hard} levels. Violating an SLO at soft level is not critical, albeit alarming. However, violating a resource at hard level is a critical issue and is a negative point for an Auto-Scaler.
@@ -169,7 +169,65 @@ Last but not least, an Auto-Scaler might decide to apply a \emph{grace period} a
 \section{Taxonomy of Auto-Scaling Techniques}
 \label{ias:taxonomy}
 
-Auto-Scalers can be modeled and classified in different categories. 
+Auto-Scalers can be modeled and classified in different categories. In a sense, it is a multi-dimensional space of features and characteristics. Table~\ref{tab:taxonomy-sum} lists and summarizes different dimensions of Auto-Scaling. In the rest of this chapter each dimension is described and explored in details.
+\begin{table*}[h!]
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        \textbf{Dimension} & \textbf{Description}\\
+        \midrule
+        \emph{Schedule-based} versus \emph{Rule-based} & Whether Auto-Scaler applies decisions manually or based on predefined rules.\\
+        \emph{Reactive} versus \emph{Proactive} & Whether Auto-Scaler reacts to workload changes or predict future workload ahead of time.\\
+        \emph{Execution} mode & Whether Auto-Scaler is central component or operating in a distributed fashion.\\
+        \emph{Algorithm} family & Which family of algorithms is applied to make the decision.\\
+        \bottomrule
+    \end{tabularx}
+    \centering
+    \caption{Summary of Auto-Scaling dimensions}
+    \label{tab:taxonomy-sum}
+\end{table*}
+\subsection{Schedule-Based versus Rule-Based}
+\label{ias:sched-rule}
 
+Some applications have a very basic cyclic workload pattern on daily basis which could be manually modeled as \emph{cron} style jobs. Schedule-based systems can not adopt to unplanned workload changes. Since this type of Auto-Scalers are in conflict with thesis requirements, it won't be studied in this thesis.
+
+On the other side of the extreme, there exists \emph{rule-based} Auto-Scalers. These Auto-Scalers take actions based on set of rules defined by application developers inspired by business requirements. Each rule is based on one or multiple \emph{constraints}. Each constraint consists of one or a set of conditions around some variable. Variables can be defined by \emph{application} -- number of tweets per second, as an example -- or by its environment -- CPU utilization, for example. For example, if average network bandwidth is more than 80\% of maximum available bandwidth for 10 minutes, then take Scale-Out action.
+
+There are different criteria to calculate defined variables. Some applications might define minimum or maximum values for variables. In some other cases, average values might be useful. Furthermore, average/minimum/maximum values might be defined for a window of time or number of occurrences of specific event. Time or event windows in turn could be defined as a \emph{static} window -- where it moves with a fixed interval -- or as a \emph{sliding} window -- where it smooths over elements.
+\subsection{Reactive vs Proactive}
+\label{ias:react-proact}
+
+In another dimension, Auto-Scalers can be partitioned into two categories. \emph{Reactive} approaches monitor the workload in order to find a meaningful change. Thereafter, they apply some algorithm to figure out the final decision. To view different family of algorithms, refer to section~\ref{ias:alg-fam}. It's noteworthy to express that, in some applications by the time a reactive Auto-Scaler decides to take some action, it might be too late. In other words, taking an action in an already overloaded application might not be desirable in some cases. \textcite{Taft:2018} argues that applying reactive approaches in the context of OLTP databases is not desirable. This leads us to another class of Auto-Scalers known as \emph{proactive} Auto-Scalers.
+
+\emph{Proactive} Auto-Scalers try to predict \emph{future} workload ahead of time before facing workload spikes. Hence, they are called as \emph{predictive} approaches. Whether the term \emph{future} is defined as near future or long term future depends on the type of Auto-Scaler. This has the advantage that, by the time load spike occurs, the required resources are already available, warmed-up and ready to respond user requests. As mentioned in section~\ref{ias:basics}, allocating some resources takes some time to become fully initialized. For example, adding a database replica does is not an immediate action. It takes some time re-replicate database records and validate the replicas. Thus, for some scenarios, even though reactive approaches might seem to be sufficient, but due to initialization latency it is not an applicable approach.
+
+\subsection{Execution Mode}
+\label{ias:exec-mode}
+
+The generic architecture which is described in section~\ref{ias:arch} does not impose any limit on the operation and execution mode of the Auto-Scaler. In other words, Auto-Scaler itself might run as a \emph{multi-instance} application. There are different types of proposed execution modes. But they can be classified in following generic groups without loosing generality. Table TODO summarizes operation modes. 
+\begin{description}[leftmargin=0pt]
+    \item[Global Controller] In this architecture, Auto-Scaler runs and controls the application as a \emph{central} or \emph{master} component. One or multiple \emph{backup} or \emph{slave} controllers might also accompany master node. In case master controller fails, one of the backup controllers kicks in and takes over the responsibility. In this model, it's the responsibility of master node to make decisions and execute actions. To detect failure of master controller, there exist already well established \emph{cluster coordination} utilities like Apache Zookeeper~\cite{zk} or CoreOS Etcd~\cite{etcd}. Figure~\ref{fig:auto-scaler-master-backup} depicts a variation of original Auto-Scaler architecture that performs under master-slave model coordinated by a Zookeeper ensemble.
+    \item[Distributed Wihtout Coorindation] In this architecture, typically Auto-Scaler runs alongside the application instances and each Auto-Scaler instance only \emph{controls} the \emph{local} application. The major difference against global controller is that, in this model each Auto-Scaler makes decision at its own will without any form of coordination with other Auto-Scalers. It's usually the most scalable solution when size of the cluster grows. However, since each Auto-Scaler instance only controls the local application, it might lead to sub-optimal decisions because local controllers lacks global view of the cluster. Figure~\ref{fig:auto-scaler-dist-wo-coord} illustrates this architecture.
+    \item[Distributed Coordinated Architecture] This architecture is similar to previous model. However the difference is that, Auto-Scaler components coordinate with each other over a communication channel to gather more information. The amount of communicated information heavily depends on underlying algorithm. In some scenarios only neighbor nodes are contacted. In other cases, all nodes might communicate with each other in order to achieve consensus. Figure~\ref{fig:auto-scaler-dist-coord} depicts this architecture.
+\end{description}
+\begin{figure}[h]
+    \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-master-backup.pdf}
+    \centering
+    \caption{Master-Slave or Global Auto-Scaler Architecture}
+    \label{fig:auto-scaler-master-backup}
+\end{figure}
+\begin{figure}[h]
+    \includegraphics[clip, trim=3cm 12.2cm 2.5cm 2.5cm]{auto-scaler-full-dist.pdf}
+    \centering
+    \caption{Distributed Without Coordination Auto-Scaler Architecture}
+    \label{fig:auto-scaler-dist-wo-coord}
+\end{figure}
+\begin{figure}[h]
+    \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-dist-coord.pdf}
+    \centering
+    \caption{Distributed Coordinated Auto-Scaler Architecture}
+    \label{fig:auto-scaler-dist-coord}
+\end{figure}
+\subsection{Algorithm Family}
+\label{ias:alg-fam}
 \section{Conclusion}
 \label{ias:conc}
