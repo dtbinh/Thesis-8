@@ -268,7 +268,7 @@ From algorithmic point of view, Auto-Scalers can be classified into 5 different 
     \item \textbf{Queuing Theory}
     \item \textbf{Control Theory}
 \end{itemize}
-In this section, each category is explained to some detail.
+In this section, each category is explained to some extent.
 
 \subsubsection{Threshold-Based Policies}
 
@@ -326,19 +326,76 @@ Algorithm~\ref{a:threshold-based} better describes this approach in a pseudocode
 
 \subsubsection{Time-Series Analysis}
 
-In contrast to threshold-based techniques, time-series analysis approaches are purely proactive or predictive approaches. A \emph{time-series} is a collection of data points sampled and ordered iteratively at uniform time  intervals~\cite{Lorido-Botran2014}. Time-series analysis typically requires to store a history of data points. Hence, storage and computation requirements are more intensive than threshold-based approaches. According to the theory of time-series analysis "TODO reference" time-series can be decomposed into multiple components.
-\begin{description}
-    \item[Season]
-    \item[Trend]
-    \item[Noise]
-\end{description}
+In contrast to threshold-based techniques, time-series analysis approaches are purely proactive or predictive approaches. A \emph{time-series} is a collection of data points sampled and ordered iteratively at uniform time  intervals~\cite{Lorido-Botran2014}. Time-series analysis typically requires to store a history of data points. Hence, storage and computation requirements are more intensive than threshold-based approaches. Refer to section~\ref{related} for evaluation of prior works in time-series.
 
+According to the theory of time-series analysis~\cite{TSA}~\cite{Herbst:2013}, time-series can be decomposed into multiple components.
+\begin{itemize}
+    \item \textbf{Season} The season component captures recurring patterns that are composed of one or more frequencies, e.g. daily, weekly or monthly patterns. These dominant frequencies can be determined by using a \emph{Fast Fourier Transformation} (FFT) or by \emph{Auto-Correlation} algorithms.
+    \item \textbf{Trend} The trend component can be described by a \emph{monotonically} increasing or decreasing function that can be approximated using common regression techniques.
+    \item \textbf{Noise} The noise component is an unpredictable outliers of various frequencies with different amplitudes. The noise can be absorbed to some extent by applying smoothing techniques like \emph{Weighted Moving Averages} (WMA), by using \emph{Lower Sampling Frequency} or by a \emph{Low-Pass Filter} that eliminates high frequencies.
+\end{itemize}
 
-Depending on the algorithm, time-series analysis can absorb up to certain level of noise or outliers.  The history of data points can be modeled in \emph{static} or \emph{sliding} time windows. Then, it can be used to find three types of repetitive workload patterns.
+A time-series has a couple of important characteristics that reveals more information about the values in it. The following represents some of these characteristics.
+\begin{itemize}
+    \item \textbf{Burstiness} The burstiness defines the impact of fluctuations within the time series and usually calculated by the ratio of the \emph{Maximum Observed Value} to the \emph{Median} within a sliding
+    window.
+    \item \textbf{Length} The length of the time series mainly influences the accuracy of approximations for the components mentioned above. It can be modeled as \emph{static} or \emph{sliding} window of time.
+    \item \textbf{Relative Monotonicity} The relative monotonicity is the maximum number of consecutive monotonic values either \emph{increasing} or \emph{decreasing} within a window and indirectly determines the influence of the noise and seasonal components.
+    \item \textbf{Mean, Median, Standard Deviation and Quartiles} These values are important indicators for the distribution of values -- how values are spread -- in time series.
+    \item \textbf{Frequency} The frequency of a time series represents the number of values that form a period of interest. This value is an important input as it defines the starting point to find seasonal patterns.
+\end{itemize}
 
 \subsubsection{Reinforcement Learning}
 
+Reinforcement Learning is a technique that relies on direct experience from environment. The decision maker -- known as \emph{agent} -- tries to learn the best possible action for each \emph{state} of the environment. The final goal is to maximize the returned \emph{reward}. In the context of Auto-Scaling problem, the agent is the Auto-Scaler component that gets current system state (any group of performance metrics) and tries to minimize/maximize some aspect of the application (response times, throughput, etc.) by performing Scale-In, Scale-Out or No-Action.
+
+In order to formally define Reinforcement Learning environments, some basic terminology shall be defined~\cite{rlIntro}. At each time step $t$, where $t = 0,1,2,\dots$ is a sequence of discrete time steps, the agent receives a representation of the environment's state $s_t \in S$, where $S$ is the set of possible states, and based on that, selects an action, $a_t \in A(s_t)$, where $A(s_t)$ is the
+set of possible available actions in state $s_t$. One time step later, as a consequence of performing action $a_t$, the agent receives a numerical reward $r_{t+1}$ and lands in a new state $s_{t+1}$. At each time step, the agent implements a \emph{mapping} from states to probabilities of selecting each possible action. This mapping is called the agent's \emph{policy} and is denoted as $\pi_t$, where $\pi_t(s,a)$ is the probability of action $a$ at state $s$. This procedure is depicted by Figure~\ref{fig:rl}.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[clip,trim=4cm 23.5cm 4cm 2.5cm]{RL.pdf}
+    \caption[Reinforcement Learning Agent]{Reinforcement Learning Agent\footnotemark}
+    \label{fig:rl}
+\end{figure}
+\footnotetext{The figure has been taken from~\cite{rlIntro}}
+
+In Reinforcement Learning environments future states can be determined only with the current state, regardless of the past history. This is known as \emph{Markov Property}, which formally states that the probability of a moving to a new state $s_{t+1}$ only depends on the current state $s_t$ and the $a$. In other words, it is independent of all previous states and actions~\cite{rlIntro}~\cite{Lorido-Botran2014}. Equation~\ref{eq:markov} defines this property.
+\begin{equation}
+P(s_{t+1} = s',r_{t+1} = r | s_t,a_t) = P(s_{t+1} = s',r_{t+1} = r | s_t,a_t,r_t,s_{t-1},a_{t-1},r_{t-1},\dots,s_1,a_1,r_1,s_0,a_0)
+\label{eq:markov}
+\end{equation}
+
+A stochastic process that satisfies the Markov property is called a \emph{Markov Decision Process} (MDP). It is typically represented as a 5-tuple consisting of \emph{states}, \emph{actions}, \emph{transitions probabilities}, \emph{rewards} and \emph{policy} function.
+\begin{itemize}
+    \item Set $S$ which represents the state space of the environment.
+    \item Set $A$ which represents the total possible actions.
+    \item Reward function $R$ defined as $S \times A \rightarrow R$ which represents the reward for each state-action pair. $R(s,a)$ is the reward received after executing action $a$ at state $s$.
+    \item Probability distribution $T$ defined as $S \times A \rightarrow P(S)$ which specifies a probability distribution over the set $S$. $P(s'|s,a)$ specifies the probability of landing in state $s'$ assuming that the agent is in state $s$ and performs action $a$.
+    \item Policy function $\pi$ defined as $S \rightarrow A$ that maps state $s$ to some action $a$. A policy function that maps state $s$ to \emph{best} possible action -- with highest expected reward -- is called \emph{optimal} policy denoted as $\pi^*$.
+\end{itemize}
+
+An important aspect of reward function is that, reward must be accumulated with a \emph{Discount Rate} denoted as $\gamma$. This is introduced to prevent \emph{infinite} reward accumulation and force reward values to converge. Equation~\ref{eq:reward} defines reward function in combination with discount rate.
+\begin{equation}
+    R_t = r_{t+1}+\gamma r_{t+2}+\gamma^2 r_{t+3}+\dots=\sum_{0}^{\infty}\gamma^k r_{t+k+1}
+    \label{eq:reward}
+\end{equation}
+
+Last but not least, under policy $\pi$, \emph{value-state} function $V^\pi(s)$ defines an estimate value of expected reward for state $s$. Equation~\ref{eq:value-state} defines value-state function where $E_\pi$ defines the expected reward value. The value-state function is the core of most Reinforcement Learning techniques. In section~\ref{design}, two of the techniques used in this thesis will be further discussed. Furthermore, section~\ref{related} evaluates prior work regarding Reinforcement Learning approaches.
+\begin{equation}
+V^\pi(s) = E_\pi(R_t|s_t=s)=E_\pi\bigg(\sum_{0}^{\infty}\gamma^k r_{t+k+1}|s_t=s\bigg)
+\label{eq:value-state}
+\end{equation}
+
 \subsubsection{Queuing Theory}
+
+Queuing theory has been thoroughly used in the context of packet processing to estimate the average wait time until a packet could be routed. The same principle can be applied in the context of Auto-Scaling problem. Clients send requests at a \emph{Mean Arrival Rate} denoted as $\lambda$. Requests are enqueued until they are processed with at a \emph{Mean Service Rate} denoted as $\mu$. Figure~\ref{fig:queue} shows two architecture of queuing systems.
+\begin{figure}[h]
+    \centering
+    \includegraphics[clip, trim=2cm 25cm 3cm 1cm]{queue.pdf}
+    \caption[Queuing Theory with single processor (left) and with multiple processors (right)]{Queuing Theory with single (left), with multiple processor (right)\footnotemark}
+    \label{fig:queue}
+\end{figure}
+\footnotetext{The figure has been taken from~\cite{Lorido-Botran2014}}
 
 \subsubsection{Control Theory}
 
