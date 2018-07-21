@@ -359,7 +359,7 @@ set of possible available actions in state $s_t$. One time step later, as a cons
 \end{figure}
 \footnotetext{The figure has been taken from~\cite{rlIntro}}
 
-In Reinforcement Learning environments future states can be determined only with the current state, regardless of the past history. This is known as \emph{Markov Property}, which formally states that the probability of a moving to a new state $s_{t+1}$ only depends on the current state $s_t$ and the $a$. In other words, it is independent of all previous states and actions~\cite{rlIntro}~\cite{Lorido-Botran2014}. Equation~\ref{eq:markov} defines this property.
+In Reinforcement Learning environments future states can be determined only with the current state, regardless of the past history. This is known as \emph{Markov Property}, which formally states that the probability of a moving to a new state $s_{t+1}$ only depends on the current state $s_t$ and the $a$. In other words, it is \emph{independent} of all previous states and actions~\cite{rlIntro}~\cite{Lorido-Botran2014}. Equation~\ref{eq:markov} defines this property.
 \begin{equation}
 P(s_{t+1} = s',r_{t+1} = r | s_t,a_t) = P(s_{t+1} = s',r_{t+1} = r | s_t,a_t,r_t,s_{t-1},a_{t-1},r_{t-1},\dots,s_1,a_1,r_1,s_0,a_0)
 \label{eq:markov}
@@ -388,16 +388,51 @@ V^\pi(s) = E_\pi(R_t|s_t=s)=E_\pi\bigg(\sum_{0}^{\infty}\gamma^k r_{t+k+1}|s_t=s
 
 \subsubsection{Queuing Theory}
 
-Queuing theory has been thoroughly used in the context of packet processing to estimate the average wait time until a packet could be routed. The same principle can be applied in the context of Auto-Scaling problem. Clients send requests at a \emph{Mean Arrival Rate} denoted as $\lambda$. Requests are enqueued until they are processed with at a \emph{Mean Service Rate} denoted as $\mu$. Figure~\ref{fig:queue} shows two architecture of queuing systems.
+Queuing theory has been thoroughly used in the context of packet processing to estimate the average wait time until a packet could be routed. The same principle can be applied in the context of Auto-Scaling problem. Clients send requests at a \emph{Mean Arrival Rate} denoted as $\lambda$. Requests are enqueued until they are processed with at a \emph{Mean Service Rate} denoted as $\mu$. Figure~\ref{fig:queue} portrays two architecture of queuing systems. Furthermore, multi-tiered applications are modeled as multiple queues attached \emph{serially} or in \emph{parallel}, depending on the architecture of the application.
 \begin{figure}[h]
     \centering
     \includegraphics[clip, trim=2cm 25cm 3cm 1cm]{queue.pdf}
-    \caption[Queuing Theory with single processor (left) and with multiple processors (right)]{Queuing Theory with single (left), with multiple processor (right)\footnotemark}
+    \caption[Queuing Theory with single processor (left) and with multiple processors (right)]{Queuing Theory with single (left), with multiple processors (right)\footnotemark}
     \label{fig:queue}
 \end{figure}
 \footnotetext{The figure has been taken from~\cite{Lorido-Botran2014}}
 
+Queuing systems are modeled with \emph{Kendall}'s notation~\cite{kendall1953}. A queue is modeled as $A/B/C/K/N/D$. Each variable is defined and further explained in the following.
+\begin{itemize}
+    \item \textbf{A} Request inter-arrival time distribution.
+    \item \textbf{B} Service time distribution.
+    \item \textbf{C} Number of request processors.
+    \item \textbf{K} Maximum length of the queue. This is an optional parameter and is set to unlimited if not specified.
+    \item \textbf{N} Calling population. This is an optional parameter and is set to unlimited if not specified. This parameter controls the population of requests entering the system. In case of an \emph{open queuing} system, this value is unlimited. While in a \emph{closed queuing} system the population of customers is a finite value.
+    \item \textbf{D} Priority order which defines in which order requests will be processed by request processors. This parameter is optional and is set to \emph{First Come First Served} (FCFS) if not specified.
+\end{itemize}
+
+Queuing theory is mostly capable of modeling stationary systems with constant parameters defined above. In case of Auto-Scaling problems, these values have to periodically recomputed, since request inter-arrival distribution, service time and number of request processors are changing constantly. These parameters can be re-calculated mostly based on two approaches. First, by applying \emph{analytic} techniques -- suitable for simple queuing systems. Second, by applying \emph{Discrete Event Simulation} (DES) techniques -- suitable for more complex models.
+
 \subsubsection{Control Theory}
+
+Control Theory is categorized as mixture of reactive and proactive systems and decomposed intro three major categories.
+\begin{itemize}
+    \item \textbf{Open Loop Systems} These systems do not consider any feedback returned by underlying systems. They only consider current state of the system in order to make decision. The output of the system is not considered to check whether it is in stable and desired state.
+    \item \textbf{Feedback Systems} These system monitor the output of the system in order to check whether it is complying to defined business conditions. These systems are mainly reactive systems. Figure~\ref{fig:feedback} depicts these controllers.
+    \item \textbf{Feed-Forward System} These systems pro-actively try to predict the system's future state and behavior. 
+\end{itemize}
+\begin{figure}[h]
+    \centering
+    \includegraphics[clip, trim=1.2cm 23.5cm 3.4cm 3cm]{control.pdf}
+    \caption[Feedback Control System]{Feedback Control System\footnotemark}
+    \label{fig:feedback}
+\end{figure}
+\footnotetext{The figure has been taken from~\cite{Patikirikorala:2018}}
+Feedback driven control systems are further divided into multiple categories~\cite{Patikirikorala:2018}.
+\begin{itemize}
+    \item \textbf{Fixed Gain Controllers} The most simple type of feedback control systems. However, the configuration parameters of the controller are fixed during system runtime.
+    \item \textbf{Adaptive Controller} These controllers allow to change some of the configuration parameters during runtime which makes them an applicable option for \emph{slowly-changing} environments, but not for suitable for \emph{bursty} workloads.
+    \item \textbf{Reconfiguring Controller} In contrast to Adaptive Control controllers in which only configuration parameters can be changed at runtime -- controller itself does not change -- in this model the controller itself can also be changed at runtime. With this enhancement, Reconfiguring Controllers are more resilient to bursty workloads.
+    \item \textbf{Model Predictive Controller} These controllers mix some \emph{predicative} features into feedback controllers which make them even more resilient to unanticipated workloads.
+\end{itemize}
 
 \section{Conclusion}
 \label{ias:conc}
+
+In this chapter, different architectural aspects and major design considerations of Auto-Scalers have been discussed. As mentioned, it is multi-dimensional space of features and capabilities. Many of the current proposals do not map to one category, but combine divergent set of features. Section~\ref{related} compares and evaluates prior research on different systems.
