@@ -350,14 +350,13 @@ A time-series has a couple of important characteristics that reveals more inform
 Reinforcement Learning is a technique that relies on direct experience from environment. The decision maker -- known as \emph{agent} -- tries to learn the best possible action for each \emph{state} of the environment. The final goal is to maximize the returned \emph{reward}. In the context of Auto-Scaling problem, the agent is the Auto-Scaler component that gets current system state (any group of performance metrics) and tries to minimize/maximize some aspect of the application (response times, throughput, etc.) by performing Scale-In, Scale-Out or No-Action.
 
 In order to formally define Reinforcement Learning environments, some basic terminology shall be defined~\cite{rlIntro}. At each time step $t$, where $t = 0,1,2,\dots$ is a sequence of discrete time steps, the agent receives a representation of the environment's state $s_t \in S$, where $S$ is the set of possible states, and based on that, selects an action, $a_t \in A(s_t)$, where $A(s_t)$ is the
-set of possible available actions in state $s_t$. One time step later, as a consequence of performing action $a_t$, the agent receives a numerical reward $r_{t+1}$ and lands in a new state $s_{t+1}$. At each time step, the agent implements a \emph{mapping} from states to probabilities of selecting each possible action. This mapping is called the agent's \emph{policy} and is denoted as $\pi_t$, where $\pi_t(s,a)$ is the probability of action $a$ at state $s$. This procedure is depicted by Figure~\ref{fig:rl}.
+set of possible available actions in state $s_t$. One time step later, as a consequence of performing action $a_t$, the agent receives a numerical reward $r_{t+1}$ and lands in a new state $s_{t+1}$. At each time step, the agent implements a \emph{mapping} from states to probabilities of selecting each possible action. This mapping is called the agent's \emph{policy} and is denoted as $\pi_t$, where $\pi_t(s,a)$ is the probability of action $a$ at state $s$. This procedure is depicted by Figure~\ref{fig:rl}\footnote{The figure has been taken from~\cite{rlIntro}}.
 \begin{figure}[ht]
     \centering
     \includegraphics[clip,trim=4cm 23.5cm 4cm 2.5cm]{RL.pdf}
-    \caption[Reinforcement Learning Agent]{Reinforcement Learning Agent\footnotemark}
+    \caption[Reinforcement Learning Agent]{Reinforcement Learning Agent}
     \label{fig:rl}
 \end{figure}
-\footnotetext{The figure has been taken from~\cite{rlIntro}}
 
 In Reinforcement Learning environments future states can be determined only with the current state, regardless of the past history. This is known as \emph{Markov Property}, which formally states that the probability of a moving to a new state $s_{t+1}$ only depends on the current state $s_t$ and the $a$. In other words, it is \emph{independent} of all previous states and actions~\cite{rlIntro}~\cite{Lorido-Botran2014}. Equation~\ref{eq:markov} defines this property.
 \begin{equation}
@@ -388,14 +387,13 @@ V^\pi(s) = E_\pi(R_t|s_t=s)=E_\pi\bigg(\sum_{0}^{\infty}\gamma^k r_{t+k+1}|s_t=s
 
 \subsubsection{Queuing Theory}
 
-Queuing theory has been thoroughly used in the context of packet processing to estimate the average wait time until a packet could be routed. The same principle can be applied in the context of Auto-Scaling problem. Clients send requests at a \emph{Mean Arrival Rate} denoted as $\lambda$. Requests are enqueued until they are processed with at a \emph{Mean Service Rate} denoted as $\mu$. Figure~\ref{fig:queue} portrays two architecture of queuing systems. Furthermore, multi-tiered applications are modeled as multiple queues attached \emph{serially} or in \emph{parallel}, depending on the architecture of the application.
+Queuing theory has been thoroughly used in the context of packet processing to estimate the average wait time until a packet could be routed. The same principle can be applied in the context of Auto-Scaling problem. Clients send requests at a \emph{Mean Arrival Rate} denoted as $\lambda$. Requests are enqueued until they are processed with at a \emph{Mean Service Rate} denoted as $\mu$. Figure~\ref{fig:queue}\footnote{The figure has been taken from~\cite{Lorido-Botran2014}} portrays two architecture of queuing systems. Furthermore, multi-tiered applications are modeled as multiple queues attached \emph{serially} or in \emph{parallel}, depending on the architecture of the application.
 \begin{figure}[h]
     \centering
     \includegraphics[clip, trim=2cm 25cm 3cm 1cm]{queue.pdf}
-    \caption[Queuing Theory with single processor (left) and with multiple processors (right)]{Queuing Theory with single (left), with multiple processors (right)\footnotemark}
+    \caption[Queuing Theory with single processor (left) and with multiple processors (right)]{Queuing Theory with single processor (left), with multiple processors (right)}
     \label{fig:queue}
 \end{figure}
-\footnotetext{The figure has been taken from~\cite{Lorido-Botran2014}}
 
 Queuing systems are modeled with \emph{Kendall}'s notation~\cite{kendall1953}. A queue is modeled as $A/B/C/K/N/D$. Each variable is defined and further explained in the following.
 \begin{itemize}
@@ -414,16 +412,15 @@ Queuing theory is mostly capable of modeling stationary systems with constant pa
 Control Theory is categorized as mixture of reactive and proactive systems and decomposed intro three major categories.
 \begin{itemize}
     \item \textbf{Open Loop Systems} These systems do not consider any feedback returned by underlying systems. They only consider current state of the system in order to make decision. The output of the system is not considered to check whether it is in stable and desired state.
-    \item \textbf{Feedback Systems} These system monitor the output of the system in order to check whether it is complying to defined business conditions. These systems are mainly reactive systems. Figure~\ref{fig:feedback} depicts these controllers.
+    \item \textbf{Feedback Systems} These system monitor the output of the system in order to check whether it is complying to defined business conditions. These systems are mainly reactive systems. Figure~\ref{fig:feedback}\footnote{The figure has been taken from~\cite{Patikirikorala:2018}} depicts these controllers.
     \item \textbf{Feed-Forward System} These systems pro-actively try to predict the system's future state and behavior. 
 \end{itemize}
 \begin{figure}[h]
     \centering
     \includegraphics[clip, trim=1.2cm 23.5cm 3.4cm 3cm]{control.pdf}
-    \caption[Feedback Control System]{Feedback Control System\footnotemark}
+    \caption[Feedback Control System]{Feedback Control System}
     \label{fig:feedback}
 \end{figure}
-\footnotetext{The figure has been taken from~\cite{Patikirikorala:2018}}
 Feedback driven control systems are further divided into multiple categories~\cite{Patikirikorala:2018}.
 \begin{itemize}
     \item \textbf{Fixed Gain Controllers} The most simple type of feedback control systems. However, the configuration parameters of the controller are fixed during system runtime.
