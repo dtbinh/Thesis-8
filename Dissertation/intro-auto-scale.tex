@@ -220,43 +220,42 @@ The generic architecture which is described in section~\ref{ias:arch} does not i
     \caption{Summary of execution modes}
     \label{tab:exec-mode}
 \end{table*}
+\clearpage
 \begin{description}[leftmargin=0pt]
     \item[Global Controller] In this architecture, Auto-Scaler runs and controls the application as a \emph{central} or \emph{master} component. One or multiple \emph{backup} or \emph{slave} controllers might also accompany master node. In case master controller fails, one of the backup controllers kicks in and takes over the responsibility. In this model, it's the responsibility of master node to make decisions and execute actions. To detect failure of master controller, there exist already well established \emph{cluster coordination} utilities like Apache Zookeeper~\cite{zk} or CoreOS Etcd~\cite{etcd}. Figure~\ref{fig:auto-scaler-master-backup} depicts a variation of original Auto-Scaler architecture that performs under master-slave model coordinated by a Zookeeper ensemble.
+    \begin{figure}[hb]
+        \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-master-backup.pdf}
+        \centering
+        \caption{Master-Slave or Global Auto-Scaler Architecture}
+        \label{fig:auto-scaler-master-backup}
+    \end{figure}
+    \clearpage
     \item[Distributed Without Coorindation] In this architecture, typically Auto-Scaler runs alongside the application instances and each Auto-Scaler instance only \emph{controls} the \emph{local} application. The major difference against global controller is that, in this model each Auto-Scaler makes decision at its own will without any form of coordination with other Auto-Scalers. It's usually the most scalable solution when size of the cluster grows. However, since each Auto-Scaler instance only controls the local application, it might lead to sub-optimal decisions because local controllers lacks global view of the cluster. Figure~\ref{fig:auto-scaler-dist-wo-coord} illustrates this architecture.
-    \item[Distributed Coordinated] This architecture is similar to previous model. However the difference is that, Auto-Scaler components coordinate with each other over a communication channel to gather more information. The amount of communicated information heavily depends on underlying algorithm. In some scenarios only neighbor nodes are contacted. In other cases, all nodes might communicate with each other in order to achieve consensus. Figure~\ref{fig:auto-scaler-dist-coord} depicts this architecture.
-    \item[Hierarchical Controllers] This architecture is the mixture of previous models. It's a combination of \emph{Global Controller} and \emph{Distributed Coordinated Architecture} model. Local Auto-Scalers communicate with a global controller in order to perform necessary actions. This architecture doesn't impose any limitation on whether local Auto-Scalers communicate with each other or not. Noteworthy to express, one or more back controller might also accompany global controller. Furthermore, it is not necessarily a two-level hierarchy. It might be multi-level hierarchal approach that each level operate in distributed or master-slave mode. Additionally, there might be no limit on who actually performs the actions. Each Auto-Scaler -- whether it is operating in local or global model -- might perform actions independent of the others. Figure~\ref{fig:auto-scaler-hierar} illustrates this architecture.
-\end{description}
-\begin{figure}[hb]
-    \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-master-backup.pdf}
-    \centering
-    \caption{Master-Slave or Global Auto-Scaler Architecture}
-    \label{fig:auto-scaler-master-backup}
-\end{figure}
-\begin{center}
-    \begin{figure}
+    \begin{figure}[hb]
         \includegraphics[clip, trim=3cm 12.2cm 2.5cm 2.5cm]{auto-scaler-full-dist.pdf}
         \centering
         \caption{Distributed Without Coordination Auto-Scaler Architecture}
         \label{fig:auto-scaler-dist-wo-coord}
     \end{figure}
-\end{center}
-\begin{center}
-    \begin{figure}
+    \clearpage
+    \item[Distributed Coordinated] This architecture is similar to previous model. However the difference is that, Auto-Scaler components coordinate with each other over a communication channel to gather more information. The amount of communicated information heavily depends on underlying algorithm. In some scenarios only neighbor nodes are contacted. In other cases, all nodes might communicate with each other in order to achieve consensus. Figure~\ref{fig:auto-scaler-dist-coord} depicts this architecture.
+    \begin{figure}[hb]
         \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-dist-coord.pdf}
         \centering
         \caption{Distributed Coordinated Auto-Scaler Architecture}
         \label{fig:auto-scaler-dist-coord}
     \end{figure}
-\end{center}
-\begin{center}
-    \begin{figure}
-        \includegraphics[clip, trim=3cm 4cm 2.5cm 2.5cm]{auto-scaler-hierarchy.pdf}
+    \clearpage
+    \item[Hierarchical Controllers] This architecture is the mixture of previous models. It's a combination of \emph{Global Controller} and \emph{Distributed Coordinated Architecture} model. Local Auto-Scalers communicate with a global controller in order to perform necessary actions. Local Auto-Scalers might also communicate with each other. Additionally, one or more back controller might also accompany global controller. Furthermore, there might be no limit on who actually performs the actions. Each Auto-Scaler -- whether it is operating in local or global model -- might perform actions independent of the others. Figure~\ref{fig:auto-scaler-hierar} illustrates this architecture.
+    \begin{figure}[hb]
+        \includegraphics[clip,trim=3cm 4.2cm 2.5cm 2.8cm,scale=0.8]{auto-scaler-hierarchy.pdf}
         \centering
         \caption{Hierarchical Controllers Auto-Scaler Architecture}
         \label{fig:auto-scaler-hierar}
     \end{figure}
-\end{center}
+\end{description}
 
+\clearpage
 \subsection{Algorithm Family}
 \label{ias:alg-fam}
 

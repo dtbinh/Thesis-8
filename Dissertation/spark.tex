@@ -91,7 +91,7 @@ Note that, the term \emph{executor} is a conceptual term and implementation deta
     \item [Spark Standalone] It is the default resource manager for Spark and will be used throughout this thesis. It also follows the master-slave model. \emph{Spark Master} is the global cluster level resource manager. On each cluster node runs a \emph{Spark Slave} process. Spark Slaves are responsible to run and monitor worker executors. It is possible to set default number of CPU cores and available memory for each executor though configuration, either \emph{statically} -- default value for all jobs -- or at specific job \emph{submission} time -- per job basis.
     
      Fault-tolerance is achieved by several counter measures. Figure~\ref{fig:spark-full}\footnote{The figure has been partially taken from~\cite{spark-guide}} depicts all the measures. Similar to YARN and Mesos, a multi-level failure detection approach is exploited. Multiple backup nodes monitor the Spark Master via Zookeeper~(Case 1). Spark Slaves and Drivers are monitored by Spark Master (Case 2). Progress of each executor -- whether the assigned task is done or not -- is monitored by Driver (Case 3). Liveness of each executor is further monitored by corresponding local Spark Slave process (Case 5). Initial input and final output of the jobs are stored in a distributed replicated file system like HDFS. In case any executor fails to store its final output in DFS, it will relaunched by Spark on another node (Case 4). Intermediate results are stored locally without any fault-tolerance in mind. However, \emph{checkpoints} -- stored on DFS -- can be used in this case to recover from executor failures (Case 4). Refer to section~\ref{sp:rdd} for more information on checkpointing process. 
-     \begin{figure}[h]
+     \begin{figure}[ht]
          \centering
          \includegraphics[clip,trim=4cm 13cm 4cm 2.2cm]{spark-full.pdf}
          \caption[Spark Fault-Tolerance Architecture]{Spark Fault-Tolerance Architecture}
@@ -120,7 +120,7 @@ Whereas, RDDs offer \emph{coarse-grained} interface based on \emph{immutable tra
         \bottomrule
     \end{tabular}
     \centering
-    \caption{Summary of Spark Cluster Managers}
+    \caption{High-Level Comparison of RDDs and Distributed Shared Memory Systems}
     \label{tab:rdd-vs-dsm}
 \end{table*}
 
@@ -137,6 +137,7 @@ An RDD has enough information about how it was derived from other RDDs. This mea
 \end{itemize}
 
 In order to simplify the concept of lineage graph, listing~\ref{l:sp:log-error}\footnotemark and figure~\ref{fig:spark-lineage-sample}\footnotemark[\value{footnote}] illustrate a simple log processing pipeline and its corresponding generated lineage.
+\footnotetext{The figure and sample code has been partially taken from~\cite{Zaharia:2012}}
 \begin{lstlisting}[float=h, caption={Parsing errors in log files from HDFS},label={l:sp:log-error},captionpos=b,morekeywords={val}]
 val lines = spark.textFile("hdfs://...")
 val errors = lines.filter(_.startsWith("ERROR"))
@@ -154,13 +155,16 @@ val slowQueries = mysqlErrors.filter(_.contains("SLOW QUERY"))
                                                          .map(_.split(',')(3))
                                                          .collect()
 \end{lstlisting}
-\begin{figure}[ht]
+\begin{figure}[p]
     \centering
     \includegraphics[clip,trim=4.5cm 9cm 2.2cm 2.2cm]{spark-lineage-sample.pdf}
     \caption[RDD Transformations and Corresponding Lineage]{RDD Transformations and Corresponding Lineage}
     \label{fig:spark-lineage-sample}
 \end{figure}
-\footnotetext{The figure and sample code has been partially taken from~\cite{Zaharia:2012}}
+
+\clearpage
+\subsection{RDD Transformations and Dependencies}
+\label{sp:depend}
 
 As mentioned, RDDs are the result of \emph{lazy} transformations derived from one another. In other words, RDDs are not materialized unless it is really needed. However, not all transformations are lazy. There are three major types of transformations.
 \begin{itemize}
@@ -169,24 +173,53 @@ As mentioned, RDDs are the result of \emph{lazy} transformations derived from on
     \item \textbf{Actions}. These transformations trigger RDD materialization process. That is, the actual computation of RDDs don't realize until this type of transformation is met in lineage graph. For example, \lstinline$count$, \lstinline$collect$ and \lstinline$save$ are classified in this group.
 \end{itemize}
 
-\subsection{RDD Dependencies}
-\label{sp:depend}
-
-As mentioned, in a lineage graph RDDs are derived from one another. This makes each RDD depend on one or several RDDs depending on type of the transformation. There are two types of dependencies among RDDs.
+In a lineage graph RDDs are derived from one another. This makes each RDD depend on one or several RDDs depending on type of the transformation. There are two types of dependencies among RDDs.
 \begin{itemize}
-    \item \textbf{Narrow}. When one partition of the parent RDD is used by at most one partition of the child RDD, then the dependency is considered as narrow. For example, \lstinline$map$, \lstinline$filter$,
-    \item \textbf{Wide}. When one partition of the parent RDD is used by more than one partition of the child RDD, then the dependency is considered as wide. 
+    \item \textbf{Narrow}. When one partition of the parent RDD is used by at most one partition of the child RDD, then the dependency is considered as narrow. For example \lstinline$map$, \lstinline$filter$, \lstinline$union$ and joins with \emph{co-partitioned} inputs create narrow dependencies. Narrow dependencies allow to process RDDs without triggering shuffling process -- a phenomenon known as \emph{pipelined execution}. Additionally, failure recovery is easier in case of narrow dependencies because only lost parent RDDs need to be recomputed. Figure~\ref{fig:sp:narrow-dep}\footnotemark depicts narrow dependencies.
+    \item \textbf{Wide}. When one partition of the parent RDD is used by more than one partition of the child RDD, then the dependency is considered as wide. For example, \lstinline$groupByKey$ and joins with inputs \emph{not co-partitioned} create wide dependencies. Wide dependencies trigger the shuffling process. In contrast to narrow dependencies, recovering from node failures are less efficient since a failed node might cause loss of some partitions from all ancestors which requires full recomputation~\cite{Zaharia:2012}. Figure~\ref{fig:sp:wide-dep}\footnotemark[\value{footnote}] depicts wide dependencies.
+    \begin{figure}[p]
+        \centering
+        \includegraphics[clip,trim=4cm 11.5cm 3.1cm 2.5cm]{narrow-dep.pdf}
+        \caption[RDD Narrow Dependencies]{RDD Narrow Dependencies}
+        \label{fig:sp:narrow-dep}
+        \includegraphics[clip,trim=2cm 19.5cm 3.5cm 4cm]{wide-dep.pdf}
+        \caption[RDD Wide Dependencies]{RDD Wide Dependencies}
+        \label{fig:sp:wide-dep}
+    \end{figure}
 \end{itemize}
+\footnotetext{The figure and sample code has been partially taken from~\cite{Zaharia:2012}}
 
 \subsection{Fault-Tolerance with Checkpointing}
 \label{sp:fault}
 
-The idea of the lineage graph and recomputable transformations significantly simplifies fault-recovery. However, in long chains recomputing failed RDDs can be a very time or process intensive operation. Operation 
+The idea of the lineage graph and recomputable transformations simplifies fault-recovery significantly. However, in long chains recomputing failed RDDs can be a very time/process intensive operation. Hence, in some cases it is useful to checkpoint some RDDs to stable storage -- like shared file system. In general checkpointing is useful for applications with deep lineage graphs containing wide dependencies, since a node failure in parent RDDs leads to full recomputation in child RDDs. If the lineage graph is small or most dependencies are narrow, checkpointing tends to be less useful. 
 
-\subsection{RDD and Spark Job Stages}
+In order to provide full control to application developers, Spark exposes checkpointing behavior though its API -- via \lstinline$REPLICATE$ flag in \lstinline$persist()$ function -- and leaves the decision up to developers. There are some scenarios where automatic checkpointing without intervention of developers may seem a feasible choice. Because job scheduler is completely aware of the size all RDDs and naturally it should be able to implement more effective checkpointing strategy compared to developers. However, this feature is not currently available in Spark.
+
+With checkpointing in-place, providing fault-tolerance becomes a fairly straightforward process. Note that, RDDs are immutable set of records. This feature makes it easy to flush them in a background process, since there is no \emph{concurrency} and \emph{consistency} concerns involved. Noteworthy, there is an additional fault-tolerance mechanism known as \emph{WAL-based fault-tolerance} for streaming pipelines. This topic is further discussed in section~\ref{sp:dstream}.
+
+\clearpage
+\subsection{RDDs and Spark Job Stages}
 \label{sp:stage}
 
+Spark's Job scheduler is similar to Dryad~\cite{Isard:2007}. However, it takes RDD locations into account as well, since some partitions of RDDs are cached into memory or persisted to stable storage. When a job is submitted, Spark's job scheduler does the following.
+\begin{itemize}
+    \item \textbf{Calculating Lineage Graph}. In this step, Spark calculates the lineage graph of RDDs with corresponding transformations and dependencies.
+    \item \textbf{Defining Stages}. In this step Spark defines the stages required to run the job. From developer's point of view a job is a sequence of RDDs. However, at runtime a job is modeled as \emph{Direct Acyclic Graph} (DAG) of stages. A \emph{stage} is basically the longest possible chain of RDD transformations with shuffling operations in the boundaries. Additionally, different partitions of RDDs in their corresponding stages will also be computed. 
+    \item \textbf{Launching Tasks}. In this step, Spark launches \emph{tasks} which is going to be run by executors. Each task process one or multiple partitions of some RDDs. Depending on the location of RDDs, tasks will be launched on machines with data-locality awareness to reduce network transmission. In case a task fails, it can be run as long as parent stages are still available. If one or more parent stages become unavailable, missing partitions from parent stages shall be recomputed according to lineage graph.
+\end{itemize}
+Figure~\ref{fig:sp:logical} shows a sample job with logical operators and Figure~\ref{fig:sp:dag} depicts its corresponding DAG with two stages at runtime.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[clip,trim=2.3cm 23.5cm 1.7cm 2.5cm,scale=0.97]{stage-logical.pdf}
+    \caption[Spark Job with Logical Operators]{Spark Job with Logical Operators}
+    \label{fig:sp:logical}
+    \includegraphics[clip,trim=2.3cm 11.4cm 1.7cm 10cm,scale=0.97]{stage-dag.pdf}
+    \caption[Spark Job Stages at Runtime]{Spark Job Stages at Runtime}
+    \label{fig:sp:dag}
+\end{figure}
 
+\clearpage
 \section{Discretized Streams}
 \label{sp:dstream}
 
