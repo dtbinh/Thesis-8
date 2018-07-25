@@ -112,12 +112,12 @@ object RMConstants {
   final val TargetLatencyDefault = "800ms"
   final val LatencyGranularityKey = "spark.streaming.dynamicAllocation.latencyGranularity"
   final val LatencyGranularityDefault = "10ms"
-  final val GracePeriodKey = "spark.streaming.dynamicAllocation.gracePeriodKey"
+  final val GracePeriodKey = "spark.streaming.dynamicAllocation.gracePeriod"
   final val GracePeriodDefault = "60s"
   final val WindowSizeKey = "spark.streaming.dynamicAllocation.windowSize"
-  final val WindowSizeDefault = 30
+  final val WindowSizeDefault = 10
   final val LearningFactorKey = "spark.streaming.dynamicAllocation.learningFactor"
-  final val LearningFactorDefault = 0.5
+  final val LearningFactorDefault = 0.7
   final val DiscountFactorKey = "spark.streaming.dynamicAllocation.discountFactor"
   final val DiscountFactorDefault = 0.9
   final val BestRewardKey = "spark.streaming.dynamicAllocation.bestReward"

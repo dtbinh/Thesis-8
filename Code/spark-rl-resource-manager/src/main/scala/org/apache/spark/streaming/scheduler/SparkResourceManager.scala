@@ -8,9 +8,9 @@ import org.apache.spark.streaming.StreamingContext
 class SparkResourceManager(val constants: RMConstants, val streamingContext: StreamingContext) extends ResourceManager {
 
   @transient override lazy val log: Logger = LogManager.getLogger(this.getClass)
-  private val batchDuration: Long = streamingContext.graph.batchDuration.milliseconds
+  private lazy val batchDuration: Long = streamingContext.graph.batchDuration.milliseconds
 
-  val listener: ExecutorAllocationManager = new ExecutorAllocationManager(executorAllocator,
+  lazy val listener: ExecutorAllocationManager = new ExecutorAllocationManager(client,
     streamingContext.scheduler.receiverTracker,
     sparkConf,
     batchDuration,

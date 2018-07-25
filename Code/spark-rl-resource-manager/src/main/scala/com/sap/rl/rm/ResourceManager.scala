@@ -8,7 +8,7 @@ import org.apache.spark.scheduler._
 import org.apache.spark.streaming.scheduler._
 import org.apache.spark.{SparkConf, SparkContext}
 
-trait ResourceManager extends SparkStreamingListenerTrait with SparkListenerTrait with ExecutorAllocator {
+trait ResourceManager extends StreamingListener with SparkListenerTrait with ExecutorAllocator {
 
   protected lazy val sparkContext: SparkContext = streamingContext.sparkContext
   protected lazy val sparkConf: SparkConf = sparkContext.getConf
@@ -27,9 +27,13 @@ trait ResourceManager extends SparkStreamingListenerTrait with SparkListenerTrai
     totalNumberOfBatches.incrementAndGet()
   }
 
+  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
+    log.info(s"$STREAMING_STARTED -- StreamingStartTime = ${streamingStarted.time}")
+  }
+
   def incrementSLOViolations(): Unit = numberOfSLOViolations.getAndIncrement()
 
-  def isSLOViolated(info: BatchInfo): Boolean = info.processingDelay.get.toInt >= CoarseTargetLatency
+  def isSLOViolated(info: BatchInfo): Boolean = (info.processingDelay.get.toInt / LatencyGranularity) >= CoarseTargetLatency
 
   def logAndCountSLOInfo(info: BatchInfo): Unit = {
     // log current and last state, as well

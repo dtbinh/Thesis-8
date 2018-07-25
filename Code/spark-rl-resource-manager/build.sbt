@@ -1,13 +1,14 @@
+organization := "com.sap"
 name := "spark-rl-resource-manager"
-
-version := "0.1"
+version := "1.0.0"
+isSnapshot := true
 
 scalaVersion := "2.11.12"
 
 compileOrder := CompileOrder.JavaThenScala
 
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-streaming" % "2.2.1" % "provided",
+  "org.apache.spark" %% "spark-streaming" % "2.2.2" % "provided",
   "org.scalactic" %% "scalactic" % "3.0.5",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test",
   "org.mockito" % "mockito-core" % "2.19.0" % "test"

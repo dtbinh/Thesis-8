@@ -5,7 +5,7 @@ import com.sap.rl.rm.LogStatus._
 import com.sap.rl.rm.RMConstants._
 import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
 import org.apache.log4j.Logger
-import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted}
+import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted, StreamingListenerStreamingStarted}
 
 import scala.util.Random.shuffle
 
@@ -26,6 +26,12 @@ trait RLResourceManager extends ResourceManager {
   protected val log: Logger
 
   import constants._
+
+  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
+    super.onStreamingStarted(streamingStarted)
+    requestMaximumExecutors()
+    log.info(s"$SPARK_MAX_EXEC")
+  }
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
     super.onBatchCompleted(batchCompleted)
