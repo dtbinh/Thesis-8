@@ -19,8 +19,20 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
 
   import constants._
 
+  override def onApplicationStart(applicationStart: SparkListenerApplicationStart): Unit = {
+    log.info(s"$MY_TAG -- $APP_STARTED -- ApplicationStartTime = ${applicationStart.time}")
+  }
+
+  override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = {
+    log.info(s"$MY_TAG -- $SPARK_EXEC_ADDED -- (ID,Time,All,Workers,Receivers) = (${executorAdded.executorId},${executorAdded.time},$numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
+  }
+
+  override def onExecutorRemoved(executorRemoved: SparkListenerExecutorRemoved): Unit = {
+    log.info(s"$MY_TAG -- $SPARK_EXEC_REMOVED -- (ID,Time,All,Workers,Receivers) = (${executorRemoved.executorId},${executorRemoved.time},$numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
+  }
+
   override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
-    log.info(s"$APP_ENDED -- (ApplicationEndTime,NumberOfBatches,SLOViolations) = (${applicationEnd.time},${totalNumberOfBatches.get()},${numberOfSLOViolations.get()})")
+    log.info(s"$MY_TAG -- $APP_ENDED -- (ApplicationEndTime,NumberOfBatches,SLOViolations) = (${applicationEnd.time},${totalNumberOfBatches.get()},${numberOfSLOViolations.get()})")
   }
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
@@ -28,7 +40,7 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
   }
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
-    log.info(s"$STREAMING_STARTED -- StreamingStartTime = ${streamingStarted.time}")
+    log.info(s"$MY_TAG -- $STREAMING_STARTED -- (StreamingStartTime,All,Workers,Receivers) = (${streamingStarted.time},$numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
   }
 
   def incrementSLOViolations(): Unit = numberOfSLOViolations.getAndIncrement()
@@ -41,6 +53,6 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
       incrementSLOViolations()
     }
 
-    log.info(s"$SLO_INFO -- (NumberOfBatches,SLOViolations) = (${totalNumberOfBatches.get()},${numberOfSLOViolations.get()})")
+    log.info(s"$MY_TAG -- $SLO_INFO -- (NumberOfBatches,SLOViolations) = (${totalNumberOfBatches.get()},${numberOfSLOViolations.get()})")
   }
 }

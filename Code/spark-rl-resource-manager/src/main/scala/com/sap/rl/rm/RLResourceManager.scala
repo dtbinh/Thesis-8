@@ -29,8 +29,9 @@ trait RLResourceManager extends ResourceManager {
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     super.onStreamingStarted(streamingStarted)
+    log.info(s"$MY_TAG -- $SPARK_MAX_EXEC -- Before(All,Workers,Receivers) = ($numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
     requestMaximumExecutors()
-    log.info(s"$SPARK_MAX_EXEC")
+    log.info(s"$MY_TAG -- $SPARK_MAX_EXEC -- After(All,Workers,Receivers) = ($numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
   }
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
@@ -40,15 +41,18 @@ trait RLResourceManager extends ResourceManager {
     // check if batch is valid
     if (isInvalidBatch(info)) return
 
-    runningSum = runningSum + info.totalDelay.get.toInt
+    runningSum = runningSum + info.processingDelay.get.toInt
     numberOfBatches = numberOfBatches + 1
     incomingMessages = incomingMessages + info.numRecords.toInt
 
+    // count and log SLO violations
+    logAndCountSLOInfo(info)
+
     if (numberOfBatches < WindowSize) {
-      log.info(s"$WINDOW_ADDED -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
+      log.info(s"$MY_TAG -- $WINDOW_ADDED -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
       return
     }
-    log.info(s"$WINDOW_FULL -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
+    log.info(s"$MY_TAG -- $WINDOW_FULL -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
 
     // take average
     val currentNumberOfExecutors: Int = numberOfWorkerExecutors
@@ -63,9 +67,6 @@ trait RLResourceManager extends ResourceManager {
     // build the state variable
     currentState = State(currentNumberOfExecutors, currentLatency, currentIncomingMessages)
     if (isInvalidState(currentState)) return
-
-    // count and log SLO violations
-    logAndCountSLOInfo(info)
 
     // do nothing and just initialize to no action
     if (lastState == null) {
@@ -96,28 +97,28 @@ trait RLResourceManager extends ResourceManager {
     val batchTime: Long = info.batchTime.milliseconds
 
     if (info.processingDelay.isEmpty) {
-      log.warn(s"$BATCH_EMPTY -- BatchTime = $batchTime [ms]")
+      log.warn(s"$MY_TAG -- $BATCH_EMPTY -- BatchTime = $batchTime [ms]")
       IsInvalid
     } else if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
-      log.info(s"$GRACE_PERIOD -- BatchTime = $batchTime [ms]")
+      log.info(s"$MY_TAG -- $GRACE_PERIOD -- BatchTime = $batchTime [ms]")
       IsInvalid
     } else {
-      log.info(s"$BATCH_OK -- BatchTime = $batchTime [ms]")
+      log.info(s"$MY_TAG -- $BATCH_OK -- BatchTime = $batchTime [ms]")
       IsValid
     }
   }
 
   def isInvalidState(state: State): Boolean = if (state.numberOfExecutors > MaximumExecutors) {
-    log.warn(s"$INVALID_STATE_EXCESSIVE_EXECUTORS -- $state")
+    log.warn(s"$MY_TAG -- $INVALID_STATE_EXCESSIVE_EXECUTORS -- $state")
     IsInvalid
   } else if (state.latency >= CoarseMaximumLatency) {
-    log.warn(s"$INVALID_STATE_EXCESSIVE_LATENCY -- $state")
+    log.warn(s"$MY_TAG -- $INVALID_STATE_EXCESSIVE_LATENCY -- $state")
     IsInvalid
   } else if (state.incomingMessages >= CoarseMaximumIncomingMessages) {
-    log.warn(s"$INVALID_STATE_EXCESSIVE_INCOMING_MESSAGES -- $state")
+    log.warn(s"$MY_TAG -- $INVALID_STATE_EXCESSIVE_INCOMING_MESSAGES -- $state")
     IsInvalid
   } else {
-    log.info(s"$STATE_OK -- $state")
+    log.info(s"$MY_TAG -- $STATE_OK -- $state")
     IsValid
   }
 
@@ -125,13 +126,13 @@ trait RLResourceManager extends ResourceManager {
     lastState = currentState
     lastAction = NoAction
 
-    log.info(s"$FIRST_WINDOW -- Initialized")
+    log.info(s"$MY_TAG -- $FIRST_WINDOW -- Initialized")
     setDecisionTime()
   }
 
   def setDecisionTime(): Unit = {
     lastTimeDecisionMade = System.currentTimeMillis()
-    log.info(s"$DECIDED -- LastTimeDecisionMade = $lastTimeDecisionMade")
+    log.info(s"$MY_TAG -- $DECIDED -- LastTimeDecisionMade = $lastTimeDecisionMade")
   }
 
   def reconfigure(actionToTake: Action): Unit = actionToTake match {
@@ -142,16 +143,16 @@ trait RLResourceManager extends ResourceManager {
 
   def scaleIn(): Unit = {
     val killed: Seq[String] = removeExecutors(shuffle(workerExecutors).take(One))
-    log.info(s"$EXEC_KILL_OK -- Killed = $killed")
+    log.info(s"$MY_TAG -- $EXEC_KILL_OK -- Killed = $killed")
   }
 
   def scaleOut(): Unit = {
     // TODO: ScaleOut at fixed or exponential steps?
-    if (addExecutors(One)) log.info(s"$EXEC_ADD_OK")
-    else log.error(s"$EXEC_ADD_ERR")
+    if (addExecutors(One)) log.info(s"$MY_TAG -- $EXEC_ADD_OK")
+    else log.error(s"$MY_TAG -- $EXEC_ADD_ERR")
   }
 
-  def noAction(): Unit = log.info(s"$EXEC_NO_ACTION")
+  def noAction(): Unit = log.info(s"$MY_TAG -- $EXEC_NO_ACTION")
 
   def whatIsTheNextAction(): Action = policy.nextActionFrom(lastState, lastAction, currentState)
 

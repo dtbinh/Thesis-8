@@ -136,7 +136,7 @@ An RDD has enough information about how it was derived from other RDDs. This mea
     \item \textbf{Partitioning}. Some transformations like \lstinline$groupByKey$ or \lstinline$join$ partition the original RDD into multiple secondary partitions. RDDs allow application developers to perform partitioning -- hash, range or any custom partitioning strategy -- such that relevant records are \emph{co-partitioned} on same machine. This is particularly useful for \emph{operator placement} optimizations.
 \end{itemize}
 
-In order to simplify the concept of lineage graph, listing~\ref{l:sp:log-error}\footnotemark and figure~\ref{fig:spark-lineage-sample}\footnotemark[\value{footnote}] illustrate a simple log processing pipeline and its corresponding generated lineage.
+In order to simplify the concept of lineage graph, listing~\ref{l:sp:log-error}\footnotemark and figure~\ref{fig:spark-lineage-sample}\footnotemark[\value{footnote}] illustrate a simple log processing pipeline and its corresponding generated lineage graph.
 \footnotetext{The figure and sample code has been partially taken from~\cite{Zaharia:2012}}
 \begin{lstlisting}[float=h, caption={Parsing errors in log files from HDFS},label={l:sp:log-error},captionpos=b,morekeywords={val}]
 val lines = spark.textFile("hdfs://...")
@@ -158,7 +158,7 @@ val slowQueries = mysqlErrors.filter(_.contains("SLOW QUERY"))
 \begin{figure}[p]
     \centering
     \includegraphics[clip,trim=4.5cm 9cm 2.2cm 2.2cm]{spark-lineage-sample.pdf}
-    \caption[RDD Transformations and Corresponding Lineage]{RDD Transformations and Corresponding Lineage}
+    \caption[RDD Transformations and Corresponding Lineage Graph]{RDD Transformations and Corresponding Lineage Graph}
     \label{fig:spark-lineage-sample}
 \end{figure}
 
@@ -222,6 +222,51 @@ Figure~\ref{fig:sp:logical} shows a sample job with logical operators and Figure
 \clearpage
 \section{Discretized Streams}
 \label{sp:dstream}
+
+Many modern big data applications process data in real-time as they enter the processing pipeline. Online machine learning, fraud detection, spam detection, etc. are just few examples of applications that require near real time processing of data. In order to process incoming records in near real-time, new generation of data processing frameworks has been emerged which is known as \emph{stream processing systems}. Apache Storm~\cite{Storm} is an example of stream processing systems. Although these systems provide stream processing pipelines, but they also come with a couple of deficiencies. First, section~\ref{sp:continues-model} explores the architecture of traditional stream processing systems and its problems. Then, section~\ref{sp:dstream-model} describes the new stream processing model known as \emph{Discretized Streams} (D-Streams)~\cite{Zaharia:2013} that is built on top of RDDs in order to resolve the problems of traditional model.
+
+\subsection{Continuous Operator Processing Model}
+\label{sp:continues-model}
+
+Though the concept of stream processing is nothing new and there has been many proposals and implementations like~\cite{Grandl:2014:MPC}~\cite{Storm}~\cite{flink}, but most of these systems are based on a processing model known as \emph{Continuous Operator Processing Model}. In this model streaming computations are divided into a set of \emph{long-lived stateful} operators that process messages in a loop:
+\begin{itemize}
+    \item Get one or more messages from previous operators.
+    \item Apply the computation -- business logic -- on newly received messages. Query the internal state if required.
+    \item Update internal state if necessary.
+    \item Produce any number of messages as the result of computation. These messages will be sent to next operators down the pipeline.
+\end{itemize}
+
+While continuous processing model minimizes latency, the stateful architecture of operators and nondeterminism that comes from record interleaving on the network, makes it hard to provide fault tolerance efficiently. In particular, recovering from a \emph{failed} or slow node -- \emph{stragglers} -- is challenging. The are usually two standard approaches to overcome these issues.
+\begin{description}[leftmargin=0pt]
+    \item[Replication] In replication model which is borrowed from database systems, there are two copies processing graphs. Produced messages are sent as duplicates to down stream operators. However, just replicating messages is not sufficient. A \emph{consensus protocol} should exist in-place to ensure that both operator replicas see incoming messages in the same order that is sent by upstream operators. Even though replication is a costly operation but it recovers from failures very fast, since both replicas are processing message online in synchronized steps.
+    \item[Upstream Backup] The basic idea behind this model~\cite{Hwang:2005} is to checkpoint the internal state every once in a while to a stable shared storage. In case an operator -- or node -- fails, a backup operator takes over and reloads the last successfully written checkpoint. Then backup operator rebuilds the state by replying new messages and reproducing lost messages as necessary. Although this model is more efficient in terms of replication costs, but suffers from high fail-over time. Backup node should replay newly published messages from the last checkpoint and apply them to the internal state. Depending on checkpointing interval, this might be a time consuming operation.
+\end{description}
+Besides the fault-tolerance costs of this model, dealing with straggler nodes are even more challenging. Replication model provides no solution at all, since two replicas are processing messages synchronously. The only way to resolve this issue in Upstream Backup model is to fail -- kill -- the slow operator and let the backup operator takes over the responsibility which will undergo slow recovery process. Figure~\ref{fig:sp:cont-op} depicts these two approaches with additional synchronization and replication messages involved.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[clip,trim=2.5cm 20cm 6.7cm 2.2cm]{cont-op.pdf}
+    \caption[Continuous Operator Processing Model]{Continuous Operator Processing Model}
+    \label{fig:sp:cont-op}
+\end{figure}
+
+\subsection{D-Stream Processing Model}
+\label{sp:dstream-model}
+
+\emph{Discretized Streams} (D-Streams)~\cite{Zaharia:2013} is a novel technique to overcome the issues the Continuous Operator Processing Model. The basic idea behind D-Streams is to separate the computation from its state and keep the state as RDDs. This separation provides the following benefits.
+\begin{itemize}
+    \item Computation of messages becomes a set of \emph{stateless} and \emph{deterministic} tasks operating on RDDs.
+    \item RDDs already provide resiliency through in-memory replication and lineage recomputation. There is no need for further mechanisms to provide fault-tolerance.
+    \item Unified processing model for batch and stream processing.
+\end{itemize}
+
+As a consequence of storing operator intermediate state as RDDs, a streaming computation can be modeled as series of \emph{deterministic batch computations} on small intervals -- known as micro-batch. Messages received in each batch interval is stored reliably across the cluster to form an input dataset for that interval. Once the time interval completes, this dataset is processed just like traditional batch processing using \lstinline$map$, \lstinline$filter$, \lstinline$groupByKey$, etc. Formally, A D-Stream is a sequence of \emph{immutable}, \emph{partitioned} datasets (RDDs) that can be acted on by deterministic transformations~\cite{Zaharia:2013}. These  transformations produce new D-Streams, and may create intermediate state represented as RDDs. Figure~\ref{fig:sp:dstream-high} shows high-level D-Stream computation model.
+\begin{figure}[hb]
+    \centering
+    \includegraphics[clip,trim=3cm 23cm 3.5cm 2.1cm,scale=0.81]{dstream-high.pdf}
+    \caption[D-Stream High Level Processing Model]{D-Stream High Level Processing Model}
+    \label{fig:sp:dstream-high}
+\end{figure}
+
 
 \section{Conclusion}
 \label{sp:conc}

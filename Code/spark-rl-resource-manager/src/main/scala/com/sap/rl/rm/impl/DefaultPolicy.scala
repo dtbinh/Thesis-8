@@ -18,7 +18,7 @@ class DefaultPolicy(constants: RMConstants, stateSpace: StateSpace) extends Poli
     val qValues = currentExecutors match {
       case MinimumExecutors =>
         log.warn(
-          s""" --- $EXEC_NOT_ENOUGH ---
+          s""" --- $MY_TAG -- $EXEC_NOT_ENOUGH ---
              | lastState=$lastState
              | lastAction=$lastAction
              | currentState=$currentState""".stripMargin)
@@ -27,7 +27,7 @@ class DefaultPolicy(constants: RMConstants, stateSpace: StateSpace) extends Poli
         }
       case MaximumExecutors =>
         log.warn(
-          s""" --- $EXEC_EXCESSIVE ---
+          s""" --- $MY_TAG -- $EXEC_EXCESSIVE ---
              | lastState=$lastState
              | lastAction=$lastAction
              | currentState=$currentState""".stripMargin)

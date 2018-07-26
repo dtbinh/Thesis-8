@@ -1,5 +1,6 @@
 package com.sap.rl.rm.td
 
+import com.sap.rl.rm.LogStatus._
 import com.sap.rl.rm.{RLResourceManager, RMConstants}
 import org.apache.log4j.{LogManager, Logger}
 import org.apache.spark.streaming.StreamingContext
@@ -23,7 +24,7 @@ class TemporalDifferenceResourceManager(val constants: RMConstants, val streamin
     stateSpace.updateQValueForAction(lastState, lastAction, newQVal)
 
     log.info(
-      s""" --- QValue-Update-Begin ---
+      s""" --- $MY_TAG -- QValue-Update-Begin ---
          | ==========================
          | lastState=$lastState
          | lastAction=$lastAction

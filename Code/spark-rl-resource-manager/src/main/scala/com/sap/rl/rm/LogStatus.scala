@@ -3,6 +3,8 @@ package com.sap.rl.rm
 object LogStatus extends Enumeration {
   type Status = Value
 
+  val MY_TAG: Status = Value
+
   val APP_STARTED: Status = Value
   val APP_ENDED: Status = Value
   val STREAMING_STARTED: Status = Value
