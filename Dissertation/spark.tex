@@ -36,7 +36,7 @@ Figure~\ref{fig:spark-runtime}\footnote{The figure has been partially taken from
 \begin{figure}[h]
     \centering
     \includegraphics[clip,trim=3cm 16.8cm 2.5cm 2.5cm]{spark-high.pdf}
-    \caption[Spark Runtime Architecture]{Spark Runtime Architecture}
+    \caption{Architecture of Spark Runtime}
     \label{fig:spark-runtime}
 \end{figure}
 \begin{table*}[ht]
@@ -51,7 +51,7 @@ Figure~\ref{fig:spark-runtime}\footnote{The figure has been partially taken from
         \bottomrule
     \end{tabularx}
     \centering
-    \caption{Summary of Spark runtime components}
+    \caption{Summary of Spark Runtime Components}
     \label{tab:spark-runtime}
 \end{table*}
 
@@ -62,7 +62,7 @@ Section~\ref{sp:run} described the coarse grained architecture of Spark. However
 \begin{figure}[h]
     \centering
     \includegraphics[clip,trim=2.4cm 19cm 3.5cm 2cm]{spark-cluster.pdf}
-    \caption[Spark Cluster Manager Architecture]{Spark Cluster Manager Architecture}
+    \caption[Architecture of Spark Cluster Manager]{Architecture of Spark Cluster Manager}
     \label{fig:spark-cluster}
 \end{figure}
 
@@ -94,7 +94,7 @@ Note that, the term \emph{executor} is a conceptual term and implementation deta
      \begin{figure}[ht]
          \centering
          \includegraphics[clip,trim=4cm 13cm 4cm 2.2cm]{spark-full.pdf}
-         \caption[Spark Fault-Tolerance Architecture]{Spark Fault-Tolerance Architecture}
+         \caption{Architecture of Spark Fault-Tolerance}
          \label{fig:spark-full}
      \end{figure}
 \end{description}
@@ -138,7 +138,7 @@ An RDD has enough information about how it was derived from other RDDs. This mea
 
 In order to simplify the concept of lineage graph, listing~\ref{l:sp:log-error}\footnotemark and figure~\ref{fig:spark-lineage-sample}\footnotemark[\value{footnote}] illustrate a simple log processing pipeline and its corresponding generated lineage graph.
 \footnotetext{The figure and sample code has been partially taken from~\cite{Zaharia:2012}}
-\begin{lstlisting}[float=h, caption={Parsing errors in log files from HDFS},label={l:sp:log-error},captionpos=b,morekeywords={val}]
+\begin{lstlisting}[float=h, caption={Parsing Errors in Log Files From HDFS},label={l:sp:log-error},captionpos=b,morekeywords={val}]
 val lines = spark.textFile("hdfs://...")
 val errors = lines.filter(_.startsWith("ERROR"))
 errors.persist()
@@ -158,7 +158,7 @@ val slowQueries = mysqlErrors.filter(_.contains("SLOW QUERY"))
 \begin{figure}[p]
     \centering
     \includegraphics[clip,trim=4.5cm 9cm 2.2cm 2.2cm]{spark-lineage-sample.pdf}
-    \caption[RDD Transformations and Corresponding Lineage Graph]{RDD Transformations and Corresponding Lineage Graph}
+    \caption{RDD Transformations and Corresponding Lineage Graph}
     \label{fig:spark-lineage-sample}
 \end{figure}
 
@@ -180,10 +180,10 @@ In a lineage graph RDDs are derived from one another. This makes each RDD depend
     \begin{figure}[p]
         \centering
         \includegraphics[clip,trim=4cm 11.5cm 3.1cm 2.5cm]{narrow-dep.pdf}
-        \caption[RDD Narrow Dependencies]{RDD Narrow Dependencies}
+        \caption{RDD Narrow Dependencies}
         \label{fig:sp:narrow-dep}
         \includegraphics[clip,trim=2cm 19.5cm 3.5cm 4cm]{wide-dep.pdf}
-        \caption[RDD Wide Dependencies]{RDD Wide Dependencies}
+        \caption{RDD Wide Dependencies}
         \label{fig:sp:wide-dep}
     \end{figure}
 \end{itemize}
@@ -212,10 +212,10 @@ Figure~\ref{fig:sp:logical} shows a sample job with logical operators and Figure
 \begin{figure}[h!]
     \centering
     \includegraphics[clip,trim=2.3cm 23.5cm 1.7cm 2.5cm,scale=0.97]{stage-logical.pdf}
-    \caption[Spark Job with Logical Operators]{Spark Job with Logical Operators}
+    \caption{Spark Job with Logical Operators}
     \label{fig:sp:logical}
     \includegraphics[clip,trim=2.3cm 11.4cm 1.7cm 10cm,scale=0.97]{stage-dag.pdf}
-    \caption[Spark Job Stages at Runtime]{Spark Job Stages at Runtime}
+    \caption{Spark Job Stages at Runtime}
     \label{fig:sp:dag}
 \end{figure}
 
@@ -245,7 +245,7 @@ Besides the fault-tolerance costs of this model, dealing with straggler nodes ar
 \begin{figure}[ht]
     \centering
     \includegraphics[clip,trim=2.5cm 20cm 6.7cm 2.2cm]{cont-op.pdf}
-    \caption[Continuous Operator Processing Model]{Continuous Operator Processing Model}
+    \caption{Continuous Operator Processing Model}
     \label{fig:sp:cont-op}
 \end{figure}
 
@@ -262,8 +262,8 @@ Besides the fault-tolerance costs of this model, dealing with straggler nodes ar
 As a consequence of storing operator intermediate state as RDDs, a streaming computation can be modeled as series of \emph{deterministic batch computations} on small intervals -- known as micro-batch. Messages received in each batch interval is stored reliably across the cluster to form an input dataset for that interval. Once the time interval completes, this dataset is processed just like traditional batch processing using \lstinline$map$, \lstinline$filter$, \lstinline$groupByKey$, etc. Formally, A D-Stream is a sequence of \emph{immutable}, \emph{partitioned} datasets (RDDs) that can be acted on by deterministic transformations~\cite{Zaharia:2013}. These  transformations produce new D-Streams, and may create intermediate state represented as RDDs. Figure~\ref{fig:sp:dstream-high} shows high-level D-Stream computation model.
 \begin{figure}[hb]
     \centering
-    \includegraphics[clip,trim=3cm 23cm 3.5cm 2.1cm,scale=0.98]{dstream-high.pdf}
-    \caption[D-Stream High Level Processing Model]{D-Stream High Level Processing Model}
+    \includegraphics[clip,trim=2.1cm 23cm 2cm 2.6cm]{dstream-high.pdf}
+    \caption{D-Stream High Level Processing Model}
     \label{fig:sp:dstream-high}
 \end{figure}
 
@@ -278,15 +278,28 @@ val counts       = ones.runningReduce((a, b) => a + b)
 \begin{figure}[h]
     \centering
     \includegraphics[clip,trim=2.5cm 11cm 3cm 4cm]{dstream-example.pdf}
-    \caption[Streaming Word Count using D-Stream API]{Streaming Word Count using D-Stream API}
+    \caption{Streaming Word Count Using D-Stream API}
     \label{fig:sp:dstream-api}
 \end{figure}
 \footnotetext{The code and figure has been partially taken from~\cite{Zaharia:2013}}
 
 \clearpage
-\subsection{D-Stream Fault-Tolerance}
+\subsection{Fault-Tolerant Message Consumption}
 Since RDDs provide the basic building block of Spark Streaming, achieving fault-tolerance in streaming applications is a straightforward process. In case of any node failure, failed RDD partitions can be reproduced easily by evaluating lineage graph and determining which transformations need to be recomputed. Furthermore, for stateful transformations, Spark already provides checkpointing. However, there is one case that needs more attention.
 
-Naturally, in a streaming applications, live stream of records are coming from some data sources. For example, in log processing application it may originate from web servers or in live monitoring applications it comes from sensors. Now the questions is what happens if the first transformation that reads data from live stream fails? Are the consumed messages lost? or it can be replayed.
+Naturally, in streaming applications, live stream of records are coming from some data sources. For example, in log processing application it may originate from web servers or in live monitoring applications it comes from sensors. If one of the RDD transformations crashes during message consumption, two questions arise:
+\begin{itemize}
+    \item Are the messages that were consumed before crashing, be redelivered after relaunching failed transformations?
+    \item In case lost messages are redelivered, will they be delivered with the same order as consumed before crashing?
+\end{itemize}
+The answer to these two questions leads us to \emph{three} types of data sources.
+\begin{description}[leftmargin=0pt]
+    \item[Reliable Ordered] With this type of data sources, the data source provides ordering and reliable message consumption capabilities. Messages will be kept in data source until its reliably confirmed -- ACKed -- by consumer. In case of consumer crash, messages will be delivered with the same order as before. Many of publish-subscribe message brokers such as Apache Kafka~\cite{kafka} provide this feature.
+    \item[Reliable Unordered] With this type of data sources, the data source provides reliable message store but redelivery is not guaranteed with the same order as before consumer crash. For cases where ordered message consumption is crucial for business logic of the application, Spark Streaming provides \emph{WAL-based} consumers. With WAL-based consumers, each consumer appends the received message to a log file before starting to consume the message. These log files are stored in a distributed file system like HDFS. In case of consumer failure, another consumer re-opens the the log file and re-process the messages with same order as before.
+    \item[Unreliable] This type of data source does not provide any form of reliability, ordering and fault-tolerance. Hence, WAL-based message consumption shall be enabled by application developer.
+\end{description}
+
 \section{Conclusion}
 \label{sp:conc}
+
+In this chapter different aspects and features of Spark has been explored. Built on top of unique features of Resilient Distributed Datasets (RDDs), Spark offers a unified approach for batch and stream processing. As explained during the chapter, deficiencies and problems of traditional systems have been addressed to some extent by Spark.

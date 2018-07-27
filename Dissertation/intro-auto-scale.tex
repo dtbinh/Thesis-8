@@ -57,7 +57,7 @@ First, responsibilities of different components shall be clarified. Table~\ref{t
         \bottomrule
     \end{tabular}
     \centering
-    \caption{Auto-Scaler components summary}
+    \caption{Summary of Auto-Scaler Components}
     \label{tab:auto-scaler-sum}
 \end{table*}
 An Auto-Scaling system typically consists of following sub-components.
@@ -131,7 +131,7 @@ For the sake of understandability, Algorithm~\ref{a:as-workflow} describes the a
             \error{"request can not be fulfilled"}
         }
     }
-    \caption{General work-flow of an Auto-Scaler}
+    \caption{General Work-Flow of an Auto-Scaler}
     \label{a:as-workflow}
 \end{algorithm}
 
@@ -150,7 +150,7 @@ In each round an Auto-Scaler decides to take an action and request that specific
         \bottomrule
     \end{tabular}
     \centering
-    \caption{Summary of feasible actions}
+    \caption{Feasible Actions of an Auto-Scaler}
     \label{tab:actions-sum}
 \end{table*}
 This thesis, assumes three possible actions.
@@ -183,7 +183,7 @@ Auto-Scalers can be modeled and classified in different categories. In a sense, 
         \bottomrule
     \end{tabularx}
     \centering
-    \caption{Summary of Auto-Scaling dimensions}
+    \caption{Dimensions of Auto-Scaling}
     \label{tab:taxonomy-sum}
 \end{table*}
 \subsection{Schedule-Based versus Rule-Based}
@@ -217,7 +217,7 @@ The generic architecture which is described in section~\ref{ias:arch} does not i
         \bottomrule
     \end{tabularx}
     \centering
-    \caption{Summary of execution modes}
+    \caption{Execution Modes of an Auto-Scaler}
     \label{tab:exec-mode}
 \end{table*}
 \clearpage
@@ -226,7 +226,7 @@ The generic architecture which is described in section~\ref{ias:arch} does not i
     \begin{figure}[hb]
         \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-master-backup.pdf}
         \centering
-        \caption{Master-Slave or Global Auto-Scaler Architecture}
+        \caption{Architecture of Master-Slave or Global Controller}
         \label{fig:auto-scaler-master-backup}
     \end{figure}
     \clearpage
@@ -234,7 +234,7 @@ The generic architecture which is described in section~\ref{ias:arch} does not i
     \begin{figure}[hb]
         \includegraphics[clip, trim=3cm 12.2cm 2.5cm 2.5cm]{auto-scaler-full-dist.pdf}
         \centering
-        \caption{Distributed Without Coordination Auto-Scaler Architecture}
+        \caption{Architecture of Distributed Non-Coordinated Controller}
         \label{fig:auto-scaler-dist-wo-coord}
     \end{figure}
     \clearpage
@@ -242,15 +242,15 @@ The generic architecture which is described in section~\ref{ias:arch} does not i
     \begin{figure}[hb]
         \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-dist-coord.pdf}
         \centering
-        \caption{Distributed Coordinated Auto-Scaler Architecture}
+        \caption{Architecture of Distributed Coordinated Controller}
         \label{fig:auto-scaler-dist-coord}
     \end{figure}
     \clearpage
     \item[Hierarchical Controllers] This architecture is the mixture of previous models. It's a combination of \emph{Global Controller} and \emph{Distributed Coordinated Architecture} model. Local Auto-Scalers communicate with a global controller in order to perform necessary actions. Local Auto-Scalers might also communicate with each other. Additionally, one or more back controller might also accompany global controller. Furthermore, there might be no limit on who actually performs the actions. Each Auto-Scaler -- whether it is operating in local or global model -- might perform actions independent of the others. Figure~\ref{fig:auto-scaler-hierar} illustrates this architecture.
     \begin{figure}[hb]
-        \includegraphics[clip,trim=3cm 4.2cm 2.5cm 2.8cm,scale=0.8]{auto-scaler-hierarchy.pdf}
+        \fbox{\includegraphics[clip,trim=3cm 4.2cm 2.5cm 2.8cm,scale=0.8]{auto-scaler-hierarchy.pdf}}
         \centering
-        \caption{Hierarchical Controllers Auto-Scaler Architecture}
+        \caption{Hierarchical Controllers Architecture}
         \label{fig:auto-scaler-hierar}
     \end{figure}
 \end{description}
@@ -319,7 +319,7 @@ Algorithm~\ref{a:threshold-based} better describes this approach in a pseudocode
             \DN{}
         }
     }
-    \caption{General work-flow of threshold-based techniques}
+    \caption{General Work-Flow of Threshold-Based Techniques}
     \label{a:threshold-based}
 \end{algorithm}
 
@@ -353,7 +353,7 @@ set of possible available actions in state $s_t$. One time step later, as a cons
 \begin{figure}[ht]
     \centering
     \includegraphics[clip,trim=4cm 23.5cm 4cm 2.5cm]{RL.pdf}
-    \caption[Reinforcement Learning Agent]{Reinforcement Learning Agent}
+    \caption{Reinforcement Learning Agent}
     \label{fig:rl}
 \end{figure}
 
@@ -390,7 +390,7 @@ Queuing theory has been thoroughly used in the context of packet processing to e
 \begin{figure}[h]
     \centering
     \includegraphics[clip, trim=2cm 25cm 3cm 1cm]{queue.pdf}
-    \caption[Queuing Theory with single processor (left) and with multiple processors (right)]{Queuing Theory with single processor (left), with multiple processors (right)}
+    \caption{Queuing Theory with Single Processor (Left), with Multiple Processors (Right)}
     \label{fig:queue}
 \end{figure}
 
@@ -417,7 +417,7 @@ Control Theory is categorized as mixture of reactive and proactive systems and d
 \begin{figure}[h]
     \centering
     \includegraphics[clip, trim=1.2cm 23.5cm 3.4cm 3cm]{control.pdf}
-    \caption[Feedback Control System]{Feedback Control System}
+    \caption{Feedback Control System}
     \label{fig:feedback}
 \end{figure}
 Feedback driven control systems are further divided into multiple categories~\cite{Patikirikorala:2018}.

@@ -23,6 +23,7 @@
 \usepackage{breakurl}
 \usepackage[ruled,linesnumbered,commentsnumbered]{algorithm2e}
 \usepackage{listings}
+\renewcommand{\lstlistlistingname}{List of Code Snippets}
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{enumitem}
@@ -55,11 +56,16 @@
 \pagenumbering{Roman}
 
 \tableofcontents
-\newpage
+\clearpage
 \listoffigures
-\newpage
+\clearpage
 \listoftables
-\newpage
+\clearpage
+\lstlistoflistings
+\clearpage
+\listofalgorithms
+\addcontentsline{toc}{chapter}{List of Algorithms}
+\clearpage
 \newcounter{romanpagenumbers}
 \setcounter{romanpagenumbers}{\value{page}}
 
