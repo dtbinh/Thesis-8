@@ -262,11 +262,31 @@ Besides the fault-tolerance costs of this model, dealing with straggler nodes ar
 As a consequence of storing operator intermediate state as RDDs, a streaming computation can be modeled as series of \emph{deterministic batch computations} on small intervals -- known as micro-batch. Messages received in each batch interval is stored reliably across the cluster to form an input dataset for that interval. Once the time interval completes, this dataset is processed just like traditional batch processing using \lstinline$map$, \lstinline$filter$, \lstinline$groupByKey$, etc. Formally, A D-Stream is a sequence of \emph{immutable}, \emph{partitioned} datasets (RDDs) that can be acted on by deterministic transformations~\cite{Zaharia:2013}. These  transformations produce new D-Streams, and may create intermediate state represented as RDDs. Figure~\ref{fig:sp:dstream-high} shows high-level D-Stream computation model.
 \begin{figure}[hb]
     \centering
-    \includegraphics[clip,trim=3cm 23cm 3.5cm 2.1cm,scale=0.81]{dstream-high.pdf}
+    \includegraphics[clip,trim=3cm 23cm 3.5cm 2.1cm,scale=0.98]{dstream-high.pdf}
     \caption[D-Stream High Level Processing Model]{D-Stream High Level Processing Model}
     \label{fig:sp:dstream-high}
 \end{figure}
 
+In order to clarify D-Stream API, listing~\ref{l:sp:dstream-api}\footnotemark shows a simple streaming word count example. It creates a \lstinline$pageViews$ D-Stream by
+reading even stream over TCP, and groups them into 1-second batch intervals. Then, it transforms the event stream to a new D-Stream of \lstinline$(URL,1)$ pairs called
+\lstinline$ones$. Finally, it performs a running count with a \emph{stateful} \lstinline$runningReduce$ operator. Figure~\ref{fig:sp:dstream-api}\footnotemark[\value{footnote}] depicts the corresponding lineage graph and how the streams are divided are into batch intervals. Note that smaller rectangles illustrates RDD partitions.
+\begin{lstlisting}[float=h, caption={Streaming Word Count using D-Stream API},label={l:sp:dstream-api},captionpos=b,morekeywords={val}]
+val pageViews = readStream("tcp://...", "1s")
+val ones           = pageViews.map(event => (event.url, 1))
+val counts       = ones.runningReduce((a, b) => a + b)
+\end{lstlisting}
+\begin{figure}[h]
+    \centering
+    \includegraphics[clip,trim=2.5cm 11cm 3cm 4cm]{dstream-example.pdf}
+    \caption[Streaming Word Count using D-Stream API]{Streaming Word Count using D-Stream API}
+    \label{fig:sp:dstream-api}
+\end{figure}
+\footnotetext{The code and figure has been partially taken from~\cite{Zaharia:2013}}
 
+\clearpage
+\subsection{D-Stream Fault-Tolerance}
+Since RDDs provide the basic building block of Spark Streaming, achieving fault-tolerance in streaming applications is a straightforward process. In case of any node failure, failed RDD partitions can be reproduced easily by evaluating lineage graph and determining which transformations need to be recomputed. Furthermore, for stateful transformations, Spark already provides checkpointing. However, there is one case that needs more attention.
+
+Naturally, in a streaming applications, live stream of records are coming from some data sources. For example, in log processing application it may originate from web servers or in live monitoring applications it comes from sensors. Now the questions is what happens if the first transformation that reads data from live stream fails? Are the consumed messages lost? or it can be replayed.
 \section{Conclusion}
 \label{sp:conc}
