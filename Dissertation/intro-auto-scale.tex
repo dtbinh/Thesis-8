@@ -39,7 +39,7 @@ Figure~\ref{fig:auto-scaler-arch} illustrates generic architecture of an Auto-Sc
 \begin{figure}[ht]
     \centering
     \includegraphics[clip, trim=3cm 12.5cm 2.5cm 2.5cm]{auto-scaler-arch.pdf}
-    \caption{General Auto-Scaler Architecture}
+    \caption{Architecture of a Generic Auto-Scaler}
     \label{fig:auto-scaler-arch}
 \end{figure}
 First, responsibilities of different components shall be clarified. Table~\ref{tab:auto-scaler-sum} summarizes all components of the system.
@@ -248,9 +248,9 @@ The generic architecture which is described in section~\ref{ias:arch} does not i
     \clearpage
     \item[Hierarchical Controllers] This architecture is the mixture of previous models. It's a combination of \emph{Global Controller} and \emph{Distributed Coordinated Architecture} model. Local Auto-Scalers communicate with a global controller in order to perform necessary actions. Local Auto-Scalers might also communicate with each other. Additionally, one or more back controller might also accompany global controller. Furthermore, there might be no limit on who actually performs the actions. Each Auto-Scaler -- whether it is operating in local or global model -- might perform actions independent of the others. Figure~\ref{fig:auto-scaler-hierar} illustrates this architecture.
     \begin{figure}[hb]
-        \fbox{\includegraphics[clip,trim=3cm 4.2cm 2.5cm 2.8cm,scale=0.8]{auto-scaler-hierarchy.pdf}}
+        \includegraphics[clip,trim=3cm 4.2cm 2.5cm 2.8cm,scale=0.8]{auto-scaler-hierarchy.pdf}
         \centering
-        \caption{Hierarchical Controllers Architecture}
+        \caption{Architecture of Hierarchical Controllers}
         \label{fig:auto-scaler-hierar}
     \end{figure}
 \end{description}
