@@ -26,12 +26,9 @@ class SparkResourceManager(val constants: RMConstants, val streamingContext: Str
     listener.stop()
   }
 
-  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
+  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
     super.onBatchCompleted(batchCompleted)
     listener.onBatchCompleted(batchCompleted)
-
-    // count and log SLO violations
-    logAndCountSLOInfo(batchCompleted.batchInfo)
   }
 }
 

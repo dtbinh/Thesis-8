@@ -45,11 +45,8 @@ trait RLResourceManager extends ResourceManager {
     numberOfBatches = numberOfBatches + 1
     incomingMessages = incomingMessages + info.numRecords.toInt
 
-    // count and log SLO violations
-    logAndCountSLOInfo(info)
-
     if (numberOfBatches < WindowSize) {
-      log.info(s"$MY_TAG -- $WINDOW_ADDED -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
+      log.debug(s"$MY_TAG -- $WINDOW_ADDED -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
       return
     }
     log.info(s"$MY_TAG -- $WINDOW_FULL -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
@@ -97,13 +94,13 @@ trait RLResourceManager extends ResourceManager {
     val batchTime: Long = info.batchTime.milliseconds
 
     if (info.processingDelay.isEmpty) {
-      log.warn(s"$MY_TAG -- $BATCH_EMPTY -- BatchTime = $batchTime [ms]")
+      log.debug(s"$MY_TAG -- $BATCH_EMPTY -- BatchTime = $batchTime [ms]")
       IsInvalid
     } else if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
-      log.info(s"$MY_TAG -- $GRACE_PERIOD -- BatchTime = $batchTime [ms]")
+      log.debug(s"$MY_TAG -- $GRACE_PERIOD -- BatchTime = $batchTime [ms]")
       IsInvalid
     } else {
-      log.info(s"$MY_TAG -- $BATCH_OK -- BatchTime = $batchTime [ms]")
+      log.debug(s"$MY_TAG -- $BATCH_OK -- BatchTime = $batchTime [ms]")
       IsValid
     }
   }
@@ -118,7 +115,7 @@ trait RLResourceManager extends ResourceManager {
     log.warn(s"$MY_TAG -- $INVALID_STATE_EXCESSIVE_INCOMING_MESSAGES -- $state")
     IsInvalid
   } else {
-    log.info(s"$MY_TAG -- $STATE_OK -- $state")
+    log.debug(s"$MY_TAG -- $STATE_OK -- $state")
     IsValid
   }
 

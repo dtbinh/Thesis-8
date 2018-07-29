@@ -28,7 +28,6 @@ class RMConstants(sparkConf: SparkConf) {
   final val MaximumIncomingMessages = sparkConf.getInt(MaximumIncomingMessagesKey, MaximumIncomingMessagesDefault)
   final val IncomingMessagesGranularity = sparkConf.getInt(IncomingMessagesGranularityKey, IncomingMessagesGranularityDefault)
   final val CoarseMaximumIncomingMessages = MaximumIncomingMessages / IncomingMessagesGranularity
-  final val LatencyYellowZoneSteps: Int = sparkConf.getInt(LatencyYellowZoneStepsKey, LatencyYellowZoneStepsDefault)
   @transient private lazy val log = LogManager.getLogger(this.getClass)
 
   validateSettings()
@@ -75,7 +74,6 @@ class RMConstants(sparkConf: SparkConf) {
          | NoReward: $NoReward
          | MaximumIncomingMessages: $MaximumIncomingMessages
          | IncomingMessagesGranularity: $IncomingMessagesGranularity
-         | LatencyYellowZoneSteps: $LatencyYellowZoneSteps
          | --- Configuration ---""".stripMargin
 
     log.info(config)
@@ -128,8 +126,6 @@ object RMConstants {
   final val MaximumIncomingMessagesDefault = 20000
   final val IncomingMessagesGranularityKey = "spark.streaming.dynamicAllocation.incomingMessagesGranularity"
   final val IncomingMessagesGranularityDefault = 200
-  final val LatencyYellowZoneStepsKey = "spark.streaming.dynamicAllocation.latencyYellowZoneSteps"
-  final val LatencyYellowZoneStepsDefault = 5
 
   def apply(sparkConf: SparkConf): RMConstants = new RMConstants(sparkConf)
 }
