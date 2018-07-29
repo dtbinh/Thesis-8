@@ -83,14 +83,10 @@ class RMConstants(sparkConf: SparkConf) {
 object RMConstants {
 
   final val One: Int = 1
-  final val Zero: Int = 0
 
   final val LessThan: Int = -1
   final val GreaterThan: Int = 1
   final val Equal: Int = 0
-
-  final val IsInvalid: Boolean = true
-  final val IsValid: Boolean = !IsInvalid
 
   final val CoresPerTaskKey = "spark.task.cpus"
   final val CoresPerTaskDefault = 1

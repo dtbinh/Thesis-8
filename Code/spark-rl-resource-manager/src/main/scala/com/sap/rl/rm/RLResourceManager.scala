@@ -5,7 +5,7 @@ import com.sap.rl.rm.LogStatus._
 import com.sap.rl.rm.RMConstants._
 import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
 import org.apache.log4j.Logger
-import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted, StreamingListenerStreamingStarted}
+import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerStreamingStarted}
 
 import scala.util.Random.shuffle
 
@@ -29,94 +29,72 @@ trait RLResourceManager extends ResourceManager {
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     super.onStreamingStarted(streamingStarted)
-    log.info(s"$MY_TAG -- $SPARK_MAX_EXEC -- Before(All,Workers,Receivers) = ($numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
+    log.info(s"$MY_TAG -- $SPARK_MAX_EXEC -- Before = $numberOfActiveExecutors")
     requestMaximumExecutors()
-    log.info(s"$MY_TAG -- $SPARK_MAX_EXEC -- After(All,Workers,Receivers) = ($numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
+    log.info(s"$MY_TAG -- $SPARK_MAX_EXEC -- After = $numberOfActiveExecutors")
   }
 
-  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
-    super.onBatchCompleted(batchCompleted)
+  def inGracePeriod(batchTime: Long): Boolean = {
+    if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
+      log.debug(s"$MY_TAG -- $GRACE_PERIOD -- BatchTime = $batchTime [ms]")
+      return true
+    }
+    false
+  }
 
-    val info: BatchInfo = batchCompleted.batchInfo
+  override def processBatch(info: BatchInfo): Boolean = {
+    if (!super.processBatch(info)) return false
+
     // check if batch is valid
-    if (isInvalidBatch(info)) return
+    val batchTime = info.batchTime.milliseconds
+    if (inGracePeriod(batchTime)) return false
 
     runningSum = runningSum + info.processingDelay.get.toInt
     numberOfBatches = numberOfBatches + 1
     incomingMessages = incomingMessages + info.numRecords.toInt
 
-    if (numberOfBatches < WindowSize) {
-      log.debug(s"$MY_TAG -- $WINDOW_ADDED -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
-      return
-    }
-    log.info(s"$MY_TAG -- $WINDOW_FULL -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
+    if (numberOfBatches == WindowSize) {
+      log.info(s"$MY_TAG -- $WINDOW_FULL -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
 
-    // take average
-    val currentNumberOfExecutors: Int = numberOfWorkerExecutors
-    val currentLatency: Int = runningSum / (numberOfBatches * LatencyGranularity)
-    val currentIncomingMessages: Int = incomingMessages / (numberOfBatches * IncomingMessagesGranularity)
+      // take average
+      val averageLatency: Int = runningSum / (numberOfBatches * LatencyGranularity)
+      val averageIncomingMessages: Int = incomingMessages / (numberOfBatches * IncomingMessagesGranularity)
 
-    // reset
-    runningSum = 0
-    numberOfBatches = 0
-    incomingMessages = 0
+      // reset
+      runningSum = 0
+      numberOfBatches = 0
+      incomingMessages = 0
 
-    // build the state variable
-    currentState = State(currentNumberOfExecutors, currentLatency, currentIncomingMessages)
-    if (isInvalidState(currentState)) return
+      // build the state variable
+      currentState = State(numberOfActiveExecutors, averageLatency, averageIncomingMessages)
 
-    // do nothing and just initialize to no action
-    if (lastState == null) {
-      init()
-      return
-    }
+      // do nothing and just initialize to no action
+      if (lastState == null) {
+        init()
+      } else {
+        // calculate reward
+        rewardForLastAction = calculateRewardFor()
 
-    // calculate reward
-    rewardForLastAction = calculateRewardFor()
+        // take new action
+        actionToTake = whatIsTheNextAction()
 
-    // take new action
-    actionToTake = whatIsTheNextAction()
+        // specialize algorithm
+        specialize()
 
-    // specialize algorithm
-    specialize()
+        // request change
+        reconfigure(actionToTake)
 
-    // request change
-    reconfigure(actionToTake)
+        // store current state and action
+        lastState = currentState
+        lastAction = actionToTake
 
-    // store current state and action
-    lastState = currentState
-    lastAction = actionToTake
-
-    setDecisionTime()
-  }
-
-  def isInvalidBatch(info: BatchInfo): Boolean = {
-    val batchTime: Long = info.batchTime.milliseconds
-
-    if (info.processingDelay.isEmpty) {
-      log.debug(s"$MY_TAG -- $BATCH_EMPTY -- BatchTime = $batchTime [ms]")
-      IsInvalid
-    } else if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
-      log.debug(s"$MY_TAG -- $GRACE_PERIOD -- BatchTime = $batchTime [ms]")
-      IsInvalid
+        setDecisionTime()
+      }
     } else {
-      log.debug(s"$MY_TAG -- $BATCH_OK -- BatchTime = $batchTime [ms]")
-      IsValid
+      log.debug(s"$MY_TAG -- $WINDOW_ADDED -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
     }
-  }
 
-  def isInvalidState(state: State): Boolean = if (state.numberOfExecutors > MaximumExecutors) {
-    log.warn(s"$MY_TAG -- $INVALID_STATE_EXCESSIVE_EXECUTORS -- $state")
-    IsInvalid
-  } else if (state.latency >= CoarseMaximumLatency) {
-    log.warn(s"$MY_TAG -- $INVALID_STATE_EXCESSIVE_LATENCY -- $state")
-    IsInvalid
-  } else if (state.incomingMessages >= CoarseMaximumIncomingMessages) {
-    log.warn(s"$MY_TAG -- $INVALID_STATE_EXCESSIVE_INCOMING_MESSAGES -- $state")
-    IsInvalid
-  } else {
-    log.debug(s"$MY_TAG -- $STATE_OK -- $state")
-    IsValid
+    true
   }
 
   def init(): Unit = {
@@ -135,21 +113,18 @@ trait RLResourceManager extends ResourceManager {
   def reconfigure(actionToTake: Action): Unit = actionToTake match {
     case ScaleIn => scaleIn()
     case ScaleOut => scaleOut()
-    case NoAction => noAction()
+    case _ =>
   }
 
   def scaleIn(): Unit = {
-    val killed: Seq[String] = removeExecutors(shuffle(workerExecutors).take(One))
+    val killed: Seq[String] = removeExecutors(shuffle(activeExecutors).take(One))
     log.info(s"$MY_TAG -- $EXEC_KILL_OK -- Killed = $killed")
   }
 
   def scaleOut(): Unit = {
-    // TODO: ScaleOut at fixed or exponential steps?
     if (addExecutors(One)) log.info(s"$MY_TAG -- $EXEC_ADD_OK")
     else log.error(s"$MY_TAG -- $EXEC_ADD_ERR")
   }
-
-  def noAction(): Unit = log.info(s"$MY_TAG -- $EXEC_NO_ACTION")
 
   def whatIsTheNextAction(): Action = policy.nextActionFrom(lastState, lastAction, currentState)
 

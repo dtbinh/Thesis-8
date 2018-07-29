@@ -5,6 +5,7 @@ import org.apache.log4j.Logger
 import org.apache.spark.scheduler._
 import org.apache.spark.streaming.scheduler._
 import org.apache.spark.{SparkConf, SparkContext}
+import Math._
 
 trait ResourceManager extends StreamingListener with SparkListenerTrait with ExecutorAllocator {
 
@@ -37,22 +38,26 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
   }
 
   override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = {
-    log.info(s"$MY_TAG -- $SPARK_EXEC_ADDED -- (ID,Time,All,Workers,Receivers) = (${executorAdded.executorId},${executorAdded.time},$numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
+    log.info(s"$MY_TAG -- $SPARK_EXEC_ADDED -- (ID,Time,Workers) = (${executorAdded.executorId},${executorAdded.time},$numberOfActiveExecutors)")
   }
 
   override def onExecutorRemoved(executorRemoved: SparkListenerExecutorRemoved): Unit = {
-    log.info(s"$MY_TAG -- $SPARK_EXEC_REMOVED -- (ID,Time,All,Workers,Receivers) = (${executorRemoved.executorId},${executorRemoved.time},$numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
+    log.info(s"$MY_TAG -- $SPARK_EXEC_REMOVED -- (ID,Time,Workers) = (${executorRemoved.executorId},${executorRemoved.time},$numberOfActiveExecutors)")
   }
 
   override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
     log.info(s"$MY_TAG -- $APP_ENDED -- ApplicationEndTime = ${applicationEnd.time}")
   }
 
-  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = {
-    val info = batchCompleted.batchInfo
+  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
+    log.info(s"$MY_TAG -- $STREAMING_STARTED -- (StreamingStartTime,Workers) = (${streamingStarted.time},$numberOfActiveExecutors)")
+  }
+
+  def processBatch(info: BatchInfo): Boolean = {
+    if (isInValidBatch(info)) return false
+
     if (lastTimeReportLogged == 0) {
       lastTimeReportLogged = info.batchTime.milliseconds
-      return
     }
 
     statTotalBatches += 1
@@ -63,13 +68,13 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
     }
 
     statSumLatency += info.processingDelay.get.toInt
-    statMinLatency = Math.min(statMinLatency, info.processingDelay.get.toInt)
-    statMaxLatency = Math.max(statMaxLatency, info.processingDelay.get.toInt)
+    statMinLatency = min(statMinLatency, info.processingDelay.get.toInt)
+    statMaxLatency = max(statMaxLatency, info.processingDelay.get.toInt)
 
-    val currentWorkers = numberOfWorkerExecutors
+    val currentWorkers = numberOfActiveExecutors
     statSumExecutor += currentWorkers
-    statMinExecutor = Math.min(statMinExecutor, currentWorkers)
-    statMaxExecutor = Math.max(statMaxExecutor, currentWorkers)
+    statMinExecutor = min(statMinExecutor, currentWorkers)
+    statMaxExecutor = max(statMaxExecutor, currentWorkers)
 
     if ((info.batchTime.milliseconds - lastTimeReportLogged) >= REPORT_DURATION) {
       windowCounter += 1
@@ -78,6 +83,7 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
         s""" --- $MY_TAG -- $STAT ---
            | ==========================
            | TotalBatches=$statTotalBatches
+           | CurrentWindowBatches: $statWindowBatches
            | CurrentWindow: $windowCounter
            | ==========================
            | AverageLatency=${statSumLatency.toDouble / statWindowBatches}
@@ -107,10 +113,25 @@ trait ResourceManager extends StreamingListener with SparkListenerTrait with Exe
 
       lastTimeReportLogged = info.batchTime.milliseconds
     }
+
+    true
   }
 
-  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
-    log.info(s"$MY_TAG -- $STREAMING_STARTED -- (StreamingStartTime,All,Workers,Receivers) = (${streamingStarted.time},$numberOfActiveExecutors,$numberOfWorkerExecutors,$numberOfReceiverExecutors)")
+  def isInValidBatch(info: BatchInfo): Boolean = {
+    if (info.processingDelay.isEmpty) {
+      log.warn(s"$MY_TAG -- $BATCH_EMPTY -- BatchTime = ${info.batchTime} [ms]")
+      return true
+    }
+    if (info.processingDelay.get >= MaximumLatency) {
+      log.warn(s"$MY_TAG -- $EXCESSIVE_LATENCY -- ${info.processingDelay.get}")
+      return true
+    }
+    if (info.numRecords >= MaximumIncomingMessages) {
+      log.warn(s"$MY_TAG -- $EXCESSIVE_INCOMING_MESSAGES -- ${info.numRecords}")
+      return true
+    }
+    log.debug(s"$MY_TAG -- $BATCH_OK -- BatchTime = ${info.batchTime} [ms]")
+    false
   }
 
   def isSLOViolated(info: BatchInfo): Boolean = info.processingDelay.get.toInt >= TargetLatency

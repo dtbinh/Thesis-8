@@ -13,7 +13,7 @@ class TemporalDifferenceResourceManager(val constants: RMConstants, val streamin
   @transient override lazy val log: Logger = LogManager.getLogger(this.getClass)
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
-    super.onBatchCompleted(batchCompleted)
+    processBatch(batchCompleted.batchInfo)
   }
 
   def specialize(): Unit = {

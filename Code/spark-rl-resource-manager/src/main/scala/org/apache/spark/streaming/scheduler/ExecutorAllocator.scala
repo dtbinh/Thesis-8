@@ -20,24 +20,16 @@ trait ExecutorAllocator {
   protected val streamingContext: StreamingContext
   protected val constants: RMConstants
 
-  def workerExecutors: Seq[String] = activeExecutors.diff(receiverExecutors)
-
-  def numberOfWorkerExecutors: Int = numberOfActiveExecutors - numberOfReceiverExecutors
-
   def numberOfActiveExecutors: Int = activeExecutors.size
 
   def activeExecutors: Seq[String] = client.getExecutorIds()
-
-  def numberOfReceiverExecutors: Int = streamingContext.scheduler.receiverTracker.numReceivers()
-
-  def receiverExecutors: Seq[String] = streamingContext.scheduler.receiverTracker.allocatedExecutors.values.flatten.toSeq
 
   def addExecutors(num: Int): Boolean = client.requestExecutors(num)
 
   def removeExecutors(executors: Seq[String]): Seq[String] = client.killExecutors(executors)
 
   def requestMaximumExecutors(): Unit = {
-    val executorsToRequest = constants.MaximumExecutors - numberOfWorkerExecutors
+    val executorsToRequest = constants.MaximumExecutors - numberOfActiveExecutors
     if (executorsToRequest > 0) client.requestExecutors(executorsToRequest)
   }
 }

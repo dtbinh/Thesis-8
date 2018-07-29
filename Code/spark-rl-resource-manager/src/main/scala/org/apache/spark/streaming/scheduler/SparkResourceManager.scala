@@ -27,8 +27,9 @@ class SparkResourceManager(val constants: RMConstants, val streamingContext: Str
   }
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
-    super.onBatchCompleted(batchCompleted)
-    listener.onBatchCompleted(batchCompleted)
+    if (processBatch(batchCompleted.batchInfo)) {
+      listener.onBatchCompleted(batchCompleted)
+    }
   }
 }
 
