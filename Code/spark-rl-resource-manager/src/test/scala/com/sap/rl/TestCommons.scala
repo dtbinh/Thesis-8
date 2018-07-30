@@ -1,7 +1,7 @@
 package com.sap.rl
 
-import com.sap.rl.rm.RMConstants
-import com.sap.rl.rm.RMConstants._
+import com.sap.rl.rm.ResourceManagerConfig
+import com.sap.rl.rm.ResourceManagerConfig._
 import com.sap.rl.util.Precision
 import org.apache.log4j.BasicConfigurator
 import org.apache.spark.SparkConf
@@ -27,5 +27,5 @@ object TestCommons {
     .set(MaximumIncomingMessagesKey, "10000")
     .set(IncomingMessagesGranularityKey, "400")
 
-  def createRMConstants(sparkConf: SparkConf): RMConstants = RMConstants(sparkConf)
+  def createRMConstants(sparkConf: SparkConf): ResourceManagerConfig = ResourceManagerConfig(sparkConf)
 }

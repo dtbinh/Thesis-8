@@ -41,7 +41,7 @@ class StateSpace(value: MutableHashMap[State, MutableHashMap[Action, Double]]) {
 }
 
 object StateSpace {
-  def apply(constants: RMConstants): StateSpace = {
+  def apply(constants: ResourceManagerConfig): StateSpace = {
     import constants._
 
     val space: MutableHashMap[State, MutableHashMap[Action, Double]] = MutableHashMap()

@@ -3,12 +3,11 @@ package com.sap.rl.rm.impl
 import java.lang.Math.abs
 
 import com.sap.rl.rm.Action._
-import com.sap.rl.rm.RMConstants._
-import com.sap.rl.rm.{RMConstants, Reward, State, StateSpace}
+import com.sap.rl.rm.{ResourceManagerConfig, Reward, State, StateSpace}
 
-class DefaultReward(constants: RMConstants, stateSpace: StateSpace) extends Reward {
+class DefaultReward(config: ResourceManagerConfig, stateSpace: StateSpace) extends Reward {
 
-  import constants._
+  import config._
 
   override def forAction(lastState: State, lastAction: Action, currentState: State): Double = {
     if (isStateInDangerZone(currentState))
@@ -20,7 +19,7 @@ class DefaultReward(constants: RMConstants, stateSpace: StateSpace) extends Rewa
       MaximumExecutors / currentState.numberOfExecutors
   }
 
-  def dangerZoneLatencyDifference(s: State): Double = CoarseTargetLatency - (s.latency + One)
+  def dangerZoneLatencyDifference(s: State): Double = CoarseTargetLatency - s.latency + 1
 
   def safeZoneLatencyDifference(s: State): Double = CoarseTargetLatency - s.latency
 
@@ -28,5 +27,5 @@ class DefaultReward(constants: RMConstants, stateSpace: StateSpace) extends Rewa
 }
 
 object DefaultReward {
-  def apply(constants: RMConstants, stateSpace: StateSpace): DefaultReward = new DefaultReward(constants, stateSpace)
+  def apply(constants: ResourceManagerConfig, stateSpace: StateSpace): DefaultReward = new DefaultReward(constants, stateSpace)
 }

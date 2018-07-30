@@ -11,7 +11,8 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-streaming" % "2.2.2" % "provided",
   "org.scalactic" %% "scalactic" % "3.0.5",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-  "org.mockito" % "mockito-core" % "2.19.0" % "test"
+  "org.mockito" % "mockito-core" % "2.19.0" % "test",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
 )
 
 scalacOptions ++= Seq(

@@ -1,15 +1,16 @@
 package com.sap.rl.rm
 
-import org.apache.log4j.LogManager
+import com.typesafe.scalalogging.Logger
 import org.apache.spark.SparkConf
+import ResourceManagerConfig._
 
-class RMConstants(sparkConf: SparkConf) {
+class ResourceManagerConfig(sparkConf: SparkConf) {
 
-  import RMConstants._
+  @transient lazy val log: Logger = Logger(classOf[ResourceManagerConfig])
 
   final val CoresPerTask: Int = sparkConf.getInt(CoresPerTaskKey, CoresPerTaskDefault)
   final val CoresPerExecutor: Int = sparkConf.getInt(CoresPerExecutorKey, CoresPerExecutorDefault)
-  final val BackupExecutors: Int = sparkConf.getInt(BackupExecutorsKey, BackupExecutorsDefault)
+  final val ExecutorChangePerStep: Int = sparkConf.getInt(ExecutorChangePerStepKey, ExecutorChangePerStepDefault)
   final val MinimumExecutors: Int = sparkConf.getInt(MinimumExecutorsKey, MinimumExecutorsDefault)
   final val MaximumExecutors: Int = sparkConf.getInt(MaximumExecutorsKey, MaximumExecutorsDefault)
   final val MinimumLatency: Int = sparkConf.getTimeAsMs(MinimumLatencyKey, MinimumLatencyDefault).toInt
@@ -28,61 +29,54 @@ class RMConstants(sparkConf: SparkConf) {
   final val MaximumIncomingMessages = sparkConf.getInt(MaximumIncomingMessagesKey, MaximumIncomingMessagesDefault)
   final val IncomingMessagesGranularity = sparkConf.getInt(IncomingMessagesGranularityKey, IncomingMessagesGranularityDefault)
   final val CoarseMaximumIncomingMessages = MaximumIncomingMessages / IncomingMessagesGranularity
-  @transient private lazy val log = LogManager.getLogger(this.getClass)
+  final val IsDebugEnabled = sparkConf.getBoolean(IsDebugEnabledKey, IsDebugEnabledDefault)
 
-  validateSettings()
-  logConfiguration()
+  require(CoresPerExecutor == CoresPerTask)
+  require(ExecutorChangePerStep >= 0)
+  require(ExecutorChangePerStep <= MaximumExecutors)
 
-  private def validateSettings(): Unit = {
-    require(CoresPerExecutor == CoresPerTask)
-    require(BackupExecutors >= 0)
+  require(MaximumExecutors >= MinimumExecutors)
+  require(MinimumExecutors > 0)
+  require(WindowSize > 0)
 
-    require(MaximumExecutors >= MinimumExecutors)
-    require(MinimumExecutors > 0)
-    require(WindowSize > 0)
+  require(LearningFactor >= 0 && LearningFactor <= 1)
+  require(DiscountFactor >= 0 && DiscountFactor <= 1)
 
-    require(LearningFactor >= 0 && LearningFactor <= 1)
-    require(DiscountFactor >= 0 && DiscountFactor <= 1)
+  require(BestReward > NoReward)
 
-    require(BestReward > NoReward)
+  require(MaximumIncomingMessages > IncomingMessagesGranularity)
+  require(MaximumIncomingMessages > 0)
+  require(IncomingMessagesGranularity > 0)
 
-    require(MaximumIncomingMessages > IncomingMessagesGranularity)
-    require(MaximumIncomingMessages > 0)
-    require(IncomingMessagesGranularity > 0)
-  }
+  val config: String =
+    s""" --- Configuration ---
+       | CoresPerExecutor: $CoresPerExecutor
+       | CoresPerTask: $CoresPerTask
+       | ExecutorChangePerStep: $ExecutorChangePerStep
+       | MinimumExecutors: $MinimumExecutors
+       | MaximumExecutors: $MaximumExecutors
+       | MinimumLatency: $MinimumLatency
+       | MaximumLatency: $MaximumLatency
+       | TargetLatency: $TargetLatency
+       | LatencyGranularity: $LatencyGranularity
+       | GracePeriod: $GracePeriod
+       | WindowSize: $WindowSize
+       | LearningFactor: $LearningFactor
+       | DiscountFactor: $DiscountFactor
+       | CoarseMinimumLatency: $CoarseMinimumLatency
+       | CoarseTargetLatency: $CoarseTargetLatency
+       | CoarseMaximumLatency: $CoarseMaximumLatency
+       | BestReward: $BestReward
+       | NoReward: $NoReward
+       | MaximumIncomingMessages: $MaximumIncomingMessages
+       | IncomingMessagesGranularity: $IncomingMessagesGranularity
+       | IsDebugEnabled: $IsDebugEnabled
+       | --- Configuration ---""".stripMargin
 
-  private def logConfiguration(): Unit = {
-    val config: String =
-      s""" --- Configuration ---
-         | CoresPerExecutor: $CoresPerExecutor
-         | CoresPerTask: $CoresPerTask
-         | BackupExecutors: $BackupExecutors
-         | MinimumExecutors: $MinimumExecutors
-         | MaximumExecutors: $MaximumExecutors
-         | MinimumLatency: $MinimumLatency
-         | MaximumLatency: $MaximumLatency
-         | TargetLatency: $TargetLatency
-         | LatencyGranularity: $LatencyGranularity
-         | GracePeriod: $GracePeriod
-         | WindowSize: $WindowSize
-         | LearningFactor: $LearningFactor
-         | DiscountFactor: $DiscountFactor
-         | CoarseMinimumLatency: $CoarseMinimumLatency
-         | CoarseTargetLatency: $CoarseTargetLatency
-         | CoarseMaximumLatency: $CoarseMaximumLatency
-         | BestReward: $BestReward
-         | NoReward: $NoReward
-         | MaximumIncomingMessages: $MaximumIncomingMessages
-         | IncomingMessagesGranularity: $IncomingMessagesGranularity
-         | --- Configuration ---""".stripMargin
-
-    log.info(config)
-  }
+  log.info(config)
 }
 
-object RMConstants {
-
-  final val One: Int = 1
+object ResourceManagerConfig {
 
   final val LessThan: Int = -1
   final val GreaterThan: Int = 1
@@ -92,12 +86,12 @@ object RMConstants {
   final val CoresPerTaskDefault = 1
   final val CoresPerExecutorKey = "spark.executor.cores"
   final val CoresPerExecutorDefault = 0
-  final val BackupExecutorsKey = "spark.streaming.dynamicAllocation.backupExecutors"
-  final val BackupExecutorsDefault = 0
   final val MinimumExecutorsKey = "spark.streaming.dynamicAllocation.minExecutors"
   final val MinimumExecutorsDefault = 1
   final val MaximumExecutorsKey = "spark.streaming.dynamicAllocation.maxExecutors"
   final val MaximumExecutorsDefault = Int.MaxValue
+  final val ExecutorChangePerStepKey = "spark.streaming.dynamicAllocation.executorChangePerStep"
+  final val ExecutorChangePerStepDefault = 2
   final val MinimumLatencyKey = "spark.streaming.dynamicAllocation.minLatency"
   final val MinimumLatencyDefault = "100ms"
   final val MaximumLatencyKey = "spark.streaming.dynamicAllocation.maxLatency"
@@ -122,6 +116,8 @@ object RMConstants {
   final val MaximumIncomingMessagesDefault = 20000
   final val IncomingMessagesGranularityKey = "spark.streaming.dynamicAllocation.incomingMessagesGranularity"
   final val IncomingMessagesGranularityDefault = 200
+  final val IsDebugEnabledKey = "spark.streaming.dynamicAllocation.isDebugEnabled"
+  final val IsDebugEnabledDefault = true
 
-  def apply(sparkConf: SparkConf): RMConstants = new RMConstants(sparkConf)
+  def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }

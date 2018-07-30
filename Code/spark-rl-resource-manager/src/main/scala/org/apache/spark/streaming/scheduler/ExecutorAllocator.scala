@@ -1,13 +1,12 @@
 package org.apache.spark.streaming.scheduler
 
-import com.sap.rl.rm.RMConstants
-import org.apache.spark.streaming.StreamingContext
+import com.sap.rl.rm.Spark
 import org.apache.spark.{ExecutorAllocationClient, SparkException}
 
-trait ExecutorAllocator {
+trait ExecutorAllocator extends Spark {
 
   // Interface for manipulating number of executors
-  protected lazy val client: ExecutorAllocationClient = streamingContext.sparkContext.schedulerBackend match {
+  protected lazy val client: ExecutorAllocationClient = sparkContext.schedulerBackend match {
     case backend: ExecutorAllocationClient => backend.asInstanceOf[ExecutorAllocationClient]
     case _ =>
       throw new SparkException(
@@ -17,9 +16,6 @@ trait ExecutorAllocator {
       )
   }
 
-  protected val streamingContext: StreamingContext
-  protected val constants: RMConstants
-
   def numberOfActiveExecutors: Int = activeExecutors.size
 
   def activeExecutors: Seq[String] = client.getExecutorIds()
@@ -28,8 +24,8 @@ trait ExecutorAllocator {
 
   def removeExecutors(executors: Seq[String]): Seq[String] = client.killExecutors(executors)
 
-  def requestMaximumExecutors(): Unit = {
-    val executorsToRequest = constants.MaximumExecutors - numberOfActiveExecutors
+  def requestMaximumExecutors(maximumExecutors: Int): Unit = {
+    val executorsToRequest = maximumExecutors - numberOfActiveExecutors
     if (executorsToRequest > 0) client.requestExecutors(executorsToRequest)
   }
 }

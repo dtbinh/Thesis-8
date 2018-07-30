@@ -1,15 +1,15 @@
 package com.sap.rl.rm
 
+import java.lang.Math.min
+import java.time.Instant
+
 import com.sap.rl.rm.Action._
-import com.sap.rl.rm.LogStatus._
-import com.sap.rl.rm.RMConstants._
 import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
-import org.apache.log4j.Logger
 import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerStreamingStarted}
 
 import scala.util.Random.shuffle
 
-trait RLResourceManager extends ResourceManager {
+abstract class RLResourceManager extends ResourceManager {
 
   protected lazy val stateSpace: StateSpace = createStateSpace
   protected lazy val policy: Policy = createPolicy
@@ -23,20 +23,17 @@ trait RLResourceManager extends ResourceManager {
   protected var rewardForLastAction: Double = 0
   protected var actionToTake: Action = _
   protected var lastTimeDecisionMade: Long = 0
-  protected val log: Logger
-
-  import constants._
+  import config._
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     super.onStreamingStarted(streamingStarted)
-    log.info(s"$MY_TAG -- $SPARK_MAX_EXEC -- Before = $numberOfActiveExecutors")
-    requestMaximumExecutors()
-    log.info(s"$MY_TAG -- $SPARK_MAX_EXEC -- After = $numberOfActiveExecutors")
+    requestMaximumExecutors(MaximumExecutors)
+    logSparkMaxExecutorsRequested(numberOfActiveExecutors)
   }
 
   def inGracePeriod(batchTime: Long): Boolean = {
     if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
-      log.debug(s"$MY_TAG -- $GRACE_PERIOD -- BatchTime = $batchTime [ms]")
+      logGracePeriod(batchTime)
       return true
     }
     false
@@ -54,7 +51,7 @@ trait RLResourceManager extends ResourceManager {
     incomingMessages = incomingMessages + info.numRecords.toInt
 
     if (numberOfBatches == WindowSize) {
-      log.info(s"$MY_TAG -- $WINDOW_FULL -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
+      logWindowIsFull(runningSum, numberOfBatches, incomingMessages)
 
       // take average
       val averageLatency: Int = runningSum / (numberOfBatches * LatencyGranularity)
@@ -91,7 +88,7 @@ trait RLResourceManager extends ResourceManager {
         setDecisionTime()
       }
     } else {
-      log.debug(s"$MY_TAG -- $WINDOW_ADDED -- (RunningSum,NumberOfBatches,IncomingMessages) = ($runningSum,$numberOfBatches,$incomingMessages)")
+      logElementAddedToWindow(runningSum, numberOfBatches, incomingMessages)
     }
 
     true
@@ -101,13 +98,14 @@ trait RLResourceManager extends ResourceManager {
     lastState = currentState
     lastAction = NoAction
 
-    log.info(s"$MY_TAG -- $FIRST_WINDOW -- Initialized")
+    logFirstWindowInitialized()
     setDecisionTime()
   }
 
   def setDecisionTime(): Unit = {
-    lastTimeDecisionMade = System.currentTimeMillis()
-    log.info(s"$MY_TAG -- $DECIDED -- LastTimeDecisionMade = $lastTimeDecisionMade")
+    val now = Instant.now()
+    lastTimeDecisionMade = now.toEpochMilli
+    logDecisionTime(now)
   }
 
   def reconfigure(actionToTake: Action): Unit = actionToTake match {
@@ -117,24 +115,37 @@ trait RLResourceManager extends ResourceManager {
   }
 
   def scaleIn(): Unit = {
-    val killed: Seq[String] = removeExecutors(shuffle(activeExecutors).take(One))
-    log.info(s"$MY_TAG -- $EXEC_KILL_OK -- Killed = $killed")
+    val all = activeExecutors
+    val executorsToKill: Int = min(ExecutorChangePerStep, all.size - MinimumExecutors)
+    val killed: Int = removeExecutors(shuffle(all).take(executorsToKill)).size
+    logScaleInAction(killed)
   }
 
   def scaleOut(): Unit = {
-    if (addExecutors(One)) log.info(s"$MY_TAG -- $EXEC_ADD_OK")
-    else log.error(s"$MY_TAG -- $EXEC_ADD_ERR")
+    val executorToAdd: Int = min(ExecutorChangePerStep, MaximumExecutors - numberOfActiveExecutors)
+    if (addExecutors(executorToAdd)) logScaleOutOK()
+    else logScaleOutError()
   }
 
-  def whatIsTheNextAction(): Action = policy.nextActionFrom(lastState, lastAction, currentState)
+  def whatIsTheNextAction(): Action = {
+    val currentExecutors = currentState.numberOfExecutors
+    currentExecutors match {
+      case MinimumExecutors =>
+        logExecutorNotEnough(lastState, lastAction, currentState)
+      case MaximumExecutors =>
+        logNoMoreExecutorsLeft(lastState, lastAction, currentState)
+      case _ =>
+    }
+    policy.nextActionFrom(lastState, lastAction, currentState)
+  }
 
   def calculateRewardFor(): Double = reward.forAction(lastState, lastAction, currentState)
 
-  def createStateSpace: StateSpace = StateSpace(constants)
+  def createStateSpace: StateSpace = StateSpace(config)
 
-  def createPolicy: Policy = DefaultPolicy(constants, stateSpace)
+  def createPolicy: Policy = DefaultPolicy(config, stateSpace)
 
-  def createReward: Reward = DefaultReward(constants, stateSpace)
+  def createReward: Reward = DefaultReward(config, stateSpace)
 
   def specialize(): Unit
 }

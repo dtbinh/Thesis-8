@@ -4,7 +4,7 @@ case class State(numberOfExecutors: Int, latency: Int, incomingMessages: Int) ex
 
   override def compare(that: State): Int = {
 
-    import RMConstants._
+    import ResourceManagerConfig._
 
     if (numberOfExecutors < that.numberOfExecutors) LessThan
     else if (numberOfExecutors > that.numberOfExecutors) GreaterThan

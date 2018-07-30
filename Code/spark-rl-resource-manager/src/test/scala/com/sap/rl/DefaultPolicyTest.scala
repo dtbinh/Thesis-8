@@ -3,14 +3,14 @@ package com.sap.rl
 import com.sap.rl.TestCommons._
 import com.sap.rl.rm.Action._
 import com.sap.rl.rm.impl.DefaultPolicy
-import com.sap.rl.rm.{Policy, RMConstants, State, StateSpace}
+import com.sap.rl.rm.{Policy, ResourceManagerConfig, State, StateSpace}
 import org.apache.spark.SparkConf
 import org.scalatest.FunSuite
 
 class DefaultPolicyTest extends FunSuite {
 
   val sparkConf: SparkConf = createSparkConf()
-  val constants: RMConstants = createRMConstants(sparkConf)
+  val constants: ResourceManagerConfig = createRMConstants(sparkConf)
   import constants._
 
   test("testBestActionWithLatency") {

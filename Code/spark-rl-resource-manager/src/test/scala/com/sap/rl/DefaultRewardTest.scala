@@ -4,14 +4,14 @@ import com.sap.rl.TestCommons._
 import com.sap.rl.implicits._
 import com.sap.rl.rm.Action._
 import com.sap.rl.rm.impl.DefaultReward
-import com.sap.rl.rm.{RMConstants, State, StateSpace}
+import com.sap.rl.rm.{ResourceManagerConfig, State, StateSpace}
 import org.apache.spark.SparkConf
 import org.scalatest.FunSuite
 
 class DefaultRewardTest extends FunSuite {
 
   val sparkConf: SparkConf = createSparkConf()
-  val constants: RMConstants = RMConstants(sparkConf)
+  val constants: ResourceManagerConfig = ResourceManagerConfig(sparkConf)
 
   test("rewardForLowerLatency") {
     val stateSpace = StateSpace(constants)
