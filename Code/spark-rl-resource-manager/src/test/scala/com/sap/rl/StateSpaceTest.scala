@@ -16,22 +16,21 @@ class StateSpaceTest extends FunSuite {
     val stateSpace = StateSpace(constants)
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) *
-                                  (MaximumLatency / LatencyGranularity) *
-                                  (MaximumIncomingMessages / IncomingMessagesGranularity)
+                                  (MaximumLatency / LatencyGranularity)
     assert(stateSpace.size == expectedSpaceSize)
   }
 
   test("bestActionFor") {
     val stateSpace = StateSpace(constants)
 
-    assert(BestReward == stateSpace(State(MinimumExecutors, CoarseMinimumLatency - 1, 10))(NoAction))
-    assert(BestReward == stateSpace(State(12, 150, 10))(ScaleOut))
-    assert(BestReward == stateSpace(State(12, 1, 10))(ScaleIn))
-    assert(NoReward == stateSpace(State(MaximumExecutors, CoarseTargetLatency, 10))(ScaleOut))
-    assert(BestReward == stateSpace(State(MaximumExecutors, CoarseTargetLatency, 10))(NoAction))
-    assert(BestReward == stateSpace(State(MaximumExecutors - 1, CoarseTargetLatency, 10))(ScaleOut))
-    assert(NoReward == stateSpace(State(20, CoarseTargetLatency - 1, 10))(ScaleOut))
-    assert(NoReward == stateSpace(State(20, CoarseTargetLatency - 1, 10))(ScaleIn))
-    assert(BestReward == stateSpace(State(20, CoarseTargetLatency - 1, 10))(NoAction))
+    assert(BestReward == stateSpace(State(MinimumExecutors, CoarseMinimumLatency - 1))(NoAction))
+    assert(BestReward == stateSpace(State(12, 150))(ScaleOut))
+    assert(BestReward == stateSpace(State(12, 1))(ScaleIn))
+    assert(NoReward == stateSpace(State(MaximumExecutors, CoarseTargetLatency))(ScaleOut))
+    assert(BestReward == stateSpace(State(MaximumExecutors, CoarseTargetLatency))(NoAction))
+    assert(BestReward == stateSpace(State(MaximumExecutors - 1, CoarseTargetLatency))(ScaleOut))
+    assert(NoReward == stateSpace(State(20, CoarseTargetLatency - 1))(ScaleOut))
+    assert(NoReward == stateSpace(State(20, CoarseTargetLatency - 1))(ScaleIn))
+    assert(BestReward == stateSpace(State(20, CoarseTargetLatency - 1))(NoAction))
   }
 }

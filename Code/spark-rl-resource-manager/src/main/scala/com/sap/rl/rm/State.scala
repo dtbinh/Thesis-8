@@ -1,6 +1,6 @@
 package com.sap.rl.rm
 
-case class State(numberOfExecutors: Int, latency: Int, incomingMessages: Int) extends Ordered[State] {
+case class State(numberOfExecutors: Int, latency: Int) extends Ordered[State] {
 
   override def compare(that: State): Int = {
 
@@ -10,8 +10,6 @@ case class State(numberOfExecutors: Int, latency: Int, incomingMessages: Int) ex
     else if (numberOfExecutors > that.numberOfExecutors) GreaterThan
     else if (latency < that.latency) LessThan
     else if (latency > that.latency) GreaterThan
-    else if (incomingMessages < that.incomingMessages) LessThan
-    else if (incomingMessages > that.incomingMessages) GreaterThan
     else Equal
   }
 }

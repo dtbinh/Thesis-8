@@ -47,10 +47,6 @@ trait ResourceManagerLogger {
     log.warn("{} - ProcessingTime = {}", EXCESSIVE_LATENCY, processingTime)
   }
 
-  def logExcessiveIncomingMessages(numRecords: Int): Unit = {
-    log.warn("{} - IncomingMessages = {}", EXCESSIVE_INCOMING_MESSAGES, numRecords)
-  }
-
   def logBatchOK(batchTime: Long): Unit = {
     if (isDebugEnabled) {
       log.info("{} - BatchTime = {}", BATCH_OK, format(ofEpochMilli(batchTime)))
@@ -67,13 +63,13 @@ trait ResourceManagerLogger {
     }
   }
 
-  def logWindowIsFull(runningSum: Int, numberOfBatches: Int, incomingMessages: Int): Unit = {
-    log.info("{} - (RunningSum,NumberOfBatches,IncomingMessages) = ({},{},{})", WINDOW_FULL, runningSum, numberOfBatches, incomingMessages)
+  def logWindowIsFull(runningSum: Int, numberOfBatches: Int): Unit = {
+    log.info("{} - (RunningSum,NumberOfBatches) = ({},{})", WINDOW_FULL, runningSum, numberOfBatches)
   }
 
-  def logElementAddedToWindow(runningSum: Int, numberOfBatches: Int, incomingMessages: Int): Unit = {
+  def logElementAddedToWindow(runningSum: Int, numberOfBatches: Int): Unit = {
     if (isDebugEnabled) {
-      log.info("{} - (RunningSum,NumberOfBatches,IncomingMessages) = ({},{},{})", WINDOW_ADDED, runningSum, numberOfBatches, incomingMessages)
+      log.info("{} - (RunningSum,NumberOfBatches) = ({},{},{})", WINDOW_ADDED, runningSum, numberOfBatches)
     }
   }
 

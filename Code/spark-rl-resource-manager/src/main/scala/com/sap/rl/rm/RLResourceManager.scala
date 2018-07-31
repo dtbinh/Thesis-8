@@ -14,7 +14,6 @@ abstract class RLResourceManager extends ResourceManager {
   protected lazy val reward: Reward = createReward
   protected var runningSum: Int = 0
   protected var numberOfBatches: Int = 0
-  protected var incomingMessages: Int = 0
   protected var lastState: State = _
   protected var lastAction: Action = _
   protected var currentState: State = _
@@ -46,22 +45,19 @@ abstract class RLResourceManager extends ResourceManager {
 
     runningSum += info.processingDelay.get.toInt
     numberOfBatches += 1
-    incomingMessages += info.numRecords.toInt
 
     if (numberOfBatches == WindowSize) {
-      logWindowIsFull(runningSum, numberOfBatches, incomingMessages)
+      logWindowIsFull(runningSum, numberOfBatches)
 
       // take average
       val averageLatency: Int = runningSum / (numberOfBatches * LatencyGranularity)
-      val averageIncomingMessages: Int = incomingMessages / (numberOfBatches * IncomingMessagesGranularity)
 
       // reset
       runningSum = 0
       numberOfBatches = 0
-      incomingMessages = 0
 
       // build the state variable
-      currentState = State(numberOfActiveExecutors, averageLatency, averageIncomingMessages)
+      currentState = State(numberOfActiveExecutors, averageLatency)
 
       // do nothing and just initialize to no action
       if (lastState == null) {
@@ -86,7 +82,7 @@ abstract class RLResourceManager extends ResourceManager {
         setDecisionTime()
       }
     } else {
-      logElementAddedToWindow(runningSum, numberOfBatches, incomingMessages)
+      logElementAddedToWindow(runningSum, numberOfBatches)
     }
 
     true

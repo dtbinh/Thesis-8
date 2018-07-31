@@ -30,5 +30,4 @@ object LogTags extends Enumeration {
   val EXEC_NOT_ENOUGH: Status = Value
 
   val EXCESSIVE_LATENCY: Status = Value
-  val EXCESSIVE_INCOMING_MESSAGES: Status = Value
 }

@@ -24,8 +24,6 @@ object TestCommons {
     .set(MinimumLatencyKey, "300")
     .set(TargetLatencyKey, "800")
     .set(MaximumLatencyKey, "10000")
-    .set(MaximumIncomingMessagesKey, "10000")
-    .set(IncomingMessagesGranularityKey, "400")
 
   def createRMConstants(sparkConf: SparkConf): ResourceManagerConfig = ResourceManagerConfig(sparkConf)
 }

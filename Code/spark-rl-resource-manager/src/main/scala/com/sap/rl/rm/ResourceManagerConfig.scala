@@ -26,9 +26,6 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val CoarseMaximumLatency: Int = MaximumLatency / LatencyGranularity
   final val BestReward: Double = sparkConf.getDouble(BestRewardKey, BestRewardDefault)
   final val NoReward: Double = sparkConf.getDouble(NoRewardKey, NoRewardDefault)
-  final val MaximumIncomingMessages = sparkConf.getInt(MaximumIncomingMessagesKey, MaximumIncomingMessagesDefault)
-  final val IncomingMessagesGranularity = sparkConf.getInt(IncomingMessagesGranularityKey, IncomingMessagesGranularityDefault)
-  final val CoarseMaximumIncomingMessages = MaximumIncomingMessages / IncomingMessagesGranularity
   final val IsDebugEnabled = sparkConf.getBoolean(IsDebugEnabledKey, IsDebugEnabledDefault)
 
   require(CoresPerExecutor == CoresPerTask)
@@ -43,10 +40,6 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   require(DiscountFactor >= 0 && DiscountFactor <= 1)
 
   require(BestReward > NoReward)
-
-  require(MaximumIncomingMessages > IncomingMessagesGranularity)
-  require(MaximumIncomingMessages > 0)
-  require(IncomingMessagesGranularity > 0)
 
   val config: String =
     s""" --- Configuration ---
@@ -68,8 +61,6 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | CoarseMaximumLatency: $CoarseMaximumLatency
        | BestReward: $BestReward
        | NoReward: $NoReward
-       | MaximumIncomingMessages: $MaximumIncomingMessages
-       | IncomingMessagesGranularity: $IncomingMessagesGranularity
        | IsDebugEnabled: $IsDebugEnabled
        | --- Configuration ---""".stripMargin
 
@@ -112,10 +103,6 @@ object ResourceManagerConfig {
   final val BestRewardDefault = 1.0
   final val NoRewardKey = "spark.streaming.dynamicAllocation.noReward"
   final val NoRewardDefault = 0
-  final val MaximumIncomingMessagesKey = "spark.streaming.dynamicAllocation.maximumIncomingMessages"
-  final val MaximumIncomingMessagesDefault = 20000
-  final val IncomingMessagesGranularityKey = "spark.streaming.dynamicAllocation.incomingMessagesGranularity"
-  final val IncomingMessagesGranularityDefault = 200
   final val IsDebugEnabledKey = "spark.streaming.dynamicAllocation.isDebugEnabled"
   final val IsDebugEnabledDefault = true
 

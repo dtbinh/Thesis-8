@@ -42,10 +42,6 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
       logExcessiveProcessingTime(info.processingDelay.get)
       return true
     }
-    if (info.numRecords >= MaximumIncomingMessages) {
-      logExcessiveIncomingMessages(info.numRecords.toInt)
-      return true
-    }
     logBatchOK(info.batchTime.milliseconds)
     false
   }
