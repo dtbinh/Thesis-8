@@ -14,9 +14,9 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
 
   override def onApplicationStart(applicationStart: SparkListenerApplicationStart): Unit = logApplicationStarted(applicationStart)
 
-  override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = logExecutorAdded(executorAdded, numberOfActiveExecutors)
+  override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = logExecutorAdded(executorAdded)
 
-  override def onExecutorRemoved(executorRemoved: SparkListenerExecutorRemoved): Unit = logExecutorRemoved(executorRemoved, numberOfActiveExecutors)
+  override def onExecutorRemoved(executorRemoved: SparkListenerExecutorRemoved): Unit = logExecutorRemoved(executorRemoved)
 
   override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = logApplicationEnd(applicationEnd)
 

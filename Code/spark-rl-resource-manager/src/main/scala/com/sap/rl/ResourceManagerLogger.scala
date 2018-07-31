@@ -1,7 +1,7 @@
 package com.sap.rl
 
 import java.time.Instant.ofEpochMilli
-import java.time.{Instant, ZoneId}
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 import com.sap.rl.rm.Action.Action
@@ -13,30 +13,30 @@ import org.apache.spark.streaming.scheduler.StreamingListenerStreamingStarted
 
 trait ResourceManagerLogger {
 
-  private lazy val log: Logger = Logger("RMLogs")
+  @transient private lazy val log: Logger = Logger("RMLogs")
   protected def isDebugEnabled: Boolean
 
   protected lazy val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Europe/Berlin"))
   import dateFormatter._
 
   def logApplicationStarted(applicationStart: SparkListenerApplicationStart): Unit = {
-    log.info("{} - ApplicationStartTime = {}", APP_STARTED, format(ofEpochMilli(applicationStart.time)))
+    log.info("{} - Time = {}", APP_STARTED, format(ofEpochMilli(applicationStart.time)))
   }
 
-  def logExecutorAdded(executorAdded: SparkListenerExecutorAdded, numExecutors: Int): Unit = {
-    log.info("{} - (Time,Workers) = ({},{})", SPARK_EXEC_ADDED, format(ofEpochMilli(executorAdded.time)), numExecutors)
+  def logExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = {
+    log.info("{} - Time = {}", SPARK_EXEC_ADDED, format(ofEpochMilli(executorAdded.time)))
   }
 
-  def logExecutorRemoved(executorRemoved: SparkListenerExecutorRemoved, numExecutors: Int): Unit = {
-    log.info("{} - (Time,Workers) = ({},{})", SPARK_EXEC_REMOVED, format(ofEpochMilli(executorRemoved.time)), numExecutors)
+  def logExecutorRemoved(executorRemoved: SparkListenerExecutorRemoved): Unit = {
+    log.info("{} - Time = {}", SPARK_EXEC_REMOVED, format(ofEpochMilli(executorRemoved.time)))
   }
 
   def logApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
-    log.info("{} - ApplicationEndTime = {}", APP_ENDED, format(ofEpochMilli(applicationEnd.time)))
+    log.info("{} - Time = {}", APP_ENDED, format(ofEpochMilli(applicationEnd.time)))
   }
 
   def logStreamingStarted(streamingStarted: StreamingListenerStreamingStarted, numExecutors: Int): Unit = {
-    log.info("{} - (StreamingStartTime,Workers) = ({},{})", STREAMING_STARTED, format(ofEpochMilli(streamingStarted.time)), numExecutors)
+    log.info("{} - (Time,Workers) = ({},{})", STREAMING_STARTED, format(ofEpochMilli(streamingStarted.time)), numExecutors)
   }
 
   def logEmptyBatch(batchTime: Long): Unit = {
@@ -81,8 +81,8 @@ trait ResourceManagerLogger {
     log.info("{} - Initialized", FIRST_WINDOW)
   }
 
-  def logDecisionTime(now: Instant): Unit = {
-    log.info("{} - LastTimeDecisionMade = {}", DECIDED, format(now))
+  def logDecisionTime(decisionTime: Long): Unit = {
+    log.info("{} - LastTimeDecisionMade = {}", DECIDED, format(ofEpochMilli(decisionTime)))
   }
 
   def logScaleInAction(numberOfKilledExecutors: Int): Unit = {

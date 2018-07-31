@@ -1,8 +1,6 @@
 package com.sap.rl.rm
 
 import java.lang.Math.min
-import java.time.Instant
-
 import com.sap.rl.rm.Action._
 import com.sap.rl.rm.impl.{DefaultPolicy, DefaultReward}
 import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerStreamingStarted}
@@ -46,9 +44,9 @@ abstract class RLResourceManager extends ResourceManager {
     val batchTime = info.batchTime.milliseconds
     if (inGracePeriod(batchTime)) return false
 
-    runningSum = runningSum + info.processingDelay.get.toInt
-    numberOfBatches = numberOfBatches + 1
-    incomingMessages = incomingMessages + info.numRecords.toInt
+    runningSum += info.processingDelay.get.toInt
+    numberOfBatches += 1
+    incomingMessages += info.numRecords.toInt
 
     if (numberOfBatches == WindowSize) {
       logWindowIsFull(runningSum, numberOfBatches, incomingMessages)
@@ -103,9 +101,8 @@ abstract class RLResourceManager extends ResourceManager {
   }
 
   def setDecisionTime(): Unit = {
-    val now = Instant.now()
-    lastTimeDecisionMade = now.toEpochMilli
-    logDecisionTime(now)
+    lastTimeDecisionMade = System.currentTimeMillis()
+    logDecisionTime(lastTimeDecisionMade)
   }
 
   def reconfigure(actionToTake: Action): Unit = actionToTake match {

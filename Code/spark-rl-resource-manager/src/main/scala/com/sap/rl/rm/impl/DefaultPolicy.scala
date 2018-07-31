@@ -3,9 +3,9 @@ package com.sap.rl.rm.impl
 import com.sap.rl.rm.Action._
 import com.sap.rl.rm.{Policy, ResourceManagerConfig, State, StateSpace}
 
-class DefaultPolicy(constants: ResourceManagerConfig, stateSpace: StateSpace) extends Policy {
+class DefaultPolicy(config: ResourceManagerConfig, stateSpace: StateSpace) extends Policy {
 
-  import constants._
+  import config._
 
   override def nextActionFrom(lastState: State, lastAction: Action, currentState: State): Action = {
     if (currentState.numberOfExecutors > MinimumExecutors && currentState.latency < CoarseMinimumLatency) return ScaleIn
