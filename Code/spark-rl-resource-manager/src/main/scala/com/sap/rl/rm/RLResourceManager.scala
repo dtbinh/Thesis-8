@@ -115,8 +115,9 @@ abstract class RLResourceManager extends ResourceManager {
   }
 
   def scaleOut(): Unit = {
-    val executorToAdd: Int = min(ExecutorChangePerStep, MaximumExecutors - numberOfActiveExecutors)
-    if (addExecutors(executorToAdd)) logScaleOutOK()
+    val total = numberOfActiveExecutors
+    val executorToAdd: Int = min(ExecutorChangePerStep, MaximumExecutors - total)
+    if (requestTotalExecutors(executorToAdd + total)) logScaleOutOK(executorToAdd)
     else logScaleOutError()
   }
 

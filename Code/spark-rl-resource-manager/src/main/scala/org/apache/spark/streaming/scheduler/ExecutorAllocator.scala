@@ -20,7 +20,7 @@ trait ExecutorAllocator extends Spark {
 
   def activeExecutors: Seq[String] = client.getExecutorIds()
 
-  def addExecutors(num: Int): Boolean = client.requestExecutors(num)
+  def requestTotalExecutors(totalExecutors: Int): Boolean = client.requestTotalExecutors(totalExecutors, 0, Map.empty)
 
   def removeExecutors(executors: Seq[String]): Seq[String] = client.killExecutors(executors)
 

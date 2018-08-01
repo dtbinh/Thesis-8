@@ -81,8 +81,8 @@ trait ResourceManagerLogger {
     log.info("{} - Killed = {}", EXEC_KILL_OK, numberOfKilledExecutors)
   }
 
-  def logScaleOutOK(): Unit = {
-    log.info("{}", EXEC_ADD_OK)
+  def logScaleOutOK(requestedExecutors: Int): Unit = {
+    log.info("{} - RequestedExecutors = {}", EXEC_ADD_OK, requestedExecutors)
   }
 
   def logScaleOutError(): Unit = {
