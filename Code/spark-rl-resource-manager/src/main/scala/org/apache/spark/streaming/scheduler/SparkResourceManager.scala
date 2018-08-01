@@ -1,7 +1,7 @@
 package org.apache.spark.streaming.scheduler
 
 import com.sap.rl.rm.{ResourceManagerConfig, ResourceManager}
-import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerApplicationStart}
+import org.apache.spark.scheduler.SparkListenerApplicationEnd
 import org.apache.spark.streaming.StreamingContext
 
 class SparkResourceManager(val config: ResourceManagerConfig, val streamingContext: StreamingContext) extends ResourceManager {
@@ -14,9 +14,9 @@ class SparkResourceManager(val config: ResourceManagerConfig, val streamingConte
     batchDuration,
     streamingContext.scheduler.clock)
 
-  override def onApplicationStart(applicationStart: SparkListenerApplicationStart): Unit = {
-    super.onApplicationStart(applicationStart)
+  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     listener.start()
+    super.onStreamingStarted(streamingStarted)
   }
 
   override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
@@ -32,7 +32,7 @@ class SparkResourceManager(val config: ResourceManagerConfig, val streamingConte
 }
 
 object SparkResourceManager {
-  def apply(constants: ResourceManagerConfig, ssc: StreamingContext): SparkResourceManager = {
-    new SparkResourceManager(constants, ssc)
+  def apply(config: ResourceManagerConfig, ssc: StreamingContext): SparkResourceManager = {
+    new SparkResourceManager(config, ssc)
   }
 }

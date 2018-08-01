@@ -11,3 +11,7 @@ class DoNothingResourceManager(val config: ResourceManagerConfig, val streamingC
 
   override def numberOfActiveExecutors: Int = config.MaximumExecutors
 }
+
+object DoNothingResourceManager {
+  def apply(config: ResourceManagerConfig, ssc: StreamingContext): DoNothingResourceManager = new DoNothingResourceManager(config, ssc)
+}

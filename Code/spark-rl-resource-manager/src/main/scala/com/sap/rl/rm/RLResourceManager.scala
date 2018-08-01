@@ -123,10 +123,8 @@ abstract class RLResourceManager extends ResourceManager {
   def whatIsTheNextAction(): Action = {
     val currentExecutors = currentState.numberOfExecutors
     currentExecutors match {
-      case MinimumExecutors =>
-        logExecutorNotEnough(lastState, lastAction, currentState)
-      case MaximumExecutors =>
-        logNoMoreExecutorsLeft(lastState, lastAction, currentState)
+      case MinimumExecutors => logExecutorNotEnough(currentState)
+      case MaximumExecutors => logNoMoreExecutorsLeft(currentState)
       case _ =>
     }
     policy.nextActionFrom(lastState, lastAction, currentState)

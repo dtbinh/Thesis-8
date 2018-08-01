@@ -3,7 +3,6 @@ package com.sap.rl.rm
 object LogTags extends Enumeration {
   type Status = Value
 
-  val APP_STARTED: Status = Value
   val APP_ENDED: Status = Value
   val STREAMING_STARTED: Status = Value
 
@@ -26,8 +25,9 @@ object LogTags extends Enumeration {
   val EXEC_KILL_OK: Status = Value
   val EXEC_ADD_OK: Status = Value
   val EXEC_ADD_ERR: Status = Value
-  val EXEC_EXCESSIVE: Status = Value
-  val EXEC_NOT_ENOUGH: Status = Value
+
+  val REMOVED_ACTION_SCALE_OUT: Status = Value
+  val REMOVED_ACTION_SCALE_IN: Status = Value
 
   val EXCESSIVE_LATENCY: Status = Value
 }

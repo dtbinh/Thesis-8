@@ -2,6 +2,8 @@ package com.sap.rl.rm
 
 case class State(numberOfExecutors: Int, latency: Int) extends Ordered[State] {
 
+  override def toString: String = "State(NumberOfExecutors=%d,Latency=%d)".format(numberOfExecutors, latency)
+
   override def compare(that: State): Int = {
 
     import ResourceManagerConfig._

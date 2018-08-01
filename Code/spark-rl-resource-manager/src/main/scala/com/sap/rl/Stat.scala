@@ -4,9 +4,14 @@ import java.lang.Math.{max, min}
 import org.apache.spark.streaming.scheduler.BatchInfo
 
 case class Stat (TotalBatches: Int, TotalSLOViolations: Int,
-                 AverageLatency: Double, MinLatency: Int, MaxLatency: Int,
-                 AverageExecutors: Double, MinExecutors: Int, MaxExecutors: Int,
-                 WindowID: Int, WindowSize: Int, WindowSLOViolations: Int)
+                 AverageLatency: Int, MinLatency: Int, MaxLatency: Int,
+                 AverageExecutors: Int, MinExecutors: Int, MaxExecutors: Int,
+                 WindowID: Int, WindowSize: Int, WindowSLOViolations: Int) {
+  override def toString: String = {
+    "TotalBatches=%d,TotalSLOViolations=%d,AverageLatency=%d[ms],MinLatency=%d[ms],MaxLatency=%d[ms],AverageExecutors=%d,MinExecutors=%d,MaxExecutors=%d,WindowID=%d,WindowSize=%d,WindowSLOViolations=%d"
+      .format(TotalBatches,TotalSLOViolations,AverageLatency,MinLatency,MaxLatency,AverageExecutors,MinExecutors,MaxExecutors,WindowID,WindowSize,WindowSLOViolations)
+  }
+}
 
 class StatBuilder(reportDuration: Int) {
 
@@ -33,7 +38,7 @@ class StatBuilder(reportDuration: Int) {
 
     if ((info.batchTime.milliseconds - lastTimeReportGenerated) >= reportDuration) {
       val stat = Stat(TotalBatches = totalBatches, TotalSLOViolations = totalSLOViolations,
-        AverageLatency = sumLatency.toDouble / windowBatches, MinLatency = minLatency, MaxLatency = maxLatency,
+        AverageLatency = sumLatency / windowBatches, MinLatency = minLatency, MaxLatency = maxLatency,
         AverageExecutors = sumExecutor / windowBatches, MinExecutors = minExecutor, MaxExecutors = maxExecutor,
         WindowID = windowCounter, WindowSize = windowBatches, WindowSLOViolations = windowSLOViolations)
 

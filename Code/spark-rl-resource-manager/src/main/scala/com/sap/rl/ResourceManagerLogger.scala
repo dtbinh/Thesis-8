@@ -8,7 +8,7 @@ import com.sap.rl.rm.Action.Action
 import com.sap.rl.rm.LogTags._
 import com.sap.rl.rm.State
 import com.typesafe.scalalogging.Logger
-import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerApplicationStart, SparkListenerExecutorAdded, SparkListenerExecutorRemoved}
+import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerExecutorAdded, SparkListenerExecutorRemoved}
 import org.apache.spark.streaming.scheduler.StreamingListenerStreamingStarted
 
 trait ResourceManagerLogger {
@@ -18,10 +18,6 @@ trait ResourceManagerLogger {
 
   protected lazy val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Europe/Berlin"))
   import dateFormatter._
-
-  def logApplicationStarted(applicationStart: SparkListenerApplicationStart): Unit = {
-    log.info("{} - Time = {}", APP_STARTED, format(ofEpochMilli(applicationStart.time)))
-  }
 
   def logExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = {
     log.info("{} - Time = {}", SPARK_EXEC_ADDED, format(ofEpochMilli(executorAdded.time)))
@@ -69,7 +65,7 @@ trait ResourceManagerLogger {
 
   def logElementAddedToWindow(runningSum: Int, numberOfBatches: Int): Unit = {
     if (isDebugEnabled) {
-      log.info("{} - (RunningSum,NumberOfBatches) = ({},{},{})", WINDOW_ADDED, runningSum, numberOfBatches)
+      log.info("{} - (RunningSum,NumberOfBatches) = ({},{})", WINDOW_ADDED, runningSum, numberOfBatches)
     }
   }
 
@@ -100,30 +96,22 @@ trait ResourceManagerLogger {
   def logQValueUpdate(lastState: State, lastAction: Action, oldQVal: Double, rewardForLastAction: Double, currentState: State, actionToTake: Action, currentStateQVal: Double, newQVal: Double): Unit = {
     log.info(
       s""" --- QValue-Update-Begin ---
-         | lastState=$lastState
-         | lastAction=$lastAction
-         | oldQValue=$oldQVal
-         | reward=$rewardForLastAction
          | currentState=$currentState
          | actionTotake=$actionToTake
+         | lastState=$lastState
+         | lastAction=$lastAction
+         | reward=$rewardForLastAction
          | currentStateQValue=$currentStateQVal
+         | oldQValue=$oldQVal
          | newQValue=$newQVal
          | --- QValue-Update-End ---""".stripMargin)
   }
 
-  def logExecutorNotEnough(lastState: State, lastAction: Action, currentState: State): Unit = {
-    log.warn(
-      s""" --- $EXEC_NOT_ENOUGH ---
-         | lastState=$lastState
-         | lastAction=$lastAction
-         | currentState=$currentState""".stripMargin)
+  def logExecutorNotEnough(currentState: State): Unit = {
+    log.warn("{} - currentState = {}", REMOVED_ACTION_SCALE_IN, currentState)
   }
 
-  def logNoMoreExecutorsLeft(lastState: State, lastAction: Action, currentState: State): Unit = {
-    log.warn(
-      s""" --- $EXEC_EXCESSIVE ---
-         | lastState=$lastState
-         | lastAction=$lastAction
-         | currentState=$currentState""".stripMargin)
+  def logNoMoreExecutorsLeft(currentState: State): Unit = {
+    log.warn("{} - currentState = {}", REMOVED_ACTION_SCALE_OUT, currentState)
   }
 }
