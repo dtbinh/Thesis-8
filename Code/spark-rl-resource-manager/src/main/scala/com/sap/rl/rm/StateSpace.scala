@@ -41,8 +41,51 @@ class StateSpace(value: MutableHashMap[State, MutableHashMap[Action, Double]]) {
 }
 
 object StateSpace {
-  def apply(constants: ResourceManagerConfig): StateSpace = {
-    import constants._
+  def apply(config: ResourceManagerConfig): StateSpace = {
+    config.InitializationMode match {
+      case "optimal" => optimalInitializer(config)
+      case "zero" => zeroInitializer(config)
+      case "random" => randomInitializer(config)
+    }
+  }
+
+  private def zeroInitializer(config: ResourceManagerConfig): StateSpace = {
+    import config._
+
+    val space: MutableHashMap[State, MutableHashMap[Action, Double]] = MutableHashMap()
+
+    for {
+      exe <- MinimumExecutors to MaximumExecutors
+      lat <- 0 until CoarseMaximumLatency
+    } {
+      // zero out everything
+      add(space, exe, lat, scaleOutReward = NoReward, noActionReward = NoReward, scaleInReward = NoReward)
+    }
+
+    new StateSpace(space)
+  }
+
+  private def randomInitializer(config: ResourceManagerConfig): StateSpace = {
+    import config._
+
+    val space: MutableHashMap[State, MutableHashMap[Action, Double]] = MutableHashMap()
+
+    val rand = new scala.util.Random(System.currentTimeMillis())
+    for {
+      exe <- MinimumExecutors to MaximumExecutors
+      lat <- 0 until CoarseMaximumLatency
+    } {
+      val scaleOutReward = (rand.nextDouble() * 2) - 1
+      val noActionReward = (rand.nextDouble() * 2) - 1
+      val scaleInReward  = (rand.nextDouble() * 2) - 1
+      add(space, exe, lat, scaleOutReward, noActionReward, scaleInReward)
+    }
+
+    new StateSpace(space)
+  }
+
+  private def optimalInitializer(config: ResourceManagerConfig): StateSpace = {
+    import config._
 
     val space: MutableHashMap[State, MutableHashMap[Action, Double]] = MutableHashMap()
 

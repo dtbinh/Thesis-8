@@ -5,23 +5,52 @@ import com.sap.rl.rm.Action._
 import com.sap.rl.rm.{ResourceManagerConfig, State, StateSpace}
 import org.apache.spark.SparkConf
 import org.scalatest.FunSuite
+import ResourceManagerConfig._
 
 class StateSpaceTest extends FunSuite {
 
   val sparkConf: SparkConf = createSparkConf()
-  val constants: ResourceManagerConfig = createRMConstants(sparkConf)
-  import constants._
+
+  test("testZeroInitialization") {
+    sparkConf.set(InitializationModeKey, "zero")
+
+    val config: ResourceManagerConfig = createRMConstants(sparkConf)
+    val stateSpace = StateSpace(config)
+    import config._
+
+    val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity)
+    assert(stateSpace.size == expectedSpaceSize)
+    assert(NoReward == stateSpace(State(MaximumExecutors, MinimumLatency))(ScaleOut))
+    assert(NoReward == stateSpace(State(20, CoarseTargetLatency - 1))(ScaleOut))
+    assert(NoReward == stateSpace(State(20, CoarseTargetLatency - 1))(ScaleIn))
+  }
+
+  test("testRandomInitialization") {
+    sparkConf.set(InitializationModeKey, "random")
+
+    val config: ResourceManagerConfig = createRMConstants(sparkConf)
+    val stateSpace = StateSpace(config)
+    import config._
+
+    val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity)
+    assert(stateSpace.size == expectedSpaceSize)
+  }
 
   test("testInitialization") {
-    val stateSpace = StateSpace(constants)
+    sparkConf.set(InitializationModeKey, "optimal")
+    val config: ResourceManagerConfig = createRMConstants(sparkConf)
+    val stateSpace = StateSpace(config)
+    import config._
 
-    val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) *
-                                  (MaximumLatency / LatencyGranularity)
+    val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity)
     assert(stateSpace.size == expectedSpaceSize)
   }
 
   test("bestActionFor") {
-    val stateSpace = StateSpace(constants)
+    sparkConf.set(InitializationModeKey, "optimal")
+    val config: ResourceManagerConfig = createRMConstants(sparkConf)
+    val stateSpace = StateSpace(config)
+    import config._
 
     assert(BestReward == stateSpace(State(MinimumExecutors, CoarseMinimumLatency - 1))(NoAction))
     assert(BestReward == stateSpace(State(12, 150))(ScaleOut))

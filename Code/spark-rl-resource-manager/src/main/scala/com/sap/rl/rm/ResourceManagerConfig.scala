@@ -27,6 +27,8 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val BestReward: Double = sparkConf.getDouble(BestRewardKey, BestRewardDefault)
   final val NoReward: Double = sparkConf.getDouble(NoRewardKey, NoRewardDefault)
   final val IsDebugEnabled = sparkConf.getBoolean(IsDebugEnabledKey, IsDebugEnabledDefault)
+  final val InitializationMode = sparkConf.get(InitializationModeKey, InitializationModeDefault)
+  final val ReportDuration = sparkConf.getTimeAsMs(ReportDurationKey, ReportDurationDefault)
 
   require(CoresPerExecutor == CoresPerTask)
   require(ExecutorChangePerStep >= 0)
@@ -62,6 +64,8 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | BestReward: $BestReward
        | NoReward: $NoReward
        | IsDebugEnabled: $IsDebugEnabled
+       | InitializationMode: $InitializationMode
+       | ReportDuration: $ReportDuration
        | --- Configuration ---""".stripMargin
 
   log.info(config)
@@ -105,6 +109,10 @@ object ResourceManagerConfig {
   final val NoRewardDefault = 0
   final val IsDebugEnabledKey = "spark.streaming.dynamicAllocation.isDebugEnabled"
   final val IsDebugEnabledDefault = true
+  final val InitializationModeKey = "spark.streaming.dynamicAllocation.initializationMode"
+  final val InitializationModeDefault = "optimal" // zero, random
+  final val ReportDurationKey = "spark.streaming.dynamicAllocation.reportDuration"
+  final val ReportDurationDefault = "3m"
 
   def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }

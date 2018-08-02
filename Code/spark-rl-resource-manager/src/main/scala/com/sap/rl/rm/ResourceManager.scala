@@ -7,10 +7,10 @@ import com.sap.rl.{ResourceManagerLogger, StatBuilder}
 
 trait ResourceManager extends Spark with StreamingListener with SparkListenerTrait with ExecutorAllocator with ResourceManagerLogger {
 
-  private lazy val statBuilder: StatBuilder = StatBuilder()
-
   protected val config: ResourceManagerConfig
   import config._
+
+  private lazy val statBuilder: StatBuilder = StatBuilder(ReportDuration)
 
   override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = logExecutorAdded(executorAdded)
 

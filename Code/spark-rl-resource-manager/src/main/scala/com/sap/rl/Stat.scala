@@ -13,7 +13,7 @@ case class Stat (TotalBatches: Int, TotalSLOViolations: Int,
   }
 }
 
-class StatBuilder(reportDuration: Int) {
+class StatBuilder(reportDuration: Long) {
 
   private var totalSLOViolations: Int = 0
   private var totalBatches: Int = 0
@@ -26,7 +26,7 @@ class StatBuilder(reportDuration: Int) {
   private var minExecutor: Int = Int.MaxValue
   private var maxExecutor: Int = Int.MinValue
 
-  private var windowCounter: Int = 0
+  private var windowCounter: Int = 1
   private var windowBatches: Int = 0
   private var windowSLOViolations: Int = 0
   private var lastTimeReportGenerated: Long = 0
@@ -80,6 +80,5 @@ class StatBuilder(reportDuration: Int) {
 }
 
 object StatBuilder {
-  val REPORT_DURATION: Int = 5 * 60 * 1000
-  def apply(): StatBuilder = new StatBuilder(REPORT_DURATION)
+  def apply(reportDuration: Long): StatBuilder = new StatBuilder(reportDuration)
 }

@@ -8,8 +8,6 @@ class DefaultPolicy(config: ResourceManagerConfig, stateSpace: StateSpace) exten
   import config._
 
   override def nextActionFrom(lastState: State, lastAction: Action, currentState: State): Action = {
-    if (currentState.numberOfExecutors > MinimumExecutors && currentState.latency < CoarseMinimumLatency) return ScaleIn
-
     val currentExecutors = currentState.numberOfExecutors
     val qValues = currentExecutors match {
       case MinimumExecutors =>
