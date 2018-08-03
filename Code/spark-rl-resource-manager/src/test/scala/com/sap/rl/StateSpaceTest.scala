@@ -1,11 +1,12 @@
 package com.sap.rl
 
 import com.sap.rl.TestCommons._
-import com.sap.rl.rm.Action._
-import com.sap.rl.rm.{ResourceManagerConfig, State, StateSpace}
+import com.sap.rm.rl.Action._
+import com.sap.rm.ResourceManagerConfig
+import com.sap.rm.ResourceManagerConfig._
+import com.sap.rm.rl.{State, StateSpace}
 import org.apache.spark.SparkConf
 import org.scalatest.FunSuite
-import ResourceManagerConfig._
 
 class StateSpaceTest extends FunSuite {
 
@@ -14,7 +15,7 @@ class StateSpaceTest extends FunSuite {
   test("testZeroInitialization") {
     sparkConf.set(InitializationModeKey, "zero")
 
-    val config: ResourceManagerConfig = createRMConstants(sparkConf)
+    val config: ResourceManagerConfig = createConfig(sparkConf)
     val stateSpace = StateSpace(config)
     import config._
 
@@ -28,7 +29,7 @@ class StateSpaceTest extends FunSuite {
   test("testRandomInitialization") {
     sparkConf.set(InitializationModeKey, "random")
 
-    val config: ResourceManagerConfig = createRMConstants(sparkConf)
+    val config: ResourceManagerConfig = createConfig(sparkConf)
     val stateSpace = StateSpace(config)
     import config._
 
@@ -38,7 +39,7 @@ class StateSpaceTest extends FunSuite {
 
   test("testInitialization") {
     sparkConf.set(InitializationModeKey, "optimal")
-    val config: ResourceManagerConfig = createRMConstants(sparkConf)
+    val config: ResourceManagerConfig = createConfig(sparkConf)
     val stateSpace = StateSpace(config)
     import config._
 
@@ -48,7 +49,7 @@ class StateSpaceTest extends FunSuite {
 
   test("bestActionFor") {
     sparkConf.set(InitializationModeKey, "optimal")
-    val config: ResourceManagerConfig = createRMConstants(sparkConf)
+    val config: ResourceManagerConfig = createConfig(sparkConf)
     val stateSpace = StateSpace(config)
     import config._
 

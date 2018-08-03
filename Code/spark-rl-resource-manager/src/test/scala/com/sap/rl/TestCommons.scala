@@ -1,8 +1,8 @@
 package com.sap.rl
 
-import com.sap.rl.rm.ResourceManagerConfig
-import com.sap.rl.rm.ResourceManagerConfig._
-import com.sap.rl.util.Precision
+import com.sap.rm.ResourceManagerConfig
+import com.sap.rm.ResourceManagerConfig._
+import com.sap.util.Precision
 import org.apache.log4j.BasicConfigurator
 import org.apache.spark.SparkConf
 
@@ -25,5 +25,5 @@ object TestCommons {
     .set(TargetLatencyKey, "800")
     .set(MaximumLatencyKey, "10000")
 
-  def createRMConstants(sparkConf: SparkConf): ResourceManagerConfig = ResourceManagerConfig(sparkConf)
+  def createConfig(sparkConf: SparkConf): ResourceManagerConfig = ResourceManagerConfig(sparkConf)
 }

@@ -1,12 +1,10 @@
 package org.apache.spark.streaming.scheduler
 
-import com.sap.rl.rm.{ResourceManagerConfig, ResourceManager}
+import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import org.apache.spark.scheduler.SparkListenerApplicationEnd
 import org.apache.spark.streaming.StreamingContext
 
 class SparkResourceManager(val config: ResourceManagerConfig, val streamingContext: StreamingContext) extends ResourceManager {
-
-  private lazy val batchDuration: Long = streamingContext.graph.batchDuration.milliseconds
 
   lazy val listener: ExecutorAllocationManager = new ExecutorAllocationManager(client,
     streamingContext.scheduler.receiverTracker,

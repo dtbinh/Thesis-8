@@ -1,6 +1,5 @@
 package org.apache.spark.streaming.scheduler
 
-import com.sap.rl.rm.Spark
 import org.apache.spark.{ExecutorAllocationClient, SparkException}
 
 trait ExecutorAllocator extends Spark {
