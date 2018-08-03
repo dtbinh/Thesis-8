@@ -18,29 +18,11 @@ import scala.math.round
 import scala.math.signum
 import scala.util.Random.shuffle
 
-/**
- * Main ResourceManager implementation based on ideas lying under original FUGU stream processing
- * engine. It works with with following additional parameters:
- *   - thresholdBreaches:   Range of breaches allowed before optimizer module takes action. Exact
- *                          value is determined by length of batch history
- *   - adaptiveWindow.delta Delta value for AdaptiveWindow algorithm. The lower the value, the
- *                          longer utilization history will be remembered.
- *   - backupExecutors      Number of executors to be kept ahead of optimal number in order to
- *                          make executor addition process milder.
- * Important assumption here is that a single executor corresponds to execution of a single task in
- * heterogeneous cluster system.
- *
- * Internally it utilizes BatchListener along with ResourceOptimizer for event registration and
- * resource optimization respectively.
- *
- * @param streamingContext StreamingContext of the application
- * @param bufSize       Limit for number of remembered batches
- */
 class FuguResourceManager(val config: ResourceManagerConfig, val streamingContext: StreamingContext, val bufferSize: Int = 1024) extends ResourceManager {
   import FuguResourceManager._
   import config._
 
-  @transient private[FuguResourceManager] lazy val log: Logger = Logger(classOf[FuguResourceManager])
+  @transient private[FuguResourceManager] lazy val logger: Logger = Logger(classOf[FuguResourceManager])
 
   val thresholdBreaches: Range = parseConfigRange(sparkConf.get(ThresholdBreachesKey, ThresholdBreachesDefault))
   val adaptiveWindowDelta: Double = sparkConf.getDouble(AdaptiveWindowDeltaKey, AdaptiveWindowDeltaDefault)
@@ -52,7 +34,6 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
   private val jobIdToStages  = new mutable.HashMap[Long, List[StageTier]]()
   private val stageIdToTasks = new mutable.HashMap[Long, List[TaskTier]]()
 
-  // Help with finding relations between entities. It's a problem related to original models.
   private val stageIdToJobId  = new mutable.HashMap[Long, Long]()
   private val jobIdToJobStart = new mutable.HashMap[Long, SparkListenerJobStart]()
 
@@ -72,7 +53,7 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
 
     stageIdToJobId.remove(info.stageId) match {
       case Some(jobId) => if (isFinished) addStage(stageCompleted.stageInfo, jobId)
-      case None        => log.error(s"Can't register stage ${info.stageId}, unknown job id")
+      case None        => logger.error(s"Can't register stage ${info.stageId}, unknown job id")
     }
   }
 
@@ -91,9 +72,9 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
 
       if (batchQueue.size > max(thresholdBreaches.head + thresholdBreaches.step * 2, 16)) {
         val result = adapt(batchQueue)
-        log.info(s"Cluster state: ${getInfo(batchQueue.last)},$result")
+        logger.info(s"Cluster state: ${getInfo(batchQueue.last)},$result")
       } else {
-        log.debug(s"Cluster state: ${getInfo(batchQueue.last)}")
+        logger.debug(s"Cluster state: ${getInfo(batchQueue.last)}")
       }
     }
   }
@@ -111,7 +92,7 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
   private def addJob(jobId: Long, stopTime: Long): Unit = {
     jobIdToJobStart.remove(jobId) match {
       case Some(jobStart) => addJob(jobStart, stopTime, batchTime(jobStart))
-      case None           => log.error(s"Could not update job $jobId, unknown start")
+      case None           => logger.error(s"Could not update job $jobId, unknown start")
     }
   }
 
@@ -142,13 +123,13 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
     val optimalExecutorNo = result.executorNo
     val change            = calculateChange(optimalExecutorNo)
     val state             = OptimizationState(executorNo, optimalExecutorNo)
-    log.info(s"Optimal executor no is $optimalExecutorNo, expecting ($executorNo + $change)")
+    logger.info(s"Optimal executor no is $optimalExecutorNo, expecting ($executorNo + $change)")
 
     if (lastOptimizationState != state) {
       val reconfigured = (change == 0) || (change != 0 && reconfigure(change))
 
       if (reconfigured) {
-        if (change != 0) log.info("Cluster reconfigured")
+        if (change != 0) logger.info("Cluster reconfigured")
         lastOptimizationState = state
       }
     }
@@ -165,7 +146,6 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
     s"$duration,$delay,$load,$executorNo"
   }
 
-  // Number of executors to change is determined with overhead based on granularity
   private def calculateChange(proposed: Int): Int = {
     val diff     = min(proposed, MaximumExecutors) - numberOfActiveExecutors
     val softDiff = round((abs(diff) + (ExecutorGranularity - 1) * min(signum(diff), 0)) / 2.0)
@@ -173,9 +153,8 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
     signum(diff) * ceil(softDiff.toDouble / ExecutorGranularity).toInt * ExecutorGranularity
   }
 
-  // Executors for removal are selected at random
   private def reconfigure(change: Int): Boolean = {
-    log.info(s"Asking for $change executors")
+    logger.info(s"Asking for $change executors")
 
     if (change < 0) {
       removeExecutors(shuffle(activeExecutors).take(-change)).nonEmpty
