@@ -3,6 +3,7 @@ package com.sap.rm.fugu
 import com.sap.rm.fugu.model.{BatchTier, JobTier, StageTier, TaskTier}
 import com.sap.rm.fugu.optimizer.{OptimizerResult, ResourceOptimizer}
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
+import com.typesafe.scalalogging.Logger
 import org.apache.spark.SparkException
 import org.apache.spark.scheduler._
 import org.apache.spark.streaming.StreamingContext
@@ -39,6 +40,8 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
   import FuguResourceManager._
   import config._
 
+  @transient private[FuguResourceManager] lazy val log: Logger = Logger(classOf[FuguResourceManager])
+
   val thresholdBreaches: Range = parseConfigRange(sparkConf.get(ThresholdBreachesKey, ThresholdBreachesDefault))
   val adaptiveWindowDelta: Double = sparkConf.getDouble(AdaptiveWindowDeltaKey, AdaptiveWindowDeltaDefault)
 
@@ -52,9 +55,6 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
   // Help with finding relations between entities. It's a problem related to original models.
   private val stageIdToJobId  = new mutable.HashMap[Long, Long]()
   private val jobIdToJobStart = new mutable.HashMap[Long, SparkListenerJobStart]()
-
-  // We don't want to pass a reference to mutating object.
-  def batches: Seq[BatchTier] = batchQueue.clone()
 
   override def onJobStart(jobStart: SparkListenerJobStart): Unit = synchronized {
     jobStart.stageIds.map(_.toLong).foreach(stageIdToJobId(_) = jobStart.jobId)
@@ -85,17 +85,15 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
     if (processBatch(info)) {
       val batchTime = info.batchTime.milliseconds
       val batch     = BatchTier(info, pollJobs(batchTime))
-      log.info(s"Received successful batch $batchTime ms with completion time")
-      log.debug(batch.toLogString)
 
       if (bufferSize == batchQueue.size) batchQueue.dequeue()
       batchQueue.enqueue(batch)
 
-      if (batches.size > max(thresholdBreaches.head + thresholdBreaches.step * 2, 16)) {
-        val result = adapt(batches)
-        log.debug(s"Cluster state: ${getInfo(batches.last)},$result")
+      if (batchQueue.size > max(thresholdBreaches.head + thresholdBreaches.step * 2, 16)) {
+        val result = adapt(batchQueue)
+        log.info(s"Cluster state: ${getInfo(batchQueue.last)},$result")
       } else {
-        log.debug(s"Cluster state: ${getInfo(batches.last)}")
+        log.debug(s"Cluster state: ${getInfo(batchQueue.last)}")
       }
     }
   }
@@ -177,7 +175,7 @@ class FuguResourceManager(val config: ResourceManagerConfig, val streamingContex
 
   // Executors for removal are selected at random
   private def reconfigure(change: Int): Boolean = {
-    log.debug(s"Asking for $change executors")
+    log.info(s"Asking for $change executors")
 
     if (change < 0) {
       removeExecutors(shuffle(activeExecutors).take(-change)).nonEmpty
@@ -205,6 +203,10 @@ object FuguResourceManager {
 
   final val AdaptiveWindowDeltaKey     = "spark.streaming.dynamicAllocation.adaptiveWindow.delta"
   final val AdaptiveWindowDeltaDefault = 0.5
+
+  def apply(config: ResourceManagerConfig, ssc: StreamingContext): FuguResourceManager = {
+    new FuguResourceManager(config, ssc)
+  }
 
   def parseConfigRange(range: String): Range = {
     val pattern = "(\\d\\.?\\d*)to(\\d\\.?\\d*)by(\\d\\.?\\d*)".r

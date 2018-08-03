@@ -5,7 +5,7 @@ import org.apache.spark.SparkConf
 
 class ResourceManagerConfig(sparkConf: SparkConf) {
 
-  @transient lazy val log: Logger = Logger("RMLogs")
+  @transient private[ResourceManagerConfig] lazy val log: Logger = Logger("RMLogs")
   import ResourceManagerConfig._
 
   final val CoresPerTask: Int = sparkConf.getInt(CoresPerTaskKey, CoresPerTaskDefault)
