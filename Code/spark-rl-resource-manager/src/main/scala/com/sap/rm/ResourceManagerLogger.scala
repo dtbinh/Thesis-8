@@ -89,10 +89,6 @@ trait ResourceManagerLogger {
     log.warn("{}", EXEC_ADD_ERR)
   }
 
-  def logSparkMaxExecutorsRequested(numExecutors: Int): Unit = {
-    log.info("{} - Workers = {}", SPARK_MAX_EXEC, numExecutors)
-  }
-
   def logQValueUpdate(lastState: State, lastAction: Action, oldQVal: Double, rewardForLastAction: Double, currentState: State, actionToTake: Action, currentStateQVal: Double, newQVal: Double): Unit = {
     log.info(
       s""" --- QValue-Update-Begin ---

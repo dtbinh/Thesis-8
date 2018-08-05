@@ -17,7 +17,7 @@ class DefaultReward(config: ResourceManagerConfig, stateSpace: StateSpace) exten
       else
         dangerZoneLatencyDifference(currentState)
     else
-      MaximumExecutors / currentState.numberOfExecutors
+      (MaximumExecutors.toDouble / currentState.numberOfExecutors) - 1
   }
 
   def dangerZoneLatencyDifference(s: State): Double = CoarseTargetLatency - s.latency - 1

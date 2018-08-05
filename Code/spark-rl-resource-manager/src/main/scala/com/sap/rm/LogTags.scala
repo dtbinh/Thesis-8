@@ -8,7 +8,6 @@ object LogTags extends Enumeration {
 
   val SPARK_EXEC_ADDED: Status = Value
   val SPARK_EXEC_REMOVED: Status = Value
-  val SPARK_MAX_EXEC: Status = Value
 
   val STAT: Status = Value
 

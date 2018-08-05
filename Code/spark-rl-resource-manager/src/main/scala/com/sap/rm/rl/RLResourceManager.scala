@@ -27,7 +27,6 @@ abstract class RLResourceManager extends ResourceManager {
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     super.onStreamingStarted(streamingStarted)
     requestTotalExecutors(MaximumExecutors)
-    logSparkMaxExecutorsRequested(numberOfActiveExecutors)
   }
 
   def inGracePeriod(batchTime: Long): Boolean = {
