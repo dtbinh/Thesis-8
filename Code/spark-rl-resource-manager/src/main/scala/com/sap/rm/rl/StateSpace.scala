@@ -58,9 +58,10 @@ object StateSpace {
     for {
       exe <- MinimumExecutors to MaximumExecutors
       lat <- 0 until CoarseMaximumLatency
+      loadIsIncreasing <- List(false, true)
     } {
       // zero out everything
-      add(space, exe, lat, scaleOutReward = NoReward, noActionReward = NoReward, scaleInReward = NoReward)
+      add(space, exe, lat, loadIsIncreasing, scaleOutReward = NoReward, noActionReward = NoReward, scaleInReward = NoReward)
     }
 
     new StateSpace(space)
@@ -75,11 +76,12 @@ object StateSpace {
     for {
       exe <- MinimumExecutors to MaximumExecutors
       lat <- 0 until CoarseMaximumLatency
+      loadIsIncreasing <- List(false, true)
     } {
       val scaleOutReward = (rand.nextDouble() * 2) - 1
       val noActionReward = (rand.nextDouble() * 2) - 1
       val scaleInReward  = (rand.nextDouble() * 2) - 1
-      add(space, exe, lat, scaleOutReward, noActionReward, scaleInReward)
+      add(space, exe, lat, loadIsIncreasing, scaleOutReward, noActionReward, scaleInReward)
     }
 
     new StateSpace(space)
@@ -95,20 +97,17 @@ object StateSpace {
       lat <- 0 until CoarseMaximumLatency
     } {
       if (lat < CoarseMinimumLatency) {
-        // prefer to scale-in, in case scaleIn is not possible, do nothing
-        exe match {
-          case MinimumExecutors => add(space, exe, lat, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = NoReward)
-          case _ => add(space, exe, lat, scaleOutReward = NoReward, noActionReward = NoReward, scaleInReward = BestReward)
-        }
+        // prefer to scale-in
+        add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
+        add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
       } else if (lat >= CoarseMinimumLatency && lat < CoarseTargetLatency) {
-        // prefer no-action
-        add(space, exe, lat, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = NoReward)
+        // prefer scale-in in case load is decreasing
+        add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
+        add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = -BestReward)
       } else {
-        // prefer to scale-out, in case there is not enough executors, prefer NoAction
-        exe match {
-          case MaximumExecutors => add(space, exe, lat, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = NoReward)
-          case _ => add(space, exe, lat, scaleOutReward = BestReward, noActionReward = NoReward, scaleInReward = NoReward)
-        }
+        // prefer to scale-out
+        add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = BestReward, noActionReward = NoReward, scaleInReward = -BestReward)
+        add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = BestReward, noActionReward = NoReward, scaleInReward = -BestReward)
       }
     }
 
@@ -119,13 +118,14 @@ object StateSpace {
                    stateSpace: MutableHashMap[State, MutableHashMap[Action, Double]],
                    numberOfExecutors: Int,
                    latency: Int,
+                   loadIsIncreasing: Boolean,
                    scaleOutReward: Double,
                    noActionReward: Double,
                    scaleInReward: Double
                  ): Unit = {
 
     stateSpace += (
-      State(numberOfExecutors, latency) ->
+      State(numberOfExecutors, latency, loadIsIncreasing) ->
         mutable.HashMap(
           ScaleOut -> scaleOutReward,
           NoAction -> noActionReward,

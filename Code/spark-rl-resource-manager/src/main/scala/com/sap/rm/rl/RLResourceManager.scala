@@ -22,6 +22,8 @@ abstract class RLResourceManager extends ResourceManager {
   protected var rewardForLastAction: Double = 0
   protected var actionToTake: Action = _
   protected var lastTimeDecisionMade: Long = 0
+  protected var incomingMessages: Int = 0
+  protected var lastAverageIncomingMessages: Int = 0
   import config._
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
@@ -46,19 +48,26 @@ abstract class RLResourceManager extends ResourceManager {
 
     runningSum += info.processingDelay.get.toInt
     numberOfBatches += 1
+    incomingMessages += info.numRecords.toInt
 
     if (numberOfBatches == WindowSize) {
-      logWindowIsFull(runningSum, numberOfBatches)
-
       // take average
-      val averageLatency: Int = runningSum / (numberOfBatches * LatencyGranularity)
+      val currentAverageLatency: Int = runningSum / (WindowSize * LatencyGranularity)
+      val currentAverageIncomingMessages: Int = incomingMessages / WindowSize
+      logWindowIsFull(currentAverageLatency, currentAverageIncomingMessages)
 
       // reset
       runningSum = 0
       numberOfBatches = 0
+      incomingMessages = 0
 
       // build the state variable
-      currentState = State(numberOfActiveExecutors, averageLatency)
+      var loadIsIncreasing: Boolean = false
+      if (currentAverageIncomingMessages > lastAverageIncomingMessages) {
+        loadIsIncreasing = true
+      }
+      currentState = State(numberOfActiveExecutors, currentAverageLatency, loadIsIncreasing)
+      lastAverageIncomingMessages = currentAverageIncomingMessages
 
       // do nothing and just initialize to no action
       if (lastState == null) {

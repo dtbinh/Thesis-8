@@ -18,9 +18,9 @@ class DefaultPolicyTest extends FunSuite {
     val stateSpace = StateSpace(constants)
     val policy: Policy = DefaultPolicy(constants, stateSpace)
 
-    assert(ScaleIn != policy.nextActionFrom(State(12, 16), ScaleOut, State(12, 17)))
-    assert(ScaleOut != policy.nextActionFrom(State(10, 5), ScaleIn, State(10, 4)))
-    assert(ScaleIn == policy.nextActionFrom(State(12, 10), ScaleIn, State(11, 10)))
-    assert(ScaleIn != policy.nextActionFrom(State(MinimumExecutors, 10), NoAction, State(MinimumExecutors, 11)))
+    assert(ScaleIn != policy.nextActionFrom(State(12, 16, loadIsIncreasing = true), ScaleOut, State(12, 17, loadIsIncreasing = true)))
+    assert(ScaleOut != policy.nextActionFrom(State(10, 5, loadIsIncreasing = false), ScaleIn, State(10, 4, loadIsIncreasing = false)))
+    assert(ScaleIn == policy.nextActionFrom(State(12, 10, loadIsIncreasing = false), ScaleIn, State(11, 10, loadIsIncreasing = false)))
+    assert(ScaleIn != policy.nextActionFrom(State(MinimumExecutors, 10, loadIsIncreasing = true), NoAction, State(MinimumExecutors, 11, loadIsIncreasing = true)))
   }
 }

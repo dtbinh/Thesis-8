@@ -2,7 +2,6 @@ package com.sap.rl
 
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.ResourceManagerConfig._
-import com.sap.util.Precision
 import org.apache.log4j.BasicConfigurator
 import org.apache.spark.SparkConf
 
@@ -10,8 +9,6 @@ object TestCommons {
 
   // configure log4j
   BasicConfigurator.configure()
-
-  implicit val p: Precision = Precision()
 
   def createSparkConf(): SparkConf = new SparkConf()
     .setMaster("local[2]")

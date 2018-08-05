@@ -59,8 +59,8 @@ trait ResourceManagerLogger {
     }
   }
 
-  def logWindowIsFull(runningSum: Int, numberOfBatches: Int): Unit = {
-    log.info("{} - (RunningSum,NumberOfBatches) = ({},{})", WINDOW_FULL, runningSum, numberOfBatches)
+  def logWindowIsFull(currentAverageLatency: Int, currentAverageIncomingMessages: Int): Unit = {
+    log.info("{} - (CurrentAverageLatency,CurrentAverageIncomingMessages) = ({},{})", WINDOW_FULL, currentAverageLatency, currentAverageIncomingMessages)
   }
 
   def logElementAddedToWindow(runningSum: Int, numberOfBatches: Int): Unit = {
