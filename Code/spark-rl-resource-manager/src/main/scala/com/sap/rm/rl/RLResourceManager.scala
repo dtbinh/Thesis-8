@@ -26,7 +26,7 @@ abstract class RLResourceManager extends ResourceManager {
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     super.onStreamingStarted(streamingStarted)
-    requestMaximumExecutors(MaximumExecutors)
+    requestTotalExecutors(MaximumExecutors)
     logSparkMaxExecutorsRequested(numberOfActiveExecutors)
   }
 
