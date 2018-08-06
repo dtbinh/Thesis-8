@@ -8,7 +8,7 @@ case class Stat (TotalBatches: Int, TotalSLOViolations: Int,
                  AverageLatency: Int, MinLatency: Int, MaxLatency: Int,
                  Executors: Int, WindowID: Int, WindowSize: Int, WindowSLOViolations: Int) {
   override def toString: String = {
-    "TotalBatches=%d,TotalSLOViolations=%d,AverageLatency=%d[ms],MinLatency=%d[ms],MaxLatency=%d[ms],Executors=%d,WindowID=%d,WindowSize=%d,WindowSLOViolations=%d"
+    "TotalBatches=%d,TotalSLOViolations=%d,AverageLatency=%d,MinLatency=%d,MaxLatency=%d,Executors=%d,WindowID=%d,WindowSize=%d,WindowSLOViolations=%d"
       .format(TotalBatches,TotalSLOViolations,AverageLatency,MinLatency,MaxLatency,Executors,WindowID,WindowSize,WindowSLOViolations)
   }
 }

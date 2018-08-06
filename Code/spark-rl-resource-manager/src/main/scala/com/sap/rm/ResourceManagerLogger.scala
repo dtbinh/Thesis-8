@@ -14,6 +14,7 @@ import org.apache.spark.streaming.scheduler.StreamingListenerStreamingStarted
 trait ResourceManagerLogger {
 
   @transient private[ResourceManagerLogger] lazy val log: Logger = Logger("RMLogs")
+  @transient private[ResourceManagerLogger] lazy val statLog: Logger = Logger("Stat")
   protected def isDebugEnabled: Boolean
 
   protected lazy val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Europe/Berlin"))
@@ -51,6 +52,7 @@ trait ResourceManagerLogger {
 
   def logStat(stat: Stat): Unit = {
     log.info("{} - {}", STAT, stat)
+    statLog.info("{}", stat)
   }
 
   def logGracePeriod(batchTime: Long): Unit = {
