@@ -11,16 +11,21 @@ class DefaultReward(config: ResourceManagerConfig, stateSpace: StateSpace) exten
   import config._
 
   override def forAction(lastState: State, lastAction: Action, currentState: State): Double = {
-    if (isStateInDangerZone(currentState))
-      if (lastAction == ScaleOut)
-        abs(dangerZoneLatencyDifference(currentState))
-      else
-        dangerZoneLatencyDifference(currentState)
-    else
-      MaximumExecutors.toDouble / currentState.numberOfExecutors
+    val currentStateDiff = dangerZoneLatencyDifference(currentState)
+    val lastStateDiff = dangerZoneLatencyDifference(lastState)
+
+    if (isStateInDangerZone(currentState)) {
+      if ((lastAction == ScaleOut && (currentState.loadIsIncreasing ||
+                                     (isStateInDangerZone(lastState) && currentStateDiff < lastStateDiff))) ||
+          (lastAction == NoAction && !currentState.loadIsIncreasing))
+        return currentStateDiff
+      return -currentStateDiff
+    }
+
+    MaximumExecutors.toDouble / currentState.numberOfExecutors
   }
 
-  def dangerZoneLatencyDifference(s: State): Double = CoarseTargetLatency - s.latency - 1
+  def dangerZoneLatencyDifference(s: State): Double = abs(CoarseTargetLatency - s.latency - 1)
 
   def isStateInDangerZone(s: State): Boolean = s.latency >= CoarseTargetLatency
 }

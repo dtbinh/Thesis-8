@@ -106,7 +106,7 @@ object StateSpace {
         add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = -BestReward)
       } else {
         // prefer to scale-out
-        add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = BestReward, noActionReward = NoReward, scaleInReward = -BestReward)
+        add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = -BestReward)
         add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = BestReward, noActionReward = NoReward, scaleInReward = -BestReward)
       }
     }
