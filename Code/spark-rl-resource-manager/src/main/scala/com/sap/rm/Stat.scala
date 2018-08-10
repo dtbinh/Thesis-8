@@ -1,15 +1,13 @@
 package com.sap.rm
 
-import java.lang.Math.{max, min}
-
 import org.apache.spark.streaming.scheduler.BatchInfo
 
 case class Stat (TotalBatches: Int, TotalSLOViolations: Int,
-                 AverageLatency: Int, MinLatency: Int, MaxLatency: Int,
-                 Executors: Int, WindowID: Int, WindowSize: Int, WindowSLOViolations: Int) {
+                 AverageProcessingTime: Int, AverageTotalDelay: Int, Executors: Int,
+                 WindowID: Int, WindowSize: Int, WindowSLOViolations: Int) {
   override def toString: String = {
-    "TotalBatches=%d,TotalSLOViolations=%d,AverageLatency=%d,MinLatency=%d,MaxLatency=%d,Executors=%d,WindowID=%d,WindowSize=%d,WindowSLOViolations=%d"
-      .format(TotalBatches,TotalSLOViolations,AverageLatency,MinLatency,MaxLatency,Executors,WindowID,WindowSize,WindowSLOViolations)
+    "TotalBatches=%d,TotalSLOViolations=%d,AverageLatency=%d,AverageTotalDelay=%d,Executors=%d,WindowID=%d,WindowSize=%d,WindowSLOViolations=%d"
+      .format(TotalBatches,TotalSLOViolations,AverageProcessingTime,AverageTotalDelay,Executors,WindowID,WindowSize,WindowSLOViolations)
   }
 }
 
@@ -18,9 +16,8 @@ class StatBuilder(reportDuration: Long) {
   private var totalSLOViolations: Int = 0
   private var totalBatches: Int = 0
 
-  private var sumLatency: Int = 0
-  private var minLatency: Int = Int.MaxValue
-  private var maxLatency: Int = Int.MinValue
+  private var sumProcessingTime: Int = 0
+  private var sumTotalDelay: Int = 0
 
   private var windowCounter: Int = 1
   private var windowBatches: Int = 0
@@ -39,22 +36,19 @@ class StatBuilder(reportDuration: Long) {
       windowSLOViolations += 1
     }
 
-    sumLatency += info.processingDelay.get.toInt
-    minLatency = min(minLatency, info.processingDelay.get.toInt)
-    maxLatency = max(maxLatency, info.processingDelay.get.toInt)
+    sumProcessingTime += info.processingDelay.get.toInt
+    sumTotalDelay += info.totalDelay.get.toInt
 
     if ((info.batchTime.milliseconds - lastTimeReportGenerated) >= reportDuration) {
       val stat = Stat(TotalBatches = totalBatches, TotalSLOViolations = totalSLOViolations,
-        AverageLatency = sumLatency / windowBatches, MinLatency = minLatency, MaxLatency = maxLatency,
-        Executors = numExecutors, WindowID = windowCounter, WindowSize = windowBatches, WindowSLOViolations = windowSLOViolations)
+        AverageProcessingTime = sumProcessingTime / windowBatches, AverageTotalDelay = sumTotalDelay / windowBatches, Executors = numExecutors,
+        WindowID = windowCounter, WindowSize = windowBatches, WindowSLOViolations = windowSLOViolations)
 
       // reset stats
       windowBatches = 0
       windowSLOViolations = 0
-
-      sumLatency = 0
-      minLatency = Int.MaxValue
-      maxLatency = Int.MinValue
+      sumProcessingTime = 0
+      sumTotalDelay = 0
 
       lastTimeReportGenerated = info.batchTime.milliseconds
       windowCounter += 1
