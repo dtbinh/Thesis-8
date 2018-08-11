@@ -4,16 +4,16 @@ import java.lang.Math.min
 
 import com.sap.rm.ResourceManager
 import Action._
-import com.sap.rm.rl.impl.{DefaultPolicy, DefaultReward}
 import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerStreamingStarted}
 
 import scala.util.Random.shuffle
 
 abstract class RLResourceManager extends ResourceManager {
 
-  protected lazy val stateSpace: StateSpace = createStateSpace
-  protected lazy val policy: Policy = createPolicy
-  protected lazy val reward: Reward = createReward
+  protected val stateSpace: StateSpace
+  protected val policy: Policy
+  protected val reward: Reward
+
   protected var runningSum: Int = 0
   protected var numberOfBatches: Int = 0
   protected var lastState: State = _
@@ -138,16 +138,10 @@ abstract class RLResourceManager extends ResourceManager {
       case MaximumExecutors => logNoMoreExecutorsLeft(currentState)
       case _ =>
     }
-    policy.nextActionFrom(lastState, lastAction, currentState)
+    policy.nextActionFrom(stateSpace, lastState, lastAction, currentState)
   }
 
-  def calculateRewardFor(): Double = reward.forAction(lastState, lastAction, currentState)
-
-  def createStateSpace: StateSpace = StateSpace(config)
-
-  def createPolicy: Policy = DefaultPolicy(config, stateSpace)
-
-  def createReward: Reward = DefaultReward(config, stateSpace)
+  def calculateRewardFor(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState)
 
   def specialize(): Unit
 }

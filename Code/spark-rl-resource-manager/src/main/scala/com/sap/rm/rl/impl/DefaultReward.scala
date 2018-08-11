@@ -6,11 +6,11 @@ import com.sap.rm.rl.Action._
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.{Reward, State, StateSpace}
 
-class DefaultReward(config: ResourceManagerConfig, stateSpace: StateSpace) extends Reward {
+class DefaultReward(config: ResourceManagerConfig) extends Reward {
 
   import config._
 
-  override def forAction(lastState: State, lastAction: Action, currentState: State): Double = {
+  override def forAction(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Double = {
     val currentStateDiff = dangerZoneLatencyDifference(currentState)
     val lastStateDiff = dangerZoneLatencyDifference(lastState)
 
@@ -31,5 +31,5 @@ class DefaultReward(config: ResourceManagerConfig, stateSpace: StateSpace) exten
 }
 
 object DefaultReward {
-  def apply(constants: ResourceManagerConfig, stateSpace: StateSpace): DefaultReward = new DefaultReward(constants, stateSpace)
+  def apply(config: ResourceManagerConfig): DefaultReward = new DefaultReward(config)
 }

@@ -6,7 +6,8 @@ import Action._
 import scala.collection.mutable
 import scala.collection.mutable.{HashMap => MutableHashMap}
 
-class StateSpace(value: MutableHashMap[State, MutableHashMap[Action, Double]]) {
+@SerialVersionUID(1L)
+class StateSpace(value: MutableHashMap[State, MutableHashMap[Action, Double]]) extends Serializable {
 
   def updateQValueForAction(state: State, action: Action, qVal: Double): Unit = {
     val qValues = value(state)

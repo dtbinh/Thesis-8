@@ -2,7 +2,8 @@ package com.sap.rm.rl
 
 import com.sap.rm.ResourceManagerConfig._
 
-case class State(numberOfExecutors: Int, latency: Int, loadIsIncreasing: Boolean) extends Ordered[State] {
+@SerialVersionUID(1L)
+case class State(numberOfExecutors: Int, latency: Int, loadIsIncreasing: Boolean) extends Serializable with Ordered[State] {
 
   override def compare(that: State): Int = {
     if (numberOfExecutors < that.numberOfExecutors) LessThan
