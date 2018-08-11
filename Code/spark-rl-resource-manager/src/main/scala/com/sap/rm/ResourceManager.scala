@@ -21,7 +21,7 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
   override val isDebugEnabled: Boolean = IsDebugEnabled
 
   def processBatch(info: BatchInfo): Boolean = {
-    if (isInValidBatch(info)) return false
+    if (isInvalidBatch(info)) return false
 
     val stat = statBuilder.update(info, numberOfActiveExecutors, isSLOViolated(info))
     if (stat.nonEmpty) logStat(stat.get)
@@ -29,8 +29,8 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
     true
   }
 
-  def isInValidBatch(info: BatchInfo): Boolean = {
-    if (info.processingDelay.isEmpty) {
+  def isInvalidBatch(info: BatchInfo): Boolean = {
+    if (info.processingDelay.isEmpty || info.totalDelay.isEmpty || info.numRecords == 0) {
       logEmptyBatch(info.batchTime.milliseconds)
       return true
     }
