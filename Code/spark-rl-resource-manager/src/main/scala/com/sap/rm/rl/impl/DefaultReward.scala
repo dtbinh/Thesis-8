@@ -17,7 +17,8 @@ class DefaultReward(config: ResourceManagerConfig) extends Reward {
     if (isStateInDangerZone(currentState)) {
       if ((lastAction == ScaleOut && (currentState.loadIsIncreasing ||
                                      (isStateInDangerZone(lastState) && currentStateDiff < lastStateDiff))) ||
-          (lastAction == NoAction && !currentState.loadIsIncreasing))
+          (lastAction == NoAction && !currentState.loadIsIncreasing) ||
+          (lastAction == NoAction && lastState.numberOfExecutors == MaximumExecutors && InitializationMode != "zero"))
         return currentStateDiff
       return -currentStateDiff
     }

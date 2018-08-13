@@ -98,17 +98,27 @@ object StateSpace {
       lat <- 0 until CoarseMaximumLatency
     } {
       if (lat < CoarseMinimumLatency) {
-        // prefer to scale-in
-        add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
-        add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
+        if (exe == MinimumExecutors) {
+          add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = BestReward, scaleInReward = NoReward)
+          add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = -BestReward, noActionReward = BestReward, scaleInReward = NoReward)
+        } else {
+          add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
+          add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
+        }
       } else if (lat >= CoarseMinimumLatency && lat < CoarseTargetLatency) {
-        // prefer scale-in in case load is decreasing
-        add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
+        if (exe == MinimumExecutors) {
+          add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = BestReward, scaleInReward = NoReward)
+        } else {
+          add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
+        }
         add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = -BestReward)
       } else {
-        // prefer to scale-out
+        if (exe == MaximumExecutors) {
+          add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = -BestReward)
+        } else {
+          add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = BestReward, noActionReward = NoReward, scaleInReward = -BestReward)
+        }
         add(space, exe, lat, loadIsIncreasing = false, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = -BestReward)
-        add(space, exe, lat, loadIsIncreasing = true, scaleOutReward = BestReward, noActionReward = NoReward, scaleInReward = -BestReward)
       }
     }
 
