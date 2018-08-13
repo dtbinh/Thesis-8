@@ -1,8 +1,8 @@
 package com.sap.rm.rl.td
 
-import com.sap.rm.ResourceManagerConfig
+import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import com.sap.rm.rl.impl.{DefaultPolicy, DefaultReward}
-import com.sap.rm.rl.{Policy, RLResourceManager, Reward, StateSpace}
+import com.sap.rm.rl._
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler.StreamingListenerBatchCompleted
 
@@ -32,12 +32,18 @@ class TemporalDifferenceResourceManager(
 }
 
 object TemporalDifferenceResourceManager {
-  def apply(config: ResourceManagerConfig, ssc: StreamingContext): TemporalDifferenceResourceManager = {
+  def apply(config: ResourceManagerConfig,
+            streamingContext: StreamingContext,
+            stateSpace: Option[StateSpace] = None,
+            policy: Option[Policy] = None,
+            reward: Option[Reward] = None
+           ): ResourceManager = {
+
     new TemporalDifferenceResourceManager(
-      config, ssc,
-      stateSpace = StateSpace(config),
-      policy = DefaultPolicy(config),
-      reward = DefaultReward(config)
-    )
+      config,
+      streamingContext,
+      stateSpace.getOrElse { StateSpaceFactory.factoryInstance(config).initialize(StateSpace()) },
+      policy.getOrElse(DefaultPolicy(config)),
+      reward.getOrElse(DefaultReward(config)))
   }
 }

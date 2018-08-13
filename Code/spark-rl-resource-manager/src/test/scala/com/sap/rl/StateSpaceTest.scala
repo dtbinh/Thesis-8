@@ -4,7 +4,7 @@ import com.sap.rl.TestCommons._
 import com.sap.rm.rl.Action._
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.ResourceManagerConfig._
-import com.sap.rm.rl.{State, StateSpace}
+import com.sap.rm.rl.{State, StateSpace, StateSpaceFactory}
 import org.apache.spark.SparkConf
 import org.scalatest.FunSuite
 
@@ -16,7 +16,7 @@ class StateSpaceTest extends FunSuite {
     sparkConf.set(InitializationModeKey, "zero")
 
     val config: ResourceManagerConfig = createConfig(sparkConf)
-    val stateSpace = StateSpace(config)
+    val stateSpace = StateSpaceFactory.factoryInstance(config).initialize(StateSpace())
     import config._
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity) * 2
@@ -30,7 +30,7 @@ class StateSpaceTest extends FunSuite {
     sparkConf.set(InitializationModeKey, "random")
 
     val config: ResourceManagerConfig = createConfig(sparkConf)
-    val stateSpace = StateSpace(config)
+    val stateSpace = StateSpaceFactory.factoryInstance(config).initialize(StateSpace())
     import config._
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity) * 2
@@ -40,7 +40,7 @@ class StateSpaceTest extends FunSuite {
   test("testInitialization") {
     sparkConf.set(InitializationModeKey, "optimal")
     val config: ResourceManagerConfig = createConfig(sparkConf)
-    val stateSpace = StateSpace(config)
+    val stateSpace = StateSpaceFactory.factoryInstance(config).initialize(StateSpace())
     import config._
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity) * 2
@@ -50,13 +50,13 @@ class StateSpaceTest extends FunSuite {
   test("bestActionFor") {
     sparkConf.set(InitializationModeKey, "optimal")
     val config: ResourceManagerConfig = createConfig(sparkConf)
-    val stateSpace = StateSpace(config)
+    val stateSpace = StateSpaceFactory.factoryInstance(config).initialize(StateSpace())
     import config._
 
-    assert(NoReward == stateSpace(State(MinimumExecutors, CoarseMinimumLatency - 1, loadIsIncreasing = true))(NoAction))
+    assert(BestReward == stateSpace(State(MinimumExecutors, CoarseMinimumLatency - 1, loadIsIncreasing = true))(NoAction))
     assert(BestReward == stateSpace(State(12, 150, loadIsIncreasing = true))(ScaleOut))
     assert(BestReward == stateSpace(State(12, 1, loadIsIncreasing = false))(ScaleIn))
-    assert(NoReward == stateSpace(State(MaximumExecutors, CoarseTargetLatency, loadIsIncreasing = false))(NoAction))
+    assert(BestReward == stateSpace(State(MaximumExecutors, CoarseTargetLatency, loadIsIncreasing = false))(NoAction))
     assert(BestReward == stateSpace(State(MaximumExecutors - 1, CoarseTargetLatency, loadIsIncreasing = true))(ScaleOut))
     assert(-BestReward == stateSpace(State(20, CoarseTargetLatency - 1, loadIsIncreasing = false))(ScaleOut))
     assert(-BestReward == stateSpace(State(20, CoarseTargetLatency - 1, loadIsIncreasing = true))(ScaleIn))
