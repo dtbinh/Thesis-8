@@ -42,7 +42,7 @@ object TemporalDifferenceResourceManager {
     new TemporalDifferenceResourceManager(
       config,
       streamingContext,
-      stateSpace.getOrElse { StateSpaceFactory.factoryInstance(config).initialize(StateSpace()) },
+      stateSpace.getOrElse { StateSpaceInitializer.getInstance(config).initialize(StateSpace()) },
       policy.getOrElse(DefaultPolicy(config)),
       reward.getOrElse(DefaultReward(config)))
   }

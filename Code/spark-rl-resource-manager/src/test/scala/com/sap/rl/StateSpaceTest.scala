@@ -4,7 +4,7 @@ import com.sap.rl.TestCommons._
 import com.sap.rm.rl.Action._
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.ResourceManagerConfig._
-import com.sap.rm.rl.{State, StateSpace, StateSpaceFactory}
+import com.sap.rm.rl.{State, StateSpace, StateSpaceInitializer}
 import org.apache.spark.SparkConf
 import org.scalatest.FunSuite
 
@@ -16,7 +16,7 @@ class StateSpaceTest extends FunSuite {
     sparkConf.set(InitializationModeKey, "zero")
 
     val config: ResourceManagerConfig = createConfig(sparkConf)
-    val stateSpace = StateSpaceFactory.factoryInstance(config).initialize(StateSpace())
+    val stateSpace = StateSpaceInitializer.getInstance(config).initialize(StateSpace())
     import config._
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity) * 2
@@ -30,7 +30,7 @@ class StateSpaceTest extends FunSuite {
     sparkConf.set(InitializationModeKey, "random")
 
     val config: ResourceManagerConfig = createConfig(sparkConf)
-    val stateSpace = StateSpaceFactory.factoryInstance(config).initialize(StateSpace())
+    val stateSpace = StateSpaceInitializer.getInstance(config).initialize(StateSpace())
     import config._
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity) * 2
@@ -40,7 +40,7 @@ class StateSpaceTest extends FunSuite {
   test("testInitialization") {
     sparkConf.set(InitializationModeKey, "optimal")
     val config: ResourceManagerConfig = createConfig(sparkConf)
-    val stateSpace = StateSpaceFactory.factoryInstance(config).initialize(StateSpace())
+    val stateSpace = StateSpaceInitializer.getInstance(config).initialize(StateSpace())
     import config._
 
     val expectedSpaceSize: Long = (MaximumExecutors - MinimumExecutors + 1) * (MaximumLatency / LatencyGranularity) * 2
@@ -50,7 +50,7 @@ class StateSpaceTest extends FunSuite {
   test("bestActionFor") {
     sparkConf.set(InitializationModeKey, "optimal")
     val config: ResourceManagerConfig = createConfig(sparkConf)
-    val stateSpace = StateSpaceFactory.factoryInstance(config).initialize(StateSpace())
+    val stateSpace = StateSpaceInitializer.getInstance(config).initialize(StateSpace())
     import config._
 
     assert(BestReward == stateSpace(State(MinimumExecutors, CoarseMinimumLatency - 1, loadIsIncreasing = true))(NoAction))

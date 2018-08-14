@@ -1,9 +1,9 @@
 package com.sap.rm.rl.impl
 
 import com.sap.rm.ResourceManagerConfig
-import com.sap.rm.rl.{StateSpace, StateSpaceFactory}
+import com.sap.rm.rl.{StateSpace, StateSpaceInitializer}
 
-class OptimizedStateSpaceFactory(config: ResourceManagerConfig) extends StateSpaceFactory {
+class OptimizedStateSpaceInitializer(config: ResourceManagerConfig) extends StateSpaceInitializer {
   override def initialize(space: StateSpace): StateSpace = {
     import config._
 
@@ -40,6 +40,6 @@ class OptimizedStateSpaceFactory(config: ResourceManagerConfig) extends StateSpa
   }
 }
 
-object OptimizedStateSpaceFactory {
-  def apply(config: ResourceManagerConfig): OptimizedStateSpaceFactory = new OptimizedStateSpaceFactory(config)
+object OptimizedStateSpaceInitializer {
+  def apply(config: ResourceManagerConfig): OptimizedStateSpaceInitializer = new OptimizedStateSpaceInitializer(config)
 }

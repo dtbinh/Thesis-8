@@ -1,9 +1,9 @@
 package com.sap.rm.rl.impl
 
 import com.sap.rm.ResourceManagerConfig
-import com.sap.rm.rl.{StateSpace, StateSpaceFactory}
+import com.sap.rm.rl.{StateSpace, StateSpaceInitializer}
 
-class RandomStateSpaceFactory(config: ResourceManagerConfig) extends StateSpaceFactory {
+class RandomStateSpaceInitializer(config: ResourceManagerConfig) extends StateSpaceInitializer {
   override def initialize(space: StateSpace): StateSpace = {
     import config._
 
@@ -23,6 +23,6 @@ class RandomStateSpaceFactory(config: ResourceManagerConfig) extends StateSpaceF
   }
 }
 
-object RandomStateSpaceFactory {
-  def apply(config: ResourceManagerConfig): RandomStateSpaceFactory = new RandomStateSpaceFactory(config)
+object RandomStateSpaceInitializer {
+  def apply(config: ResourceManagerConfig): RandomStateSpaceInitializer = new RandomStateSpaceInitializer(config)
 }

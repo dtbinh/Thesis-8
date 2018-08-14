@@ -4,7 +4,7 @@ import com.sap.rl.TestCommons._
 import com.sap.rm.rl.Action._
 import com.sap.rm.rl.impl.DefaultPolicy
 import com.sap.rm.ResourceManagerConfig
-import com.sap.rm.rl.{Policy, State, StateSpace, StateSpaceFactory}
+import com.sap.rm.rl.{Policy, State, StateSpace, StateSpaceInitializer}
 import org.apache.spark.SparkConf
 import org.scalatest.FunSuite
 
@@ -15,7 +15,7 @@ class DefaultPolicyTest extends FunSuite {
   import config._
 
   test("testBestActionWithLatency") {
-    val stateSpace = StateSpaceFactory.factoryInstance(config).initialize(StateSpace())
+    val stateSpace = StateSpaceInitializer.getInstance(config).initialize(StateSpace())
     val policy: Policy = DefaultPolicy(config)
 
     assert(ScaleIn != policy.nextActionFrom(stateSpace, State(12, 16, loadIsIncreasing = true), ScaleOut, State(12, 17, loadIsIncreasing = true)))
