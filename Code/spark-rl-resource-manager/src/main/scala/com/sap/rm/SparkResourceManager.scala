@@ -1,30 +1,24 @@
-package org.apache.spark.streaming.scheduler
+package com.sap.rm
 
-import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import org.apache.spark.scheduler.SparkListenerApplicationEnd
 import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.streaming.scheduler.{StreamingListenerBatchCompleted, StreamingListenerStreamingStarted}
 
 class SparkResourceManager(val config: ResourceManagerConfig, val streamingContext: StreamingContext) extends ResourceManager {
 
-  lazy val listener: ExecutorAllocationManager = new ExecutorAllocationManager(client,
-    streamingContext.scheduler.receiverTracker,
-    sparkConf,
-    batchDuration,
-    streamingContext.scheduler.clock)
-
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
-    listener.start()
+    sparkDynamicAllocator.start()
     super.onStreamingStarted(streamingStarted)
   }
 
   override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
     super.onApplicationEnd(applicationEnd)
-    listener.stop()
+    sparkDynamicAllocator.stop()
   }
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
     if (processBatch(batchCompleted.batchInfo)) {
-      listener.onBatchCompleted(batchCompleted)
+      sparkDynamicAllocator.onBatchCompleted(batchCompleted)
     }
   }
 }

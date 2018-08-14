@@ -3,7 +3,7 @@ package com.sap.rm
 import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerExecutorAdded, SparkListenerExecutorRemoved}
 import org.apache.spark.streaming.scheduler._
 
-trait ResourceManager extends Spark with StreamingListener with SparkListenerTrait with ExecutorAllocator with ResourceManagerLogger {
+trait ResourceManager extends Spark with StreamingListener with SparkListenerTrait with ResourceManagerLogger {
 
   protected val config: ResourceManagerConfig
   import config._
