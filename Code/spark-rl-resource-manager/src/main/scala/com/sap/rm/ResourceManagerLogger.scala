@@ -40,6 +40,10 @@ trait ResourceManagerLogger {
     log.warn("{} - BatchTime = {}", BATCH_EMPTY, format(ofEpochMilli(batchTime)))
   }
 
+  def logStartupIgnoreBatch(batchTime: Long): Unit = {
+    log.warn("{} - BatchTime = {}", BATCH_STARTUP, format(ofEpochMilli(batchTime)))
+  }
+
   def logExcessiveProcessingTime(processingTime: Long): Unit = {
     log.warn("{} - ProcessingTime = {}", EXCESSIVE_LATENCY, processingTime)
   }

@@ -29,6 +29,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val IsDebugEnabled = sparkConf.getBoolean(IsDebugEnabledKey, IsDebugEnabledDefault)
   final val InitializationMode = sparkConf.get(InitializationModeKey, InitializationModeDefault)
   final val ReportDuration = sparkConf.getTimeAsMs(ReportDurationKey, ReportDurationDefault)
+  final val StartupIgnoreBatches = sparkConf.getInt(StartupIgnoreBatchesKey, StartupIgnoreBatchesDefault)
 
   require(CoresPerExecutor == CoresPerTask)
   require(ExecutorGranularity >= 0)
@@ -42,6 +43,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   require(DiscountFactor >= 0 && DiscountFactor <= 1)
 
   require(BestReward > NoReward)
+  require(StartupIgnoreBatches >= 0)
 
   val config: String =
     s""" --- Configuration ---
@@ -66,6 +68,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | IsDebugEnabled: $IsDebugEnabled
        | InitializationMode: $InitializationMode
        | ReportDuration: $ReportDuration
+       | StartupIgnoreBatches: $StartupIgnoreBatches
        | --- Configuration ---""".stripMargin
 
   log.info(config)
@@ -113,6 +116,8 @@ object ResourceManagerConfig {
   final val InitializationModeDefault = "optimal" // zero, random
   final val ReportDurationKey = "spark.streaming.dynamicAllocation.reportDuration"
   final val ReportDurationDefault = "3m"
+  final val StartupIgnoreBatchesKey = "spark.streaming.dynamicAllocation.startupIgnoreBatches"
+  final val StartupIgnoreBatchesDefault = 3
 
   def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }
