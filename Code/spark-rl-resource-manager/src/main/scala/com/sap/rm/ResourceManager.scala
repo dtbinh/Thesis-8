@@ -16,7 +16,10 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
 
   override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = logApplicationEnd(applicationEnd)
 
-  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = logStreamingStarted(streamingStarted, numberOfActiveExecutors)
+  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
+    logStreamingStarted(streamingStarted, numberOfActiveExecutors)
+    removeExecutors(activeExecutors.take(MaximumExecutors - MinimumExecutors))
+  }
 
   override val isDebugEnabled: Boolean = IsDebugEnabled
 
@@ -33,7 +36,7 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
 
   def isInvalidBatch(info: BatchInfo): Boolean = {
     batchCount += 1
-    if (batchCount < StartupIgnoreBatches) {
+    if (batchCount <= StartupIgnoreBatches) {
       logStartupIgnoreBatch(info.batchTime.milliseconds)
       return true
     }

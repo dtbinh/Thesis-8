@@ -7,8 +7,6 @@ class DoNothingResourceManager(val config: ResourceManagerConfig, val streamingC
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
     processBatch(batchCompleted.batchInfo)
   }
-
-  override def numberOfActiveExecutors: Int = config.MaximumExecutors
 }
 
 object DoNothingResourceManager {
