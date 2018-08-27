@@ -1,7 +1,7 @@
 package com.sap.rm.rl
 
 import com.sap.rm.ResourceManagerConfig
-import com.sap.rm.rl.impl.{OptimizedStateSpaceInitializer, RandomStateSpaceInitializer, ZeroStateSpaceInitializer}
+import com.sap.rm.rl.impl.statespace.{OptimizedStateSpaceInitializer, RandomStateSpaceInitializer, ZeroStateSpaceInitializer}
 
 trait StateSpaceInitializer {
   def initialize(space: StateSpace): StateSpace

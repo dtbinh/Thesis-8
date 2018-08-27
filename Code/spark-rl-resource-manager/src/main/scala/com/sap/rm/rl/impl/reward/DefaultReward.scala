@@ -1,9 +1,9 @@
-package com.sap.rm.rl.impl
+package com.sap.rm.rl.impl.reward
 
 import java.lang.Math.abs
 
-import com.sap.rm.rl.Action._
 import com.sap.rm.ResourceManagerConfig
+import com.sap.rm.rl.Action._
 import com.sap.rm.rl.{Reward, State, StateSpace}
 
 class DefaultReward(config: ResourceManagerConfig) extends Reward {

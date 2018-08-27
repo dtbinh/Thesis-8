@@ -1,4 +1,4 @@
-package com.sap.rm.rl.impl
+package com.sap.rm.rl.impl.statespace
 
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.{StateSpace, StateSpaceInitializer}

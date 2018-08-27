@@ -2,17 +2,25 @@ package com.sap.rm.rl
 
 import java.lang.Math.min
 
-import com.sap.rm.ResourceManager
+import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import Action._
+import com.sap.rm.rl.impl.policy.GreedyPolicy
+import com.sap.rm.rl.impl.reward.DefaultReward
+import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerStreamingStarted}
 
 import scala.util.Random.shuffle
 
-abstract class RLResourceManager extends ResourceManager {
+class TemporalDifferenceResourceManager(
+                                         cfg: ResourceManagerConfig,
+                                         ssc: StreamingContext,
+                                         stateSpace: StateSpace,
+                                         policy: Policy,
+                                         reward: Reward
+                                       ) extends ResourceManager {
 
-  protected val stateSpace: StateSpace
-  protected val policy: Policy
-  protected val reward: Reward
+  override val streamingContext: StreamingContext = ssc
+  override val config: ResourceManagerConfig = cfg
 
   protected var runningSum: Int = 0
   protected var numberOfBatches: Int = 0
@@ -24,6 +32,7 @@ abstract class RLResourceManager extends ResourceManager {
   protected var lastTimeDecisionMade: Long = 0
   protected var incomingMessages: Int = 0
   protected var lastAverageIncomingMessages: Int = 0
+  protected var currentBatch: BatchInfo = _
   import config._
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
@@ -43,6 +52,7 @@ abstract class RLResourceManager extends ResourceManager {
     if (!super.processBatch(info)) return false
 
     // check if batch is valid
+    currentBatch = info
     val batchTime = info.batchTime.milliseconds
     if (inGracePeriod(batchTime)) return false
 
@@ -79,8 +89,8 @@ abstract class RLResourceManager extends ResourceManager {
         // take new action
         actionToTake = whatIsTheNextAction()
 
-        // specialize algorithm
-        specialize()
+        // update state space
+        updateStateSpace()
 
         // request change
         reconfigure(actionToTake)
@@ -143,5 +153,30 @@ abstract class RLResourceManager extends ResourceManager {
 
   def calculateRewardFor(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState)
 
-  def specialize(): Unit
+  def updateStateSpace(): Unit = {
+    val oldQVal: Double = stateSpace(lastState)(lastAction)
+    val currentStateQVal: Double = stateSpace(currentState)(actionToTake)
+
+    val newQVal: Double = ((1 - LearningFactor) * oldQVal) + (LearningFactor * (rewardForLastAction + (DiscountFactor * currentStateQVal)))
+    stateSpace.updateQValueForAction(lastState, lastAction, newQVal)
+
+    logQValueUpdate(lastState, lastAction, oldQVal, rewardForLastAction, currentState, actionToTake, currentStateQVal, newQVal)
+  }
+}
+
+object TemporalDifferenceResourceManager {
+  def apply(config: ResourceManagerConfig,
+            streamingContext: StreamingContext,
+            stateSpace: Option[StateSpace] = None,
+            policy: Option[Policy] = None,
+            reward: Option[Reward] = None
+           ): ResourceManager = {
+
+    new TemporalDifferenceResourceManager(
+      config,
+      streamingContext,
+      stateSpace.getOrElse { StateSpaceInitializer.getInstance(config).initialize(StateSpace()) },
+      policy.getOrElse(GreedyPolicy(config)),
+      reward.getOrElse(DefaultReward(config)))
+  }
 }

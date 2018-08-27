@@ -30,6 +30,10 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val InitializationMode = sparkConf.get(InitializationModeKey, InitializationModeDefault)
   final val ReportDuration = sparkConf.getTimeAsMs(ReportDurationKey, ReportDurationDefault)
   final val StartupIgnoreBatches = sparkConf.getInt(StartupIgnoreBatchesKey, StartupIgnoreBatchesDefault)
+  final val Epsilon = sparkConf.getDouble(EpsilonKey, EpsilonDefault)
+  final val EpsilonStep = sparkConf.getDouble(EpsilonStepKey, EpsilonStepDefault)
+  final val ValueIterationInitializationTime = sparkConf.getTimeAsMs(ValueIterationInitializationTimeKey, ValueIterationInitializationTimeDefault)
+  final val ValueIterationInitializationCount = sparkConf.getInt(ValueIterationInitializationCountKey, ValueIterationInitializationCountDefault)
 
   require(CoresPerExecutor == CoresPerTask)
   require(ExecutorGranularity >= 0)
@@ -44,6 +48,10 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
 
   require(BestReward > NoReward)
   require(StartupIgnoreBatches >= 0)
+  require(Epsilon >= 0 && Epsilon <= 1)
+  require(EpsilonStep >= 0 && EpsilonStep <= 1)
+  require(ValueIterationInitializationTime > 0)
+  require(ValueIterationInitializationCount > 0)
 
   val config: String =
     s""" --- Configuration ---
@@ -69,6 +77,10 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | InitializationMode: $InitializationMode
        | ReportDuration: $ReportDuration
        | StartupIgnoreBatches: $StartupIgnoreBatches
+       | Epsilon: $Epsilon
+       | EpsilonStep: $EpsilonStep
+       | ValueIterationInitializationTime: $ValueIterationInitializationTime
+       | ValueIterationInitializationCount: $ValueIterationInitializationCount
        | --- Configuration ---""".stripMargin
 
   log.info(config)
@@ -118,6 +130,14 @@ object ResourceManagerConfig {
   final val ReportDurationDefault = "3m"
   final val StartupIgnoreBatchesKey = "spark.streaming.dynamicAllocation.startupIgnoreBatches"
   final val StartupIgnoreBatchesDefault = 3
+  final val EpsilonKey = "spark.streaming.dynamicAllocation.epsilon"
+  final val EpsilonDefault = 0.1
+  final val EpsilonStepKey = "spark.streaming.dynamicAllocation.epsilonStep"
+  final val EpsilonStepDefault = 0.05
+  final val ValueIterationInitializationTimeKey = "spark.streaming.dynamicAllocation.valueIterationInitializationTime"
+  final val ValueIterationInitializationTimeDefault = "15m"
+  final val ValueIterationInitializationCountKey = "spark.streaming.dynamicAllocation.valueIterationInitializationCount"
+  final val ValueIterationInitializationCountDefault = 10
 
   def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }

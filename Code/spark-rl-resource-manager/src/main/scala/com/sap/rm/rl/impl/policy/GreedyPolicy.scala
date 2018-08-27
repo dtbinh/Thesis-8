@@ -1,10 +1,10 @@
-package com.sap.rm.rl.impl
+package com.sap.rm.rl.impl.policy
 
-import com.sap.rm.rl.Action._
 import com.sap.rm.ResourceManagerConfig
+import com.sap.rm.rl.Action._
 import com.sap.rm.rl.{Policy, State, StateSpace}
 
-class DefaultPolicy(config: ResourceManagerConfig) extends Policy {
+class GreedyPolicy(config: ResourceManagerConfig) extends Policy {
 
   import config._
 
@@ -27,6 +27,6 @@ class DefaultPolicy(config: ResourceManagerConfig) extends Policy {
   }
 }
 
-object DefaultPolicy {
-  def apply(config: ResourceManagerConfig): DefaultPolicy = new DefaultPolicy(config)
+object GreedyPolicy {
+  def apply(config: ResourceManagerConfig): GreedyPolicy = new GreedyPolicy(config)
 }

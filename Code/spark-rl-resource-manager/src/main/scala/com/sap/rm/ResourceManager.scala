@@ -9,6 +9,7 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
   import config._
 
   private lazy val statBuilder: StatBuilder = StatBuilder(ReportDuration)
+  protected var streamingStartTime: Long = 0
 
   override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = logExecutorAdded(executorAdded)
 
@@ -17,6 +18,7 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
   override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = logApplicationEnd(applicationEnd)
 
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
+    streamingStartTime = streamingStarted.time
     logStreamingStarted(streamingStarted, numberOfActiveExecutors)
     removeExecutors(activeExecutors.take(MaximumExecutors - MinimumExecutors))
   }
