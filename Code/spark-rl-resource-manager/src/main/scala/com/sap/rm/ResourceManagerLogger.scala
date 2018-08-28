@@ -10,6 +10,7 @@ import com.sap.rm.rl.State
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerExecutorAdded, SparkListenerExecutorRemoved}
 import org.apache.spark.streaming.scheduler.StreamingListenerStreamingStarted
+import scala.collection.mutable.{Map => MutableMap, Set => MutableSet}
 
 trait ResourceManagerLogger {
 
@@ -115,5 +116,42 @@ trait ResourceManagerLogger {
 
   def logNoMoreExecutorsLeft(currentState: State): Unit = {
     log.warn("{} - currentState = {}", REMOVED_ACTION_SCALE_OUT, currentState)
+  }
+
+  def logStateActionStateStat(lastState: State, lastAction: Action, rewardForLastAction: Double, currentState: State,
+                              stateActionCount: Int, stateActionReward: Double, stateActionStateCount: Int): Unit = {
+    log.info(
+      s""" --- State-Action-State-Stat ---
+         | lastState=$lastState
+         | lastAction=$lastAction
+         | reward=$rewardForLastAction
+         | currentState=$currentState
+         | stateActionCount=$stateActionCount
+         | stateActionReward=$stateActionReward
+         | stateActionStateCount=$stateActionStateCount""".stripMargin)
+  }
+
+  def logEverything(stateActionCount: MutableMap[(State, Action), Int], stateActionReward: MutableMap[(State, Action), Double],
+                    stateActionStateCount: MutableMap[(State, Action, State), Int], stateActionRewardBar: MutableMap[(State, Action), Double],
+                    stateActionStateBar: MutableMap[(State, Action, State), Double], startingStates: MutableSet[State],
+                    landingStates: MutableSet[State]): Unit = {
+    log.info(
+      s"""
+         | stateActionCount: $stateActionCount
+         | stateActionReward: $stateActionReward
+         | stateActionStateCount: $stateActionStateCount
+         | stateActionRewardBar: $stateActionRewardBar
+         | stateActionStateBar: $stateActionStateBar
+         | startingStates: $startingStates
+         | landingStates: $landingStates
+       """.stripMargin
+    )
+  }
+
+  def logVValues(vvalues: MutableMap[State, Double]): Unit = {
+    log.info(
+      s"""
+        | vvalues: $vvalues
+      """.stripMargin)
   }
 }

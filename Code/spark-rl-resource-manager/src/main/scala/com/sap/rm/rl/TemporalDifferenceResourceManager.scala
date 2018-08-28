@@ -4,7 +4,6 @@ import java.lang.Math.min
 
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import Action._
-import com.sap.rm.rl.impl.policy.GreedyPolicy
 import com.sap.rm.rl.impl.reward.DefaultReward
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerStreamingStarted}
@@ -175,8 +174,8 @@ object TemporalDifferenceResourceManager {
     new TemporalDifferenceResourceManager(
       config,
       streamingContext,
-      stateSpace.getOrElse { StateSpaceInitializer.getInstance(config).initialize(StateSpace()) },
-      policy.getOrElse(GreedyPolicy(config)),
+      stateSpace.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace())),
+      policy.getOrElse(PolicyFactory.getPolicy(config)),
       reward.getOrElse(DefaultReward(config)))
   }
 }

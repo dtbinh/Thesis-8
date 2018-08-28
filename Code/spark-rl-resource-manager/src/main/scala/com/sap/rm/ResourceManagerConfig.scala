@@ -34,6 +34,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val EpsilonStep = sparkConf.getDouble(EpsilonStepKey, EpsilonStepDefault)
   final val ValueIterationInitializationTime = sparkConf.getTimeAsMs(ValueIterationInitializationTimeKey, ValueIterationInitializationTimeDefault)
   final val ValueIterationInitializationCount = sparkConf.getInt(ValueIterationInitializationCountKey, ValueIterationInitializationCountDefault)
+  final val Policy = sparkConf.get(PolicyKey, PolicyDefault)
 
   require(CoresPerExecutor == CoresPerTask)
   require(ExecutorGranularity >= 0)
@@ -52,6 +53,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   require(EpsilonStep >= 0 && EpsilonStep <= 1)
   require(ValueIterationInitializationTime > 0)
   require(ValueIterationInitializationCount > 0)
+  require(Policy == "greedy" || Policy == "oneMinusEpsilon" || Policy == "decreasingOneMinusEpsilon")
 
   val config: String =
     s""" --- Configuration ---
@@ -81,6 +83,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | EpsilonStep: $EpsilonStep
        | ValueIterationInitializationTime: $ValueIterationInitializationTime
        | ValueIterationInitializationCount: $ValueIterationInitializationCount
+       | Policy: $Policy
        | --- Configuration ---""".stripMargin
 
   log.info(config)
@@ -138,6 +141,8 @@ object ResourceManagerConfig {
   final val ValueIterationInitializationTimeDefault = "15m"
   final val ValueIterationInitializationCountKey = "spark.streaming.dynamicAllocation.valueIterationInitializationCount"
   final val ValueIterationInitializationCountDefault = 10
+  final val PolicyKey = "spark.streaming.dynamicAllocation.policy"
+  final val PolicyDefault = "greedy"
 
   def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }

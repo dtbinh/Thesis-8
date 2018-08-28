@@ -1,11 +1,9 @@
 package com.sap.rm.rl
 
 import com.sap.rm.rl.Action.Action
-import com.sap.rm.rl.impl.policy.GreedyPolicy
 import com.sap.rm.rl.impl.reward.DefaultReward
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.scheduler.StreamingListenerBatchCompleted
 
 import scala.collection.mutable.{HashMap => MutableHashMap, HashSet => MutableHashSet}
 
@@ -22,16 +20,13 @@ class ValueIterationResourceManager(
   private lazy val stateActionStateCount = MutableHashMap[(State, Action, State), Int]().withDefaultValue(0)
   private lazy val stateActionRewardBar = MutableHashMap[(State, Action), Double]().withDefaultValue(0)
   private lazy val stateActionStateBar = MutableHashMap[(State, Action, State), Double]().withDefaultValue(0)
-  private lazy val allLandingStates = MutableHashSet[State]()
+  private lazy val startingStates = MutableHashSet[State]()
+  private lazy val landingStates = MutableHashSet[State]()
   private lazy val VValues = MutableHashMap[State, Double]().withDefaultValue(0)
 
   private var initialized: Boolean = false
 
   import config._
-
-  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
-    super.onBatchCompleted(batchCompleted)
-  }
 
   override def updateStateSpace(): Unit = {
     if (initialized) {
@@ -45,35 +40,46 @@ class ValueIterationResourceManager(
       initialized = true
 
       stateActionReward.foreach { kv =>
-        val stateAction: (State, Action) = kv._1
-        val reward: Double = kv._2
-
+        val (stateAction: (State, Action), reward: Double) = kv
         stateActionRewardBar += stateAction -> reward / stateActionCount(stateAction)
       }
 
       stateActionStateCount.foreach { kv =>
-        val stateActionState: (State, Action, State) = kv._1
-        val count: Double = kv._2.toDouble
+        val (stateActionState: (State, Action, State), count: Int) = kv
+        val stateAction = (stateActionState._1, stateActionState._2)
+        val startingState = stateActionState._1
+        val landingState = stateActionState._3
 
-        stateActionStateBar += stateActionState -> count / stateActionCount((stateActionState._1, stateActionState._2))
-        allLandingStates += stateActionState._3
+        stateActionStateBar += stateActionState -> count.toDouble / stateActionCount(stateAction)
+        startingStates += startingState
+        landingStates += landingState
       }
+
+      logEverything(
+        stateActionCount = stateActionCount,
+        stateActionReward = stateActionReward,
+        stateActionStateCount = stateActionStateCount,
+        stateActionRewardBar = stateActionRewardBar,
+        stateActionStateBar = stateActionStateBar,
+        startingStates = startingStates,
+        landingStates = landingStates)
 
       0 to ValueIterationInitializationCount foreach { _ =>
         stateActionCount.foreach { kv =>
-          val stateAction: (State, Action) = kv._1
-          val startingState = kv._1._1
-          val action = kv._1._2
+          val (stateAction: (State, Action), _) = kv
+          val (startingState, action) = stateAction
 
           var sum: Double = 0
-          for (landingState <- allLandingStates) {
+          for (landingState <- landingStates) {
             sum += stateActionStateBar((startingState, action, landingState)) * VValues(startingState)
           }
 
           val QVal: Double = stateActionRewardBar(stateAction) + DiscountFactor * sum
           stateSpace.updateQValueForAction(startingState, action, QVal)
-          VValues(startingState) = stateSpace(startingState).maxBy(_._2)._2
         }
+
+        startingStates.foreach { s => VValues(s) = stateSpace(s).maxBy(_._2)._2 }
+        logVValues(VValues)
       }
 
       stateActionCount.clear()
@@ -81,12 +87,23 @@ class ValueIterationResourceManager(
       stateActionStateCount.clear()
       stateActionRewardBar.clear()
       stateActionStateBar.clear()
-      allLandingStates.clear()
+      startingStates.clear()
+      landingStates.clear()
       VValues.clear()
     } else {
       stateActionCount((lastState, lastAction)) += 1
       stateActionReward((lastState, lastAction)) += rewardForLastAction
       stateActionStateCount((lastState, lastAction, currentState)) += 1
+
+      logStateActionStateStat(
+        lastState = lastState,
+        lastAction = lastAction,
+        rewardForLastAction = rewardForLastAction,
+        currentState = currentState,
+        stateActionCount = stateActionCount((lastState, lastAction)),
+        stateActionReward = stateActionReward((lastState, lastAction)),
+        stateActionStateCount = stateActionStateCount((lastState, lastAction, currentState))
+      )
     }
   }
 }
@@ -101,8 +118,8 @@ object ValueIterationResourceManager {
     new ValueIterationResourceManager(
       config,
       streamingContext,
-      stateSpace.getOrElse { StateSpaceInitializer.getInstance(config).initialize(StateSpace()) },
-      policy.getOrElse(GreedyPolicy(config)),
+      stateSpace.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace())),
+      policy.getOrElse(PolicyFactory.getPolicy(config)),
       reward.getOrElse(DefaultReward(config)))
   }
 }

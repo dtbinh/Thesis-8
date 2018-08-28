@@ -10,3 +10,7 @@ class DefaultRandomNumberGenerator extends RandomNumberGenerator {
 
   override def nextBoolean(): Boolean = rand.nextBoolean()
 }
+
+object DefaultRandomNumberGenerator {
+  def apply(): DefaultRandomNumberGenerator = new DefaultRandomNumberGenerator()
+}

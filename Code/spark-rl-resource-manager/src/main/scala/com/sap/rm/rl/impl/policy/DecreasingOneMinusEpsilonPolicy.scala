@@ -15,7 +15,6 @@ class DecreasingOneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Pol
       e = e - EpsilonStep
     }
 
-    println("epsilon: " + tmp)
     tmp
   }
 }
