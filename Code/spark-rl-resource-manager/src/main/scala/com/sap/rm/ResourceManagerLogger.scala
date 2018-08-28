@@ -118,8 +118,8 @@ trait ResourceManagerLogger {
     log.warn("{} - currentState = {}", REMOVED_ACTION_SCALE_OUT, currentState)
   }
 
-  def logStateActionStateStat(lastState: State, lastAction: Action, rewardForLastAction: Double, currentState: State,
-                              stateActionCount: Int, stateActionReward: Double, stateActionStateCount: Int): Unit = {
+  def logStateActionState(lastState: State, lastAction: Action, rewardForLastAction: Double, currentState: State,
+                          stateActionCount: Int, stateActionReward: Double, stateActionStateCount: Int): Unit = {
     log.info(
       s""" --- State-Action-State-Stat ---
          | lastState=$lastState

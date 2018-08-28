@@ -2,6 +2,7 @@ package com.sap.rm
 
 import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerExecutorAdded, SparkListenerExecutorRemoved}
 import org.apache.spark.streaming.scheduler._
+import scala.util.Random.shuffle
 
 trait ResourceManager extends Spark with StreamingListener with SparkListenerTrait with ResourceManagerLogger {
 
@@ -20,7 +21,7 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
     streamingStartTime = streamingStarted.time
     logStreamingStarted(streamingStarted, numberOfActiveExecutors)
-    removeExecutors(activeExecutors.take(MaximumExecutors - MinimumExecutors))
+    removeExecutors(shuffle(activeExecutors).take(MaximumExecutors - MinimumExecutors))
   }
 
   override val isDebugEnabled: Boolean = IsDebugEnabled

@@ -95,7 +95,7 @@ class ValueIterationResourceManager(
       stateActionReward((lastState, lastAction)) += rewardForLastAction
       stateActionStateCount((lastState, lastAction, currentState)) += 1
 
-      logStateActionStateStat(
+      logStateActionState(
         lastState = lastState,
         lastAction = lastAction,
         rewardForLastAction = rewardForLastAction,
