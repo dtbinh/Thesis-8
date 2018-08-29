@@ -30,4 +30,7 @@ object LogTags extends Enumeration {
   val REMOVED_ACTION_SCALE_IN: Status = Value
 
   val EXCESSIVE_LATENCY: Status = Value
+
+  val RANDOM_ACTION: Status = Value
+  val OPTIMAL_ACTION: Status = Value
 }

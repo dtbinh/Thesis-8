@@ -23,6 +23,14 @@ class DefaultReward(config: ResourceManagerConfig) extends Reward {
       return -currentStateDiff
     }
 
+    if (!isStateInDangerZone(lastState) && !isStateInDangerZone(currentState) && lastAction == ScaleOut) {
+      return -MaximumExecutors.toDouble / currentState.numberOfExecutors
+    }
+
+    if (lastAction == NoAction) {
+      return 1
+    }
+
     MaximumExecutors.toDouble / currentState.numberOfExecutors
   }
 

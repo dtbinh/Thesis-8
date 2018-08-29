@@ -8,6 +8,8 @@ class GreedyPolicy(config: ResourceManagerConfig) extends Policy {
 
   import config._
 
+  override protected def isDebugEnabled: Boolean = IsDebugEnabled
+
   override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Action = {
     val currentExecutors = currentState.numberOfExecutors
     var qValues = currentExecutors match {

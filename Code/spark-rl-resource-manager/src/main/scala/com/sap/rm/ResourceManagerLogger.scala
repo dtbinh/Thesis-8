@@ -154,4 +154,16 @@ trait ResourceManagerLogger {
         | vvalues: $vvalues
       """.stripMargin)
   }
+
+  def logRandomAction(generatedRandom: Double, epsilon: Double, action: Action): Unit = {
+    logAction(RANDOM_ACTION, generatedRandom, epsilon, action)
+  }
+
+  def logOptimalAction(generatedRandom: Double, epsilon: Double, action: Action): Unit = {
+    logAction(OPTIMAL_ACTION, generatedRandom, epsilon, action)
+  }
+
+  private def logAction(tag: Status, generatedRandom: Double, epsilon: Double, action: Action): Unit = {
+    log.info("{} - (generatedRandom, epsilon, action) = ({},{},{})", tag, generatedRandom.formatted("%.2f"), epsilon.formatted("%.2f"), action)
+  }
 }

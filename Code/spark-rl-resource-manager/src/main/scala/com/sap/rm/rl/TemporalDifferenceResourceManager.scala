@@ -18,8 +18,8 @@ class TemporalDifferenceResourceManager(
                                          reward: Reward
                                        ) extends ResourceManager {
 
-  override val streamingContext: StreamingContext = ssc
-  override val config: ResourceManagerConfig = cfg
+  override lazy val streamingContext: StreamingContext = ssc
+  override lazy val config: ResourceManagerConfig = cfg
 
   protected var runningSum: Int = 0
   protected var numberOfBatches: Int = 0

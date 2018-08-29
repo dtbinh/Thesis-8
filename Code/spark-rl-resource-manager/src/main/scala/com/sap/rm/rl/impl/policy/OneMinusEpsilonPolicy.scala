@@ -8,14 +8,18 @@ class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, gener
 
   import config._
 
+  override protected def isDebugEnabled: Boolean = IsDebugEnabled
+
   def epsilon: Double = Epsilon
 
   override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Action = {
     val r = generator.nextDouble()
     val e = epsilon
+    var randomAction = false
 
     // take random action
-    if (r > 0 && r <= e) {
+    val action = if (r > 0 && r <= e) {
+      randomAction = true
       if (r < e/3) {
         // do nothing
         NoAction
@@ -32,9 +36,12 @@ class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, gener
       }
     } else {
       // take action based on policy
-      println("OPTIM")
       policy.nextActionFrom(stateSpace, lastState, lastAction, currentState)
     }
+
+    if (randomAction) logRandomAction(r, e, action) else logOptimalAction(r, e, action)
+
+    action
   }
 }
 
