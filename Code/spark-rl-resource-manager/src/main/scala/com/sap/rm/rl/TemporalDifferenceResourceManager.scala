@@ -6,7 +6,7 @@ import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import Action._
 import com.sap.rm.rl.impl.reward.DefaultReward
 import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerStreamingStarted}
+import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted}
 
 import scala.util.Random.shuffle
 
@@ -34,23 +34,13 @@ class TemporalDifferenceResourceManager(
   protected var currentBatch: BatchInfo = _
   import config._
 
-  override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = {
-    super.onStreamingStarted(streamingStarted)
-    requestTotalExecutors(MaximumExecutors)
-  }
-
-  def inGracePeriod(batchTime: Long): Boolean = {
-    if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
-      logGracePeriod(batchTime)
-      return true
-    }
-    false
+  override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
+    processBatch(batchCompleted.batchInfo)
   }
 
   override def processBatch(info: BatchInfo): Boolean = {
     if (!super.processBatch(info)) return false
 
-    // check if batch is valid
     currentBatch = info
     val batchTime = info.batchTime.milliseconds
     if (inGracePeriod(batchTime)) return false
@@ -105,6 +95,14 @@ class TemporalDifferenceResourceManager(
     }
 
     true
+  }
+
+  def inGracePeriod(batchTime: Long): Boolean = {
+    if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
+      logGracePeriod(batchTime)
+      return true
+    }
+    false
   }
 
   def init(): Unit = {

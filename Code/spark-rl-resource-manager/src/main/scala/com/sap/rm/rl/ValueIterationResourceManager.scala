@@ -41,7 +41,7 @@ class ValueIterationResourceManager(
 
       stateActionReward.foreach { kv =>
         val (stateAction: (State, Action), reward: Double) = kv
-        stateActionRewardBar += stateAction -> reward / stateActionCount(stateAction)
+        stateActionRewardBar(stateAction) = reward / stateActionCount(stateAction)
       }
 
       stateActionStateCount.foreach { kv =>
@@ -50,7 +50,7 @@ class ValueIterationResourceManager(
         val startingState = stateActionState._1
         val landingState = stateActionState._3
 
-        stateActionStateBar += stateActionState -> count.toDouble / stateActionCount(stateAction)
+        stateActionStateBar(stateActionState) = count.toDouble / stateActionCount(stateAction)
         startingStates += startingState
         landingStates += landingState
       }
@@ -70,15 +70,18 @@ class ValueIterationResourceManager(
           val (startingState, action) = stateAction
 
           var sum: Double = 0
-          for (landingState <- landingStates) {
-            sum += stateActionStateBar((startingState, action, landingState)) * VValues(startingState)
+          val startingStateVValue = VValues(startingState)
+          if (startingStateVValue != 0) {
+            for (landingState <- landingStates) {
+              sum += stateActionStateBar((startingState, action, landingState)) * startingStateVValue
+            }
           }
 
           val QVal: Double = stateActionRewardBar(stateAction) + DiscountFactor * sum
           stateSpace.updateQValueForAction(startingState, action, QVal)
         }
 
-        startingStates.foreach { s => VValues(s) = stateSpace(s).maxBy(_._2)._2 }
+        startingStates.foreach(s => VValues(s) = stateSpace(s).maxBy(_._2)._2)
         logVValues(VValues)
       }
 
