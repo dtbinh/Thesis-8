@@ -1,7 +1,6 @@
 package com.sap.rm.rl
 
 import com.sap.rm.rl.Action.Action
-import com.sap.rm.rl.impl.reward.PreferNoActionWhenLoadIsDecreasing
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import org.apache.spark.streaming.StreamingContext
 

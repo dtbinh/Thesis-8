@@ -4,28 +4,22 @@ import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.{StateSpace, StateSpaceInitializer}
 
 class OptimizedStateSpaceInitializer(config: ResourceManagerConfig) extends StateSpaceInitializer {
-  override def initialize(space: StateSpace): StateSpace = {
-    import config._
+  import config._
 
+  override def initialize(space: StateSpace): StateSpace = {
     for {
       exe <- MinimumExecutors to MaximumExecutors
       lat <- 0 until CoarseMaximumLatency
     } {
-      if (lat < CoarseMinimumLatency) {
+      if (lat < CoarseTargetLatency) {
         if (exe == MinimumExecutors) {
           space.addState(exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = BestReward, scaleInReward = NoReward)
           space.addState(exe, lat, loadIsIncreasing = true, scaleOutReward = -BestReward, noActionReward = BestReward, scaleInReward = NoReward)
         } else {
-          space.addState(exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
-          space.addState(exe, lat, loadIsIncreasing = true, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
+          val normalizedLatency = normalize(lat)
+          space.addState(exe, lat, loadIsIncreasing = true, scaleOutReward = -BestReward, noActionReward = normalizedLatency, scaleInReward = 1 - normalizedLatency)
+          space.addState(exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = 1 - normalizedLatency)
         }
-      } else if (lat >= CoarseMinimumLatency && lat < CoarseTargetLatency) {
-        if (exe == MinimumExecutors) {
-          space.addState(exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = BestReward, scaleInReward = NoReward)
-        } else {
-          space.addState(exe, lat, loadIsIncreasing = false, scaleOutReward = -BestReward, noActionReward = NoReward, scaleInReward = BestReward)
-        }
-        space.addState(exe, lat, loadIsIncreasing = true, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = -BestReward)
       } else {
         if (exe == MaximumExecutors) {
           space.addState(exe, lat, loadIsIncreasing = true, scaleOutReward = NoReward, noActionReward = BestReward, scaleInReward = -BestReward)
@@ -38,6 +32,8 @@ class OptimizedStateSpaceInitializer(config: ResourceManagerConfig) extends Stat
 
     space
   }
+
+  private def normalize(latency: Int): Double = latency.toDouble / CoarseTargetLatency
 }
 
 object OptimizedStateSpaceInitializer {

@@ -4,7 +4,6 @@ import java.lang.Math.min
 
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import Action._
-import com.sap.rm.rl.impl.reward.PreferNoActionWhenLoadIsDecreasing
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted}
 
@@ -29,9 +28,11 @@ class TemporalDifferenceResourceManager(
   protected var rewardForLastAction: Double = 0
   protected var actionToTake: Action = _
   protected var lastTimeDecisionMade: Long = 0
-  protected var incomingMessages: Int = 0
-  protected var lastAverageIncomingMessages: Int = 0
+  protected var currentWindowTotalIncomingMessages: Int = 0
+  protected var lastBatchIncomingMessages: Int = 0
+  protected var lastWindowAverageIncomingMessages: Int = 0
   protected var currentBatch: BatchInfo = _
+  protected var currentWindowIncreasingLoadCount: Int = 0
   import config._
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
@@ -47,30 +48,36 @@ class TemporalDifferenceResourceManager(
 
     runningSum += info.processingDelay.get.toInt
     numberOfBatches += 1
-    incomingMessages += info.numRecords.toInt
+    currentWindowTotalIncomingMessages += info.numRecords.toInt
+    if (info.numRecords.toInt > lastBatchIncomingMessages) {
+      currentWindowIncreasingLoadCount += 1
+    } else if (info.numRecords.toInt < lastBatchIncomingMessages) {
+      currentWindowIncreasingLoadCount -= 1
+    }
 
     if (numberOfBatches == WindowSize) {
       // take average
-      val currentAverageLatency: Int = runningSum / (WindowSize * LatencyGranularity)
-      val currentAverageIncomingMessages: Int = incomingMessages / WindowSize
-      logWindowIsFull(currentAverageLatency, currentAverageIncomingMessages)
+      val currentWindowAverageLatency: Int = runningSum / (WindowSize * LatencyGranularity)
+      val currentWindowAverageIncomingMessages: Int = currentWindowTotalIncomingMessages / WindowSize
+      logWindowIsFull(currentWindowAverageLatency, currentWindowAverageIncomingMessages)
 
       // reset
       runningSum = 0
       numberOfBatches = 0
-      incomingMessages = 0
+      currentWindowTotalIncomingMessages = 0
 
       // build the state variable
       var loadIsIncreasing: Boolean = false
-      if (currentAverageIncomingMessages > lastAverageIncomingMessages) {
+      if (currentWindowAverageIncomingMessages > lastWindowAverageIncomingMessages) {
         loadIsIncreasing = true
       }
-      currentState = State(numberOfActiveExecutors, currentAverageLatency, loadIsIncreasing)
-      lastAverageIncomingMessages = currentAverageIncomingMessages
+      currentState = State(numberOfActiveExecutors, currentWindowAverageLatency, loadIsIncreasing)
+      lastWindowAverageIncomingMessages = currentWindowAverageIncomingMessages
 
       // do nothing and just initialize to no action
       if (lastState == null) {
-        init()
+        actionToTake = NoAction
+        logFirstWindowInitialized()
       } else {
         // calculate reward
         rewardForLastAction = calculateRewardFor()
@@ -83,17 +90,18 @@ class TemporalDifferenceResourceManager(
 
         // request change
         reconfigure(actionToTake)
-
-        // store current state and action
-        lastState = currentState
-        lastAction = actionToTake
-
-        setDecisionTime()
       }
+
+      // store current state and action
+      lastState = currentState
+      lastAction = actionToTake
+      currentWindowIncreasingLoadCount = 0
+      setDecisionTime()
     } else {
       logElementAddedToWindow(runningSum, numberOfBatches)
     }
 
+    lastBatchIncomingMessages = currentWindowTotalIncomingMessages
     true
   }
 
@@ -103,14 +111,6 @@ class TemporalDifferenceResourceManager(
       return true
     }
     false
-  }
-
-  def init(): Unit = {
-    lastState = currentState
-    lastAction = NoAction
-
-    logFirstWindowInitialized()
-    setDecisionTime()
   }
 
   def setDecisionTime(): Unit = {

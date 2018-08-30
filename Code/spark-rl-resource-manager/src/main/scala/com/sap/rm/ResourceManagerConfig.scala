@@ -13,7 +13,6 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val ExecutorGranularity: Int = sparkConf.getInt(ExecutorGranularityKey, ExecutorGranularityDefault)
   final val MinimumExecutors: Int = sparkConf.getInt(MinimumExecutorsKey, MinimumExecutorsDefault)
   final val MaximumExecutors: Int = sparkConf.getInt(MaximumExecutorsKey, MaximumExecutorsDefault)
-  final val MinimumLatency: Int = sparkConf.getTimeAsMs(MinimumLatencyKey, MinimumLatencyDefault).toInt
   final val MaximumLatency: Int = sparkConf.getTimeAsMs(MaximumLatencyKey, MaximumLatencyDefault).toInt
   final val TargetLatency: Int = sparkConf.getTimeAsMs(TargetLatencyKey, TargetLatencyDefault).toInt
   final val LatencyGranularity: Int = sparkConf.getTimeAsMs(LatencyGranularityKey, LatencyGranularityDefault).toInt
@@ -21,7 +20,6 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val WindowSize: Int = sparkConf.getInt(WindowSizeKey, WindowSizeDefault)
   final val LearningFactor: Double = sparkConf.getDouble(LearningFactorKey, LearningFactorDefault)
   final val DiscountFactor: Double = sparkConf.getDouble(DiscountFactorKey, DiscountFactorDefault)
-  final val CoarseMinimumLatency: Int = MinimumLatency / LatencyGranularity
   final val CoarseTargetLatency: Int = TargetLatency / LatencyGranularity
   final val CoarseMaximumLatency: Int = MaximumLatency / LatencyGranularity
   final val BestReward: Double = sparkConf.getDouble(BestRewardKey, BestRewardDefault)
@@ -64,7 +62,6 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | ExecutorGranularity: $ExecutorGranularity
        | MinimumExecutors: $MinimumExecutors
        | MaximumExecutors: $MaximumExecutors
-       | MinimumLatency: $MinimumLatency
        | MaximumLatency: $MaximumLatency
        | TargetLatency: $TargetLatency
        | LatencyGranularity: $LatencyGranularity
@@ -72,7 +69,6 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | WindowSize: $WindowSize
        | LearningFactor: $LearningFactor
        | DiscountFactor: $DiscountFactor
-       | CoarseMinimumLatency: $CoarseMinimumLatency
        | CoarseTargetLatency: $CoarseTargetLatency
        | CoarseMaximumLatency: $CoarseMaximumLatency
        | BestReward: $BestReward
@@ -108,8 +104,6 @@ object ResourceManagerConfig {
   final val MaximumExecutorsDefault = Int.MaxValue
   final val ExecutorGranularityKey = "spark.streaming.dynamicAllocation.executorGranularity"
   final val ExecutorGranularityDefault = 2
-  final val MinimumLatencyKey = "spark.streaming.dynamicAllocation.minLatency"
-  final val MinimumLatencyDefault = "100ms"
   final val MaximumLatencyKey = "spark.streaming.dynamicAllocation.maxLatency"
   final val MaximumLatencyDefault = "10s"
   final val TargetLatencyKey = "spark.streaming.dynamicAllocation.targetLatency"

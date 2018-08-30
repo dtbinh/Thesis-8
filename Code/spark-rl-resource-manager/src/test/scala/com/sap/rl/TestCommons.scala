@@ -17,8 +17,7 @@ object TestCommons {
     .set(CoresPerExecutorKey, "1")
     .set(MinimumExecutorsKey, "5")
     .set(MaximumExecutorsKey, "25")
-    .set(LatencyGranularityKey, "20")
-    .set(MinimumLatencyKey, "300")
+    .set(LatencyGranularityKey, "100")
     .set(TargetLatencyKey, "800")
     .set(MaximumLatencyKey, "10000")
 
