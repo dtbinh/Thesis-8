@@ -11,6 +11,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val CoresPerTask: Int = sparkConf.getInt(CoresPerTaskKey, CoresPerTaskDefault)
   final val CoresPerExecutor: Int = sparkConf.getInt(CoresPerExecutorKey, CoresPerExecutorDefault)
   final val ExecutorGranularity: Int = sparkConf.getInt(ExecutorGranularityKey, ExecutorGranularityDefault)
+  final val IncomingMessageGranularity: Int = sparkConf.getInt(IncomingMessageGranularityKey, IncomingMessageGranularityDefault)
   final val MinimumExecutors: Int = sparkConf.getInt(MinimumExecutorsKey, MinimumExecutorsDefault)
   final val MaximumExecutors: Int = sparkConf.getInt(MaximumExecutorsKey, MaximumExecutorsDefault)
   final val MaximumLatency: Int = sparkConf.getTimeAsMs(MaximumLatencyKey, MaximumLatencyDefault).toInt
@@ -24,16 +25,16 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val CoarseMaximumLatency: Int = MaximumLatency / LatencyGranularity
   final val BestReward: Double = sparkConf.getDouble(BestRewardKey, BestRewardDefault)
   final val NoReward: Double = sparkConf.getDouble(NoRewardKey, NoRewardDefault)
-  final val IsDebugEnabled = sparkConf.getBoolean(IsDebugEnabledKey, IsDebugEnabledDefault)
-  final val InitializationMode = sparkConf.get(InitializationModeKey, InitializationModeDefault)
-  final val ReportDuration = sparkConf.getTimeAsMs(ReportDurationKey, ReportDurationDefault)
-  final val StartupIgnoreBatches = sparkConf.getInt(StartupIgnoreBatchesKey, StartupIgnoreBatchesDefault)
-  final val Epsilon = sparkConf.getDouble(EpsilonKey, EpsilonDefault)
-  final val EpsilonStep = sparkConf.getDouble(EpsilonStepKey, EpsilonStepDefault)
-  final val ValueIterationInitializationTime = sparkConf.getTimeAsMs(ValueIterationInitializationTimeKey, ValueIterationInitializationTimeDefault)
-  final val ValueIterationInitializationCount = sparkConf.getInt(ValueIterationInitializationCountKey, ValueIterationInitializationCountDefault)
-  final val Policy = sparkConf.get(PolicyKey, PolicyDefault)
-  final val Reward = sparkConf.get(RewardKey, RewardDefault)
+  final val IsDebugEnabled: Boolean = sparkConf.getBoolean(IsDebugEnabledKey, IsDebugEnabledDefault)
+  final val InitializationMode: String = sparkConf.get(InitializationModeKey, InitializationModeDefault)
+  final val ReportDuration: Long = sparkConf.getTimeAsMs(ReportDurationKey, ReportDurationDefault)
+  final val StartupIgnoreBatches: Int = sparkConf.getInt(StartupIgnoreBatchesKey, StartupIgnoreBatchesDefault)
+  final val Epsilon: Double = sparkConf.getDouble(EpsilonKey, EpsilonDefault)
+  final val EpsilonStep: Double = sparkConf.getDouble(EpsilonStepKey, EpsilonStepDefault)
+  final val ValueIterationInitializationTime: Long = sparkConf.getTimeAsMs(ValueIterationInitializationTimeKey, ValueIterationInitializationTimeDefault)
+  final val ValueIterationInitializationCount: Int = sparkConf.getInt(ValueIterationInitializationCountKey, ValueIterationInitializationCountDefault)
+  final val Policy: String = sparkConf.get(PolicyKey, PolicyDefault)
+  final val Reward: String = sparkConf.get(RewardKey, RewardDefault)
 
   require(CoresPerExecutor == CoresPerTask)
   require(ExecutorGranularity >= 0)
@@ -104,6 +105,8 @@ object ResourceManagerConfig {
   final val MaximumExecutorsDefault = Int.MaxValue
   final val ExecutorGranularityKey = "spark.streaming.dynamicAllocation.executorGranularity"
   final val ExecutorGranularityDefault = 2
+  final val IncomingMessageGranularityKey = "spark.streaming.dynamicAllocation.incomingMessageGranularity"
+  final val IncomingMessageGranularityDefault = 50
   final val MaximumLatencyKey = "spark.streaming.dynamicAllocation.maxLatency"
   final val MaximumLatencyDefault = "10s"
   final val TargetLatencyKey = "spark.streaming.dynamicAllocation.targetLatency"

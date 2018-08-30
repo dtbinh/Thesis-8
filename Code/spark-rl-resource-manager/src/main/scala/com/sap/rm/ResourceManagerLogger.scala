@@ -66,22 +66,12 @@ trait ResourceManagerLogger {
     }
   }
 
-  def logWindowIsFull(currentAverageLatency: Int, currentAverageIncomingMessages: Int): Unit = {
-    log.info("{} - (CurrentAverageLatency,CurrentAverageIncomingMessages) = ({},{})", WINDOW_FULL, currentAverageLatency, currentAverageIncomingMessages)
-  }
-
-  def logElementAddedToWindow(runningSum: Int, numberOfBatches: Int): Unit = {
-    if (isDebugEnabled) {
-      log.info("{} - (RunningSum,NumberOfBatches) = ({},{})", WINDOW_ADDED, runningSum, numberOfBatches)
-    }
+  def logWindowIsFull(currentWindowAverageProcessingTime: Int, currentWindowIncomingMessage: Int): Unit = {
+    log.info("{} - (CurrentWindowAverageProcessingTime,CurrentWindowIncomingMessage) = ({},{})", WINDOW_FULL, currentWindowAverageProcessingTime, currentWindowIncomingMessage)
   }
 
   def logFirstWindowInitialized(): Unit = {
     log.info("{} - Initialized", FIRST_WINDOW)
-  }
-
-  def logDecisionTime(decisionTime: Long): Unit = {
-    log.info("{} - LastTimeDecisionMade = {}", DECIDED, format(ofEpochMilli(decisionTime)))
   }
 
   def logScaleInAction(numberOfKilledExecutors: Int): Unit = {

@@ -18,9 +18,6 @@ object LogTags extends Enumeration {
 
   val FIRST_WINDOW: Status = Value
   val WINDOW_FULL: Status = Value
-  val WINDOW_ADDED: Status = Value
-
-  val DECIDED: Status = Value
 
   val EXEC_KILL_OK: Status = Value
   val EXEC_ADD_OK: Status = Value
