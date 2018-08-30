@@ -35,6 +35,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val ValueIterationInitializationTime = sparkConf.getTimeAsMs(ValueIterationInitializationTimeKey, ValueIterationInitializationTimeDefault)
   final val ValueIterationInitializationCount = sparkConf.getInt(ValueIterationInitializationCountKey, ValueIterationInitializationCountDefault)
   final val Policy = sparkConf.get(PolicyKey, PolicyDefault)
+  final val Reward = sparkConf.get(RewardKey, RewardDefault)
 
   require(CoresPerExecutor == CoresPerTask)
   require(ExecutorGranularity >= 0)
@@ -54,6 +55,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   require(ValueIterationInitializationTime > 0)
   require(ValueIterationInitializationCount > 0)
   require(Policy == "greedy" || Policy == "oneMinusEpsilon" || Policy == "decreasingOneMinusEpsilon")
+  require(Reward == "preferScaleInWhenLoadIsDescreasing" || Reward == "preferNoActionWhenLoadIsDecreasing")
 
   val config: String =
     s""" --- Configuration ---
@@ -84,6 +86,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | ValueIterationInitializationTime: $ValueIterationInitializationTime
        | ValueIterationInitializationCount: $ValueIterationInitializationCount
        | Policy: $Policy
+       | Reward: $Reward
        | --- Configuration ---""".stripMargin
 
   log.info(config)
@@ -143,6 +146,8 @@ object ResourceManagerConfig {
   final val ValueIterationInitializationCountDefault = 10
   final val PolicyKey = "spark.streaming.dynamicAllocation.policy"
   final val PolicyDefault = "greedy"
+  final val RewardKey = "spark.streaming.dynamicAllocation.reward"
+  final val RewardDefault = "preferScaleInWhenLoadIsDescreasing" // or preferNoActionWhenLoadIsDecreasing
 
   def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }

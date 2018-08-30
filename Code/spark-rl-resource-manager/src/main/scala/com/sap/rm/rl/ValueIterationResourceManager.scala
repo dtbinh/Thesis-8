@@ -1,7 +1,7 @@
 package com.sap.rm.rl
 
 import com.sap.rm.rl.Action.Action
-import com.sap.rm.rl.impl.reward.DefaultReward
+import com.sap.rm.rl.impl.reward.PreferNoActionWhenLoadIsDecreasing
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import org.apache.spark.streaming.StreamingContext
 
@@ -123,6 +123,6 @@ object ValueIterationResourceManager {
       streamingContext,
       stateSpace.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace())),
       policy.getOrElse(PolicyFactory.getPolicy(config)),
-      reward.getOrElse(DefaultReward(config)))
+      reward.getOrElse(RewardFactory.getReward(config)))
   }
 }

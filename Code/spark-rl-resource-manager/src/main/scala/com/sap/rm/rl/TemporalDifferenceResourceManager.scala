@@ -4,7 +4,7 @@ import java.lang.Math.min
 
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import Action._
-import com.sap.rm.rl.impl.reward.DefaultReward
+import com.sap.rm.rl.impl.reward.PreferNoActionWhenLoadIsDecreasing
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted}
 
@@ -148,7 +148,7 @@ class TemporalDifferenceResourceManager(
     policy.nextActionFrom(stateSpace, lastState, lastAction, currentState)
   }
 
-  def calculateRewardFor(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState)
+  def calculateRewardFor(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState).get
 
   def updateStateSpace(): Unit = {
     val oldQVal: Double = stateSpace(lastState)(lastAction)
@@ -174,6 +174,6 @@ object TemporalDifferenceResourceManager {
       streamingContext,
       stateSpace.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace())),
       policy.getOrElse(PolicyFactory.getPolicy(config)),
-      reward.getOrElse(DefaultReward(config)))
+      reward.getOrElse(RewardFactory.getReward(config)))
   }
 }

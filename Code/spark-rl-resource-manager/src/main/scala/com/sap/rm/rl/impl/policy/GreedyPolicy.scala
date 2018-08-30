@@ -1,10 +1,10 @@
 package com.sap.rm.rl.impl.policy
 
-import com.sap.rm.ResourceManagerConfig
+import com.sap.rm.{ResourceManagerConfig, ResourceManagerLogger}
 import com.sap.rm.rl.Action._
 import com.sap.rm.rl.{Policy, State, StateSpace}
 
-class GreedyPolicy(config: ResourceManagerConfig) extends Policy {
+class GreedyPolicy(config: ResourceManagerConfig) extends Policy with ResourceManagerLogger {
 
   import config._
 

@@ -1,10 +1,10 @@
 package com.sap.rm.rl.impl.policy
 
-import com.sap.rm.ResourceManagerConfig
+import com.sap.rm.{ResourceManagerConfig, ResourceManagerLogger}
 import com.sap.rm.rl.Action.{Action, _}
 import com.sap.rm.rl.{Policy, RandomNumberGenerator, State, StateSpace}
 
-class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, generator: RandomNumberGenerator) extends Policy {
+class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, generator: RandomNumberGenerator) extends Policy with ResourceManagerLogger {
 
   import config._
 
