@@ -1,14 +1,12 @@
 package com.sap.rm.rl.impl.policy
 
-import com.sap.rm.{ResourceManagerConfig, ResourceManagerLogger}
+import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.Action._
 import com.sap.rm.rl.{Policy, State, StateSpace}
 
-class GreedyPolicy(config: ResourceManagerConfig) extends Policy with ResourceManagerLogger {
+class GreedyPolicy(config: ResourceManagerConfig) extends Policy {
 
   import config._
-
-  override protected def isDebugEnabled: Boolean = IsDebugEnabled
 
   override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Action = {
     val currentExecutors = currentState.numberOfExecutors

@@ -26,6 +26,7 @@ class ValueIterationResourceManager(
   private var initialized: Boolean = false
 
   import config._
+  import logger._
 
   override def updateStateSpace(): Unit = {
     if (initialized) {

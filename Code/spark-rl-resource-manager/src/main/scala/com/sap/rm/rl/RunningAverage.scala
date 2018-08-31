@@ -20,7 +20,6 @@ class RunningAverage(initialValue: Int = 0, initialCount: Int = 0) extends Seria
 
   def count(): Int = _count
 
-
   override def toString: String = "RunningAverage(Sum=%d,Count=%d)".format(_sum, _count)
 }
 

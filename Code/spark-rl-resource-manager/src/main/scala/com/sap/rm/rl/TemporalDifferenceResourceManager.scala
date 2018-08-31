@@ -29,7 +29,9 @@ class TemporalDifferenceResourceManager(
   protected var lastTimeDecisionMade: Long = 0
   protected var lastWindowAverageIncomingMessage: Int = 0
   protected var currentBatch: BatchInfo = _
+
   import config._
+  import logger._
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
     processBatch(batchCompleted.batchInfo)
@@ -62,21 +64,18 @@ class TemporalDifferenceResourceManager(
       } else {
         // calculate reward
         rewardForLastAction = calculateReward()
-
         // take new action
         actionToTake = whatIsTheNextAction()
-
         // update state space
         updateStateSpace()
       }
       // request change
       reconfigure(actionToTake)
-
       // store current state and action, then reset everything
       lastState = currentState
       lastAction = actionToTake
       lastWindowAverageIncomingMessage = currentWindowAverageIncomingMessage
-      lastTimeDecisionMade = System.currentTimeMillis()
+      lastTimeDecisionMade = batchTime
       processingTimeRunningAverage.reset()
       incomingMessageRunningAverage.reset()
     }

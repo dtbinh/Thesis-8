@@ -4,11 +4,12 @@ import com.sap.rm.{ResourceManagerConfig, ResourceManagerLogger}
 import com.sap.rm.rl.Action.{Action, _}
 import com.sap.rm.rl.{Policy, RandomNumberGenerator, State, StateSpace}
 
-class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, generator: RandomNumberGenerator) extends Policy with ResourceManagerLogger {
+class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, generator: RandomNumberGenerator) extends Policy {
 
   import config._
 
-  override protected def isDebugEnabled: Boolean = IsDebugEnabled
+  @transient private lazy val logger = ResourceManagerLogger(config)
+  import logger._
 
   def epsilon: Double = Epsilon
 
