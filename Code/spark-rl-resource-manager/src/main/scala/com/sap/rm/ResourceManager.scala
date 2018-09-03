@@ -34,7 +34,10 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
 
     if (startup && numberOfActiveExecutors == MaximumExecutors) {
       startup = false
-      removeExecutors(shuffle(activeExecutors).take(MaximumExecutors - MinimumExecutors))
+      val diff = MaximumExecutors - MinimumExecutors
+      if (diff > 0) {
+        removeExecutors(shuffle(activeExecutors).take(MaximumExecutors - MinimumExecutors))
+      }
     }
 
     if (isInvalidBatch(info)) return false
@@ -51,16 +54,16 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
       logStartupIgnoreBatch(info.batchTime.milliseconds)
       return true
     }
-    if (info.processingDelay.isEmpty || info.totalDelay.isEmpty || info.numRecords == 0) {
+    if (info.totalDelay.isEmpty || info.numRecords == 0) {
       logEmptyBatch(info.batchTime.milliseconds)
       return true
     }
-    if (info.processingDelay.get >= MaximumLatency) {
-      logExcessiveProcessingTime(info.processingDelay.get)
+    if (info.totalDelay.get >= MaximumLatency) {
+      logExcessiveProcessingTime(info.totalDelay.get)
       return true
     }
     false
   }
 
-  def isSLOViolated(info: BatchInfo): Boolean = info.processingDelay.get.toInt >= TargetLatency
+  def isSLOViolated(info: BatchInfo): Boolean = info.totalDelay.get.toInt >= TargetLatency
 }

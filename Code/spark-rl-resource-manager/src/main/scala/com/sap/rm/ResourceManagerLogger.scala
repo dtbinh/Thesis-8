@@ -76,8 +76,8 @@ object ResourceManagerLogger {
     }
   }
 
-  def logWindowIsFull(currentWindowAverageProcessingTime: Int, currentWindowIncomingMessage: Int): Unit = {
-    log.info("{} - {} - (CurrentWindowAverageProcessingTime,CurrentWindowIncomingMessage) = ({},{})", WINDOW_FULL, correlationId, currentWindowAverageProcessingTime, currentWindowIncomingMessage)
+  def logWindowIsFull(currentWindowAverageTotalDelay: Int, currentWindowIncomingMessage: Int): Unit = {
+    log.info("{} - {} - (CurrentWindowAverageTotalDelay,CurrentWindowIncomingMessage) = ({},{})", WINDOW_FULL, correlationId, currentWindowAverageTotalDelay, currentWindowIncomingMessage)
   }
 
   def logFirstWindowInitialized(): Unit = {

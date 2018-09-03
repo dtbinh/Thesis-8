@@ -19,7 +19,7 @@ class TemporalDifferenceResourceManager(
 
   override lazy val streamingContext: StreamingContext = ssc
   override lazy val config: ResourceManagerConfig = cfg
-  protected lazy val processingTimeRunningAverage = RunningAverage()
+  protected lazy val totalDelayRunningAverage = RunningAverage()
   protected lazy val incomingMessageRunningAverage = RunningAverage()
   protected var lastState: State = _
   protected var lastAction: Action = _
@@ -44,18 +44,18 @@ class TemporalDifferenceResourceManager(
     val batchTime = info.batchTime.milliseconds
     if (inGracePeriod(batchTime)) return false
 
-    processingTimeRunningAverage.add(info.processingDelay.get.toInt)
+    totalDelayRunningAverage.add(info.totalDelay.get.toInt)
     incomingMessageRunningAverage.add(info.numRecords.toInt)
 
-    if (processingTimeRunningAverage.count == WindowSize) {
+    if (totalDelayRunningAverage.count == WindowSize) {
       // take average
-      val currentWindowAverageProcessingTime: Int = (processingTimeRunningAverage.average() / LatencyGranularity).toInt
+      val currentWindowAverageTotalDelay: Int = (totalDelayRunningAverage.average() / LatencyGranularity).toInt
       val currentWindowAverageIncomingMessage: Int = (incomingMessageRunningAverage.average() / IncomingMessageGranularity).toInt
-      logWindowIsFull(currentWindowAverageProcessingTime, currentWindowAverageIncomingMessage)
+      logWindowIsFull(currentWindowAverageTotalDelay, currentWindowAverageIncomingMessage)
 
       // build the state variable
       val loadIsIncreasing = if (currentWindowAverageIncomingMessage > lastWindowAverageIncomingMessage) true else false
-      currentState = State(numberOfActiveExecutors, currentWindowAverageProcessingTime, loadIsIncreasing)
+      currentState = State(numberOfActiveExecutors, currentWindowAverageTotalDelay, loadIsIncreasing)
 
       // do nothing and just initialize to no action
       if (lastState == null) {
@@ -76,7 +76,7 @@ class TemporalDifferenceResourceManager(
       lastAction = actionToTake
       lastWindowAverageIncomingMessage = currentWindowAverageIncomingMessage
       lastTimeDecisionMade = batchTime
-      processingTimeRunningAverage.reset()
+      totalDelayRunningAverage.reset()
       incomingMessageRunningAverage.reset()
     }
 
