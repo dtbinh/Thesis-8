@@ -76,14 +76,6 @@ object ResourceManagerLogger {
     }
   }
 
-  def logWindowIsFull(currentWindowAverageTotalDelay: Int, currentWindowIncomingMessage: Int): Unit = {
-    log.info("{} - {} - (CurrentWindowAverageTotalDelay,CurrentWindowIncomingMessage) = ({},{})", WINDOW_FULL, correlationId, currentWindowAverageTotalDelay, currentWindowIncomingMessage)
-  }
-
-  def logFirstWindowInitialized(): Unit = {
-    log.info("{} - {} - Initialized", FIRST_WINDOW, correlationId)
-  }
-
   def logScaleInAction(numberOfKilledExecutors: Int): Unit = {
     log.info("{} - {} - Killed = {}", EXEC_KILL_OK, correlationId, numberOfKilledExecutors)
   }

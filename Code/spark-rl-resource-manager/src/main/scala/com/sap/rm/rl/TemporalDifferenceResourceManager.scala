@@ -19,8 +19,12 @@ class TemporalDifferenceResourceManager(
 
   override lazy val streamingContext: StreamingContext = ssc
   override lazy val config: ResourceManagerConfig = cfg
-  protected lazy val totalDelayRunningAverage = RunningAverage()
-  protected lazy val incomingMessageRunningAverage = RunningAverage()
+
+  import config._
+  import logger._
+
+  protected lazy val totalDelayWindow = CountBasedSlidingWindow(WindowSize)
+  protected lazy val incomingMessageWindow = CountBasedSlidingWindow(WindowSize)
   protected var lastState: State = _
   protected var lastAction: Action = _
   protected var currentState: State = _
@@ -29,9 +33,6 @@ class TemporalDifferenceResourceManager(
   protected var lastTimeDecisionMade: Long = 0
   protected var lastWindowAverageIncomingMessage: Int = 0
   protected var currentBatch: BatchInfo = _
-
-  import config._
-  import logger._
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
     processBatch(batchCompleted.batchInfo)
@@ -44,14 +45,13 @@ class TemporalDifferenceResourceManager(
     val batchTime = info.batchTime.milliseconds
     if (inGracePeriod(batchTime)) return false
 
-    totalDelayRunningAverage.add(info.totalDelay.get.toInt)
-    incomingMessageRunningAverage.add(info.numRecords.toInt)
+    totalDelayWindow.add(info.totalDelay.get.toInt)
+    incomingMessageWindow.add(info.numRecords.toInt)
 
-    if (totalDelayRunningAverage.count == WindowSize) {
+    if (lastTimeDecisionMade + DecisionInterval < batchTime) {
       // take average
-      val currentWindowAverageTotalDelay: Int = (totalDelayRunningAverage.average() / LatencyGranularity).toInt
-      val currentWindowAverageIncomingMessage: Int = (incomingMessageRunningAverage.average() / IncomingMessageGranularity).toInt
-      logWindowIsFull(currentWindowAverageTotalDelay, currentWindowAverageIncomingMessage)
+      val currentWindowAverageTotalDelay: Int = (totalDelayWindow.average() / LatencyGranularity).toInt
+      val currentWindowAverageIncomingMessage: Int = (incomingMessageWindow.average() / IncomingMessageGranularity).toInt
 
       // build the state variable
       val loadIsIncreasing = if (currentWindowAverageIncomingMessage > lastWindowAverageIncomingMessage) true else false
@@ -60,7 +60,6 @@ class TemporalDifferenceResourceManager(
       // do nothing and just initialize to no action
       if (lastState == null) {
         actionToTake = NoAction
-        logFirstWindowInitialized()
       } else {
         // calculate reward
         rewardForLastAction = calculateReward()
@@ -76,15 +75,13 @@ class TemporalDifferenceResourceManager(
       lastAction = actionToTake
       lastWindowAverageIncomingMessage = currentWindowAverageIncomingMessage
       lastTimeDecisionMade = batchTime
-      totalDelayRunningAverage.reset()
-      incomingMessageRunningAverage.reset()
     }
 
     true
   }
 
   def inGracePeriod(batchTime: Long): Boolean = {
-    if (batchTime <= (lastTimeDecisionMade + GracePeriod)) {
+    if (batchTime < (lastTimeDecisionMade + GracePeriod)) {
       logGracePeriod(batchTime)
       return true
     }
