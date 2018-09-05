@@ -70,12 +70,6 @@ object ResourceManagerLogger {
     statLog.info("{} - {}", correlationId, stat)
   }
 
-  def logGracePeriod(batchTime: Long): Unit = {
-    if (config.IsDebugEnabled) {
-      log.info("{} - {} - BatchTime = {}", GRACE_PERIOD, correlationId, format(ofEpochMilli(batchTime)))
-    }
-  }
-
   def logScaleInAction(numberOfKilledExecutors: Int): Unit = {
     log.info("{} - {} - Killed = {}", EXEC_KILL_OK, correlationId, numberOfKilledExecutors)
   }

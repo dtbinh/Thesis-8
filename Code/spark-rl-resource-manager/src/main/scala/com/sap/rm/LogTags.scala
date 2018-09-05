@@ -14,7 +14,6 @@ object LogTags extends Enumeration {
   val BATCH_EMPTY: Status = Value
   val BATCH_OK: Status = Value
   val BATCH_STARTUP: Status = Value
-  val GRACE_PERIOD: Status = Value
 
   val EXEC_KILL_OK: Status = Value
   val EXEC_ADD_OK: Status = Value

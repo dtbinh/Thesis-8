@@ -43,12 +43,11 @@ class TemporalDifferenceResourceManager(
 
     currentBatch = info
     val batchTime = info.batchTime.milliseconds
-    if (inGracePeriod(batchTime)) return false
 
     totalDelayWindow.add(info.totalDelay.get.toInt)
     incomingMessageWindow.add(info.numRecords.toInt)
 
-    if (lastTimeDecisionMade + DecisionInterval < batchTime) {
+    if (lastTimeDecisionMade + DecisionInterval <= batchTime) {
       // take average
       val currentWindowAverageTotalDelay: Int = (totalDelayWindow.average() / LatencyGranularity).toInt
       val currentWindowAverageIncomingMessage: Int = (incomingMessageWindow.average() / IncomingMessageGranularity).toInt
@@ -78,14 +77,6 @@ class TemporalDifferenceResourceManager(
     }
 
     true
-  }
-
-  def inGracePeriod(batchTime: Long): Boolean = {
-    if (batchTime < (lastTimeDecisionMade + GracePeriod)) {
-      logGracePeriod(batchTime)
-      return true
-    }
-    false
   }
 
   def reconfigure(actionToTake: Action): Unit = actionToTake match {

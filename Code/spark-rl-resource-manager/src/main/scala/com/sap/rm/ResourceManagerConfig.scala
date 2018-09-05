@@ -17,7 +17,6 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val MaximumLatency: Int = sparkConf.getTimeAsMs(MaximumLatencyKey, MaximumLatencyDefault).toInt
   final val TargetLatency: Int = sparkConf.getTimeAsMs(TargetLatencyKey, TargetLatencyDefault).toInt
   final val LatencyGranularity: Int = sparkConf.getTimeAsMs(LatencyGranularityKey, LatencyGranularityDefault).toInt
-  final val GracePeriod: Int = sparkConf.getTimeAsMs(GracePeriodKey, GracePeriodDefault).toInt
   final val WindowSize: Int = sparkConf.getInt(WindowSizeKey, WindowSizeDefault)
   final val LearningFactor: Double = sparkConf.getDouble(LearningFactorKey, LearningFactorDefault)
   final val DiscountFactor: Double = sparkConf.getDouble(DiscountFactorKey, DiscountFactorDefault)
@@ -67,7 +66,6 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | MaximumLatency: $MaximumLatency
        | TargetLatency: $TargetLatency
        | LatencyGranularity: $LatencyGranularity
-       | GracePeriod: $GracePeriod
        | WindowSize: $WindowSize
        | LearningFactor: $LearningFactor
        | DiscountFactor: $DiscountFactor
@@ -85,6 +83,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | ValueIterationInitializationCount: $ValueIterationInitializationCount
        | Policy: $Policy
        | Reward: $Reward
+       | DecisionInterval: $DecisionInterval
        | --- Configuration ---""".stripMargin
 
   log.info(config)
@@ -114,8 +113,6 @@ object ResourceManagerConfig {
   final val TargetLatencyDefault = "800ms"
   final val LatencyGranularityKey = "spark.streaming.dynamicAllocation.latencyGranularity"
   final val LatencyGranularityDefault = "10ms"
-  final val GracePeriodKey = "spark.streaming.dynamicAllocation.gracePeriod"
-  final val GracePeriodDefault = "60s"
   final val WindowSizeKey = "spark.streaming.dynamicAllocation.windowSize"
   final val WindowSizeDefault = 10
   final val LearningFactorKey = "spark.streaming.dynamicAllocation.learningFactor"
