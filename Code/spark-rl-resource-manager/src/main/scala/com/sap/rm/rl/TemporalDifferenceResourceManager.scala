@@ -34,6 +34,9 @@ class TemporalDifferenceResourceManager(
   protected var lastWindowAverageIncomingMessage: Int = 0
   protected var currentBatch: BatchInfo = _
 
+  protected var executorsAddCounter: Int = 1
+  protected var executorsRemoveCounter: Int = 1
+
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
     processBatch(batchCompleted.batchInfo)
   }
@@ -86,17 +89,27 @@ class TemporalDifferenceResourceManager(
   }
 
   def scaleIn(): Unit = {
+    executorsAddCounter = 1
+    val toRemove = ExecutorGranularity * executorsRemoveCounter
+
     val all = activeExecutors
-    val executorsToKill: Int = min(ExecutorGranularity, all.size - MinimumExecutors)
+    val executorsToKill: Int = min(toRemove, all.size - MinimumExecutors)
     val killed: Int = removeExecutors(shuffle(all).take(executorsToKill)).size
+
+    executorsRemoveCounter += 1
     logScaleInAction(killed)
   }
 
   def scaleOut(): Unit = {
+    executorsRemoveCounter = 1
+    val toAdd = ExecutorGranularity * executorsAddCounter
+
     val total = numberOfActiveExecutors
-    val executorToAdd: Int = min(ExecutorGranularity, MaximumExecutors - total)
+    val executorToAdd: Int = min(toAdd, MaximumExecutors - total)
     if (requestTotalExecutors(executorToAdd + total)) logScaleOutOK(executorToAdd)
     else logScaleOutError()
+
+    executorsAddCounter += 1
   }
 
   def whatIsTheNextAction(): Action = {
