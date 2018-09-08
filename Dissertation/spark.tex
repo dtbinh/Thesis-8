@@ -17,7 +17,7 @@ Map-Reduce~\cite{Dean:2004} and its derivative projects have been widely used by
 Apache spark has been designed from ground up to resolve these issues. It provides a large stack of tools to facilitate processing large datasets. Figure~\ref{fig:spark-eco} depicts tools provided by Spark.
 \begin{figure}[h]
     \centering
-    \includegraphics[clip,trim=5cm 21.2cm 8.7cm 3.4cm]{spark-eco.pdf}
+    \includegraphics[clip,trim=5cm 21.1cm 8.7cm 3.4cm]{spark-eco.pdf}
     \caption{Apache Spark Stack}
     \label{fig:spark-eco}
 \end{figure}
@@ -32,7 +32,7 @@ Any Spark application consists of multiple components at runtime. The following 
     \item[Worker Processes] A collection of worker processes known as \emph{executors} that run on cluster nodes. Executors run user defined code. During the runtime of the application each worker consume any number of input records, processes it based on user defined code and emits any number of output records. Similar to driver process, liveness of the worker processes shall by monitored. However, the role of worker processes are not as critical as driver process, even though they may fail for any reason. Workers have access to load/store data files from/to distributed file system or local memory of the machine. During lifetime of the application, status of the workers will be reported to driver process.
     \item[User Defined Code] Provided by user and caries the main logic of the application.
 \end{description}
-Figure~\ref{fig:spark-runtime}\footnote{The figure has been partially taken from~\cite{Zaharia:2012}} depicts coarse grained architecture of a Spark application and table~\ref{tab:spark-runtime} summarizes these components.
+Figure~\ref{fig:spark-runtime}\footnote{The figure has been partially taken from~\textcite{Zaharia:2012}} depicts coarse grained architecture of a Spark application and table~\ref{tab:spark-runtime} summarizes these components.
 \begin{figure}[h]
     \centering
     \includegraphics[clip,trim=3cm 16.8cm 2.5cm 2.5cm]{spark-high.pdf}
@@ -58,7 +58,7 @@ Figure~\ref{fig:spark-runtime}\footnote{The figure has been partially taken from
 \subsection{Spark Cluster Manager}
 \label{sp:cluster}
 
-Section~\ref{sp:run} described the coarse grained architecture of Spark. However, from a more fine grained point of view, there is missing component known as \emph{Cluster Manager}. Cluster Manager controls the \emph{assignment} of executors to cluster nodes. It monitors liveness of executors during lifetime of the Spark application. \emph{Spark Session} is the entry point for all Spark applications and has the responsibility to communicate with Cluster Manager to distribute tasks and collect task progress reports from executors. It also distributes user defined code on Worker nodes. Figure~\ref{fig:spark-cluster}\footnote{The figure has been partially taken from~\cite{spark-guide}} illustrates the role of Cluster Manager in Spark.
+Section~\ref{sp:run} described the coarse grained architecture of Spark. However, from a more fine grained point of view, there is missing component known as \emph{Cluster Manager}. Cluster Manager controls the \emph{assignment} of executors to cluster nodes. It monitors liveness of executors during lifetime of the Spark application. \emph{Spark Session} is the entry point for all Spark applications and has the responsibility to communicate with Cluster Manager to distribute tasks and collect task progress reports from executors. It also distributes user defined code on Worker nodes. Figure~\ref{fig:spark-cluster}\footnote{The figure has been partially taken from~\textcite{spark-guide}} illustrates the role of Cluster Manager in Spark.
 \begin{figure}[h]
     \centering
     \includegraphics[clip,trim=2.4cm 19cm 3.5cm 2cm]{spark-cluster.pdf}
@@ -90,7 +90,7 @@ Note that, the term \emph{executor} is a conceptual term and implementation deta
     Fault-tolerance is provided by a similar hierarchical approach like YARN. Mesos Master is monitored by several backups through Zookeeper. Mesos Slaves as well as Framework Schedulers are in turn monitored by Mesos Master. Each job is further monitored by corresponding Framework Scheduler. And finally, executors are monitored by Mesos Slaves. 
     \item [Spark Standalone] It is the default resource manager for Spark and will be used throughout this thesis. It also follows the master-slave model. \emph{Spark Master} is the global cluster level resource manager. On each cluster node runs a \emph{Spark Slave} process. Spark Slaves are responsible to run and monitor worker executors. It is possible to set default number of CPU cores and available memory for each executor though configuration, either \emph{statically} -- default value for all jobs -- or at specific job \emph{submission} time -- per job basis.
     
-     Fault-tolerance is achieved by several counter measures. Figure~\ref{fig:spark-full}\footnote{The figure has been partially taken from~\cite{spark-guide}} depicts all the measures. Similar to YARN and Mesos, a multi-level failure detection approach is exploited. Multiple backup nodes monitor the Spark Master via Zookeeper~(Case 1). Spark Slaves and Drivers are monitored by Spark Master (Case 2). Progress of each executor -- whether the assigned task is done or not -- is monitored by Driver (Case 3). Liveness of each executor is further monitored by corresponding local Spark Slave process (Case 5). Initial input and final output of the jobs are stored in a distributed replicated file system like HDFS. In case any executor fails to store its final output in DFS, it will relaunched by Spark on another node (Case 4). Intermediate results are stored locally without any fault-tolerance in mind. However, \emph{checkpoints} -- stored on DFS -- can be used in this case to recover from executor failures (Case 4). Refer to section~\ref{sp:rdd} for more information on checkpointing process. 
+     Fault-tolerance is achieved by several counter measures. Figure~\ref{fig:spark-full}\footnote{The figure has been partially taken from~\textcite{spark-guide}} depicts all the measures. Similar to YARN and Mesos, a multi-level failure detection approach is exploited. Multiple backup nodes monitor the Spark Master via Zookeeper~(Case 1). Spark Slaves and Drivers are monitored by Spark Master (Case 2). Progress of each executor -- whether the assigned task is done or not -- is monitored by Driver (Case 3). Liveness of each executor is further monitored by corresponding local Spark Slave process (Case 5). Initial input and final output of the jobs are stored in a distributed replicated file system like HDFS. In case any executor fails to store its final output in DFS, it will relaunched by Spark on another node (Case 4). Intermediate results are stored locally without any fault-tolerance in mind. However, \emph{checkpoints} -- stored on DFS -- can be used in this case to recover from executor failures (Case 4). Refer to section~\ref{sp:rdd} for more information on checkpointing process. 
      \begin{figure}[ht]
          \centering
          \includegraphics[clip,trim=4cm 13cm 4cm 2.2cm]{spark-full.pdf}
@@ -104,7 +104,7 @@ Note that, the term \emph{executor} is a conceptual term and implementation deta
 
 \emph{Resilient Distributed Dataset} (RDD)~\cite{Zaharia:2012} is the basic building block of Spark's data processing pipeline. It is inspired by the same concepts behind \emph{shared memory} and enables \emph{iterative algorithms} and \emph{interactive analytics} to perform common operations directly on memory. RDDs are fault-tolerant and parallel data structures to let intermediate results of a Spark application to be stored in memory during multiple iterations. Existing distributed shared memory abstractions for cluster computing provide \emph{fine-grained} interface -- typically key/value -- to modify state. Unfortunately, with this approach the only way to provide fault-tolerance is the \emph{log shipping} approach that is already offered by distributed database systems.
 
-Whereas, RDDs offer \emph{coarse-grained} interface based on \emph{immutable transformations}. Each transformation (\lstinline$map$, \lstinline$filter$, \lstinline$foreach$, \lstinline$groupByKey$, etc.) applies same application logic to all records that it contains. A dataset's \emph{lineage graph} is the \emph{chain}~-- \emph{sequence} -- of multiple transformations that produced the aforementioned dataset. With this approach only the transformation itself needs to be logged and shipped to other nodes to provide fault-tolerance. Since RDDs are already immutable, recomputing the lineage on other node is a trivial task. The RDD abstraction is useful in data intensive processing applications, since same operation is applied to many records. Table~\ref{tab:rdd-vs-dsm}\footnote{The table has been partially taken from~\cite{Zaharia:2012}} summarizes the differences between RRDs and commons distributed shared memory technologies.
+Whereas, RDDs offer \emph{coarse-grained} interface based on \emph{immutable transformations}. Each transformation (\lstinline$map$, \lstinline$filter$, \lstinline$foreach$, \lstinline$groupByKey$, etc.) applies same application logic to all records that it contains. A dataset's \emph{lineage graph} is the \emph{chain}~-- \emph{sequence} -- of multiple transformations that produced the aforementioned dataset. With this approach only the transformation itself needs to be logged and shipped to other nodes to provide fault-tolerance. Since RDDs are already immutable, recomputing the lineage on other node is a trivial task. The RDD abstraction is useful in data intensive processing applications, since same operation is applied to many records. Table~\ref{tab:rdd-vs-dsm}\footnote{The table has been taken from~\textcite{Zaharia:2012}} summarizes the differences between RRDs and common distributed shared memory technologies.
 \begin{table*}[h]
     \begin{tabular}{lll}
         \toprule
@@ -187,7 +187,7 @@ In a lineage graph RDDs are derived from one another. This makes each RDD depend
         \label{fig:sp:wide-dep}
     \end{figure}
 \end{itemize}
-\footnotetext{The figure and sample code has been partially taken from~\cite{Zaharia:2012}}
+\footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
 
 \subsection{Fault-Tolerance with Checkpointing}
 \label{sp:fault}
@@ -281,7 +281,7 @@ val counts       = ones.runningReduce((a, b) => a + b)
     \caption{Streaming Word Count Using D-Stream API}
     \label{fig:sp:dstream-api}
 \end{figure}
-\footnotetext{The code and figure has been partially taken from~\cite{Zaharia:2013}}
+\footnotetext{The code and figure has been partially taken from~\textcite{Zaharia:2013}}
 
 \clearpage
 \subsection{Fault-Tolerant Message Consumption}
