@@ -1,7 +1,5 @@
 package com.sap.rm.rl
 
-import java.lang.Math.min
-
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import Action._
 import org.apache.spark.streaming.StreamingContext
@@ -14,7 +12,8 @@ class TemporalDifferenceResourceManager(
                                          ssc: StreamingContext,
                                          stateSpace: StateSpace,
                                          policy: Policy,
-                                         reward: Reward
+                                         reward: Reward,
+                                         executorStrategy: ExecutorStrategy
                                        ) extends ResourceManager {
 
   override lazy val streamingContext: StreamingContext = ssc
@@ -33,9 +32,6 @@ class TemporalDifferenceResourceManager(
   protected var lastTimeDecisionMade: Long = 0
   protected var lastWindowAverageIncomingMessage: Int = 0
   protected var currentBatch: BatchInfo = _
-
-  protected var executorsAddCounter: Int = 1
-  protected var executorsRemoveCounter: Int = 1
 
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
     processBatch(batchCompleted.batchInfo)
@@ -89,27 +85,17 @@ class TemporalDifferenceResourceManager(
   }
 
   def scaleIn(): Unit = {
-    executorsAddCounter = 1
-    val toRemove = ExecutorGranularity * executorsRemoveCounter
-
     val all = activeExecutors
-    val executorsToKill: Int = min(toRemove, all.size - MinimumExecutors)
+    val executorsToKill: Int = executorStrategy.howManyExecutorsToRemove(all.size)
     val killed: Int = removeExecutors(shuffle(all).take(executorsToKill)).size
-
-    executorsRemoveCounter += 1
     logScaleInAction(killed)
   }
 
   def scaleOut(): Unit = {
-    executorsRemoveCounter = 1
-    val toAdd = ExecutorGranularity * executorsAddCounter
-
     val total = numberOfActiveExecutors
-    val executorToAdd: Int = min(toAdd, MaximumExecutors - total)
+    val executorToAdd: Int = executorStrategy.howManyExecutorsToAdd(total)
     if (requestTotalExecutors(executorToAdd + total)) logScaleOutOK(executorToAdd)
     else logScaleOutError()
-
-    executorsAddCounter += 1
   }
 
   def whatIsTheNextAction(): Action = {
@@ -140,7 +126,8 @@ object TemporalDifferenceResourceManager {
             streamingContext: StreamingContext,
             stateSpace: Option[StateSpace] = None,
             policy: Option[Policy] = None,
-            reward: Option[Reward] = None
+            reward: Option[Reward] = None,
+            executorStrategy: Option[ExecutorStrategy] = None
            ): ResourceManager = {
 
     new TemporalDifferenceResourceManager(
@@ -148,6 +135,7 @@ object TemporalDifferenceResourceManager {
       streamingContext,
       stateSpace.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace())),
       policy.getOrElse(PolicyFactory.getPolicy(config)),
-      reward.getOrElse(RewardFactory.getReward(config)))
+      reward.getOrElse(RewardFactory.getReward(config)),
+      executorStrategy.getOrElse(ExecutorStrategyFactory.getExecutorStrategy(config)))
   }
 }

@@ -11,8 +11,9 @@ class ValueIterationResourceManager(
                                      ssc: StreamingContext,
                                      stateSpace: StateSpace,
                                      policy: Policy,
-                                     reward: Reward
-                                   ) extends TemporalDifferenceResourceManager(cfg, ssc, stateSpace, policy, reward) {
+                                     reward: Reward,
+                                     executorStrategy: ExecutorStrategy
+                                   ) extends TemporalDifferenceResourceManager(cfg, ssc, stateSpace, policy, reward, executorStrategy) {
 
   private lazy val stateActionCount = MutableHashMap[(State, Action), Int]().withDefaultValue(0)
   private lazy val stateActionReward = MutableHashMap[(State, Action), Double]().withDefaultValue(0)
@@ -116,13 +117,15 @@ object ValueIterationResourceManager {
             streamingContext: StreamingContext,
             stateSpace: Option[StateSpace] = None,
             policy: Option[Policy] = None,
-            reward: Option[Reward] = None
+            reward: Option[Reward] = None,
+            executorStrategy: Option[ExecutorStrategy] = None
            ): ResourceManager = {
     new ValueIterationResourceManager(
       config,
       streamingContext,
       stateSpace.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace())),
       policy.getOrElse(PolicyFactory.getPolicy(config)),
-      reward.getOrElse(RewardFactory.getReward(config)))
+      reward.getOrElse(RewardFactory.getReward(config)),
+      executorStrategy.getOrElse(ExecutorStrategyFactory.getExecutorStrategy(config)))
   }
 }

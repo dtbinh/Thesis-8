@@ -35,6 +35,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val Policy: String = sparkConf.get(PolicyKey, PolicyDefault)
   final val Reward: String = sparkConf.get(RewardKey, RewardDefault)
   final val DecisionInterval: Int = sparkConf.getTimeAsMs(DecisionIntervalKey, DecisionIntervalDefault).toInt
+  final val ExecutorStrategy: String = sparkConf.get(ExecutorStrategyKey, ExecutorStrategyDefault)
 
   require(CoresPerExecutor == CoresPerTask)
   require(ExecutorGranularity >= 0)
@@ -55,6 +56,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   require(ValueIterationInitializationCount > 0)
   require(Policy == "greedy" || Policy == "oneMinusEpsilon" || Policy == "decreasingOneMinusEpsilon")
   require(Reward == "preferScaleInWhenLoadIsDescreasing" || Reward == "preferNoActionWhenLoadIsDecreasing")
+  require(ExecutorStrategy == "static" || ExecutorStrategy == "linear")
 
   val config: String =
     s""" --- Configuration ---
@@ -84,6 +86,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | Policy: $Policy
        | Reward: $Reward
        | DecisionInterval: $DecisionInterval
+       | ExecutorStrategy: $ExecutorStrategy
        | --- Configuration ---""".stripMargin
 
   log.info(config)
@@ -145,6 +148,8 @@ object ResourceManagerConfig {
   final val RewardDefault = "preferScaleInWhenLoadIsDescreasing" // or preferNoActionWhenLoadIsDecreasing
   final val DecisionIntervalKey = "spark.streaming.dynamicAllocation.decisionInterval"
   final val DecisionIntervalDefault = "60s"
+  final val ExecutorStrategyKey = "spark.streaming.dynamicAllocation.executorStrategy"
+  final val ExecutorStrategyDefault = "static"
 
   def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }
