@@ -149,7 +149,7 @@ object ResourceManagerConfig {
   final val DecisionIntervalKey = "spark.streaming.dynamicAllocation.decisionInterval"
   final val DecisionIntervalDefault = "60s"
   final val ExecutorStrategyKey = "spark.streaming.dynamicAllocation.executorStrategy"
-  final val ExecutorStrategyDefault = "static"
+  final val ExecutorStrategyDefault = "static" // linear
 
   def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }

@@ -4,9 +4,27 @@
 \section{Introduction}
 \label{des:intro}
 
+In this chapter design and project structure of implemented techniques will be introduced and discussed. Two techniques have been selected to be implemented. This chapter is organized as follows. Section~\ref{des:choose} explains selected techniques and the reasoning behind it. In this section, selected techniques are explained at theoretical level. Section~\ref{des:proj} describes the structure of the implementation for Spark Streaming in detail. Section~\ref{des:conf} describes the configuration parameters required to launch the implementation. Finally, Section~\ref{des:conc} concludes this chapter.
 
 \section{Choosing Auto-Scaling Techniques}
 \label{des:choose}
+
+As discussed in Section~\ref{ias:alg-fam}, Auto-Scalers can be categorized into 5 groups.
+\begin{description}[leftmargin=0pt]
+    \item[Threshold-Based] In this approach, one or multiple threshold values are defined~\cite{Hasan2012IntegratedAA} which specifies the behavior of the Auto-Scaler when the system load goes beyond these thresholds. However, manually defining thresholds is a tricky process~\cite{Dutreilh2010}. Spark's default dynamic resource manager~\cite{spark} and Online Parameter Optimization~\cite{Heinze:2015} are partially based on this approach and they will be evaluated in Section~\ref{eval}.
+    \item[Time-Series Analysis] In this approach, a history window of workload -- depending on prediction accuracy -- is considered to predict future workload. However, in case the workload is changing in an unpredictable way -- which is not an unusual phenomena in streaming applications -- then this approach becomes less useful. As confirmed by DEBS grand challenges~\cite{debs2014}~\cite{debs2015}~\cite{debs2016}, the general assumption for streaming applications is that the workload is unpredictable. Due to this limited applicability, no time-series technique is implemented.
+    \item[Queuing Theory] In this approach, the system is modeled as a queue network. Since queuing parameters -- message inter-arrival and service rates --  are static, they have to be re-calculated in a timely manner. One of the novel implementations is done by~\textcite{Lohrmann:2015}. However, authors made two unconvincing assumptions. First, worker nodes shall be homogeneous in terms of processing power and network bandwidth. Second, there should be an effective partitioning strategy in place in order to load balance outgoing messages between stages. In reality both assumptions rarely occur. Large scale stream processing clusters are built incrementally. Depending on workload, data skew does exist and imperfect hash functions are widely used by software developers. Furthermore, as confirmed by~\textcite{Rajarshi:2005}, queuing models are very complicated to build and less adaptive to changing environments. As a consequence, no queuing theory technique is implemented.
+    \item[Reinforcement Learning] Reinforcement Learning has shown its capabilities to adapt ever changing environments. However, some of the proposed solutions are conflicting with the requirement of this thesis as discussed in Section~\ref{prob-def}. The following summarizes the reasoning why each proposal is accepted or rejected by this thesis.
+    \begin{itemize}
+        \item 
+    \end{itemize}
+\end{description}
+
+\subsection{Temporal Difference}
+\label{des:temp}
+
+\subsection{Value Iteration}
+\label{des:val}
 
 \section{Project Structure}
 \label{des:proj}
