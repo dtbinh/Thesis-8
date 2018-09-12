@@ -15,7 +15,7 @@ trait Reward extends StateSpaceUtils {
       val lastStateDiff = dangerZoneLatencyDifference(lastState)
 
       if ((lastAction == ScaleOut && (currentState.loadIsIncreasing || (isStateInDangerZone(lastState) && currentStateDiff < lastStateDiff))) ||
-          (lastAction == NoAction && (!currentState.loadIsIncreasing || lastState.numberOfExecutors == MaximumExecutors))) {
+          (lastAction == NoAction && (currentState.latency < lastState.latency || lastState.numberOfExecutors == MaximumExecutors))) {
         return Some(currentStateDiff)
       }
       return Some(-currentStateDiff)
