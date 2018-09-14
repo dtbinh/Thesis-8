@@ -25,8 +25,8 @@ class PreferScaleInWhenLoadIsDescreasing(val config: ResourceManagerConfig) exte
         return Some(-max(ratio, safeZoneLatencyDiff))
       }
 
-      // if load or latency is decreasing, then no action gets negative reward
-      if ((currentState.latency < lastState.latency || !currentState.loadIsIncreasing) && lastAction == NoAction) {
+      // if latency is decreasing, then no action gets negative reward
+      if (currentState.latency <= lastState.latency && lastAction == NoAction) {
         return Some(-ratio)
       }
     }
