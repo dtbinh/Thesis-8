@@ -10,6 +10,7 @@ import com.sap.rm.rl.State
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.scheduler.{SparkListenerApplicationEnd, SparkListenerExecutorAdded, SparkListenerExecutorRemoved}
 import org.apache.spark.streaming.scheduler.StreamingListenerStreamingStarted
+
 import scala.collection.mutable.{Map => MutableMap, Set => MutableSet}
 
 object ResourceManagerLogger {
@@ -149,6 +150,14 @@ object ResourceManagerLogger {
   }
 
   private def logAction(tag: Status, generatedRandom: Double, epsilon: Double, action: Action): Unit = {
-    log.info("{} - {} - (generatedRandom, epsilon, action) = ({},{},{})", tag, correlationId, generatedRandom.formatted("%.2f"), epsilon.formatted("%.2f"), action)
+    log.info("{} - {} - (generatedRandom,epsilon,action) = ({},{},{})", tag, correlationId, generatedRandom.formatted("%.2f"), epsilon.formatted("%.2f"), action)
+  }
+
+  def logVisitedState(state: State, qValues: Seq[(Action, Double)]): Unit = {
+    log.info("{} - {} - (state,qValues) = ({},{})", VISITED_STATE, correlationId, state, qValues)
+  }
+
+  def logUnvisitedState(state: State, qValues: Seq[(Action, Double)]): Unit = {
+    log.info("{} - {} - (state,qValues) = ({},{})", UNVISITED_STATE, correlationId, state, qValues)
   }
 }

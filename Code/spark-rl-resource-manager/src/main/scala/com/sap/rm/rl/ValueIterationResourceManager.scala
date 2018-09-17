@@ -82,7 +82,7 @@ class ValueIterationResourceManager(
           stateSpace.updateQValueForAction(startingState, action, QVal)
         }
 
-        startingStates.foreach(s => VValues(s) = stateSpace(s).maxBy(_._2)._2)
+        startingStates.foreach(s => VValues(s) = stateSpace(s).qValues.maxBy(_._2)._2)
         logVValues(VValues)
       }
 

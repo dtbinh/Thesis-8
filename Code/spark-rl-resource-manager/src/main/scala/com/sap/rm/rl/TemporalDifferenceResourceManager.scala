@@ -111,8 +111,8 @@ class TemporalDifferenceResourceManager(
   def calculateReward(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState).get
 
   def updateStateSpace(): Unit = {
-    val oldQVal: Double = stateSpace(lastState)(lastAction)
-    val currentStateQVal: Double = stateSpace(currentState)(actionToTake)
+    val oldQVal: Double = stateSpace(lastState, lastAction)
+    val currentStateQVal: Double = stateSpace(currentState, actionToTake)
 
     val newQVal: Double = ((1 - LearningFactor) * oldQVal) + (LearningFactor * (rewardForLastAction + (DiscountFactor * currentStateQVal)))
     stateSpace.updateQValueForAction(lastState, lastAction, newQVal)

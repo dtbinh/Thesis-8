@@ -1,29 +1,56 @@
 package com.sap.rm.rl.impl.policy
 
-import com.sap.rm.ResourceManagerConfig
+import com.sap.rm.{ResourceManagerConfig, ResourceManagerLogger}
 import com.sap.rm.rl.Action._
 import com.sap.rm.rl.{Policy, State, StateSpace}
 
 class GreedyPolicy(config: ResourceManagerConfig) extends Policy {
 
   import config._
+  @transient private lazy val logger = ResourceManagerLogger(config)
+  import logger._
 
   override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Action = {
     val currentExecutors = currentState.numberOfExecutors
-    var qValues = currentExecutors match {
-      case MinimumExecutors => stateSpace(currentState).filterKeys(_ != ScaleIn)
-      case MaximumExecutors => stateSpace(currentState).filterKeys(_ != ScaleOut)
-      case _ => stateSpace(currentState)
+    val stateActionSet = stateSpace(currentState)
+
+    if (stateActionSet.isVisited) {
+      var qValues: Seq[(Action, Double)] = removeUnfeasibleActions(currentExecutors, stateActionSet.qValues.toSeq)
+
+      // monotonicity property
+      qValues = if (currentState.latency < lastState.latency && lastAction == ScaleIn)
+        qValues.filter(_._1 != ScaleOut)
+      else if (currentState.latency > lastState.latency && lastAction == ScaleOut)
+        qValues.filter(_._1 != ScaleIn)
+      else qValues
+
+      logVisitedState(currentState, qValues)
+
+      return qValues.maxBy(_._2)._1
     }
 
-    // monotonicity property
-    qValues = if (currentState.latency < lastState.latency && lastAction == ScaleIn)
-      qValues.filterKeys(_ != ScaleOut)
-    else if (currentState.latency > lastState.latency && lastAction == ScaleOut)
-      qValues.filterKeys(_ != ScaleIn)
-    else qValues
+    // look for neighbor state
+    var qValues: Seq[(Action, Double)] = stateActionSet.qValues.toSeq ++
+      stateSpace(State(currentState.numberOfExecutors - ExecutorGranularity, currentState.latency, currentState.loadIsIncreasing)).qValues.toSeq ++
+      stateSpace(State(currentState.numberOfExecutors + ExecutorGranularity, currentState.latency, currentState.loadIsIncreasing)).qValues.toSeq ++
+      stateSpace(State(currentState.numberOfExecutors - ExecutorGranularity, currentState.latency + 1, currentState.loadIsIncreasing)).qValues.toSeq ++
+      stateSpace(State(currentState.numberOfExecutors, currentState.latency + 1, currentState.loadIsIncreasing)).qValues.toSeq ++
+      stateSpace(State(currentState.numberOfExecutors + ExecutorGranularity, currentState.latency + 1, currentState.loadIsIncreasing)).qValues.toSeq ++
+      stateSpace(State(currentState.numberOfExecutors - ExecutorGranularity, currentState.latency - 1, currentState.loadIsIncreasing)).qValues.toSeq ++
+      stateSpace(State(currentState.numberOfExecutors, currentState.latency - 1, currentState.loadIsIncreasing)).qValues.toSeq ++
+      stateSpace(State(currentState.numberOfExecutors + ExecutorGranularity, currentState.latency - 1, currentState.loadIsIncreasing)).qValues.toSeq
 
+    qValues = removeUnfeasibleActions(currentExecutors, qValues)
+    logUnvisitedState(currentState, qValues)
     qValues.maxBy(_._2)._1
+  }
+
+  private def removeUnfeasibleActions(currentExecutors: Int, qValues: Seq[(Action, Double)]): Seq[(Action, Double)] = {
+    currentExecutors match {
+      case MinimumExecutors => qValues.filter(_._1 != ScaleIn)
+      case MaximumExecutors => qValues.filter(_._1 != ScaleOut)
+      case _ => qValues
+    }
   }
 }
 

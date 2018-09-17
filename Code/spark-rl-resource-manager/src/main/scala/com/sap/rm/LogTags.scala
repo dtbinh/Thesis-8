@@ -26,4 +26,7 @@ object LogTags extends Enumeration {
 
   val RANDOM_ACTION: Status = Value
   val OPTIMAL_ACTION: Status = Value
+
+  val VISITED_STATE: Status = Value
+  val UNVISITED_STATE: Status = Value
 }
