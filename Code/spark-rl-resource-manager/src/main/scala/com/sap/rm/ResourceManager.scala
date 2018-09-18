@@ -42,7 +42,7 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
 
     if (isInvalidBatch(info)) return false
 
-    val stat = statBuilder.update(info, numberOfActiveExecutors, isSLOViolated(info))
+    val stat = statBuilder.update(info, numberOfActiveExecutors)
     if (stat.nonEmpty) logStat(stat.get)
 
     true
@@ -64,6 +64,4 @@ trait ResourceManager extends Spark with StreamingListener with SparkListenerTra
     }
     false
   }
-
-  def isSLOViolated(info: BatchInfo): Boolean = info.totalDelay.get.toInt >= TargetLatency
 }

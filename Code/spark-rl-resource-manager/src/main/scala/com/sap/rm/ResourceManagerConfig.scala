@@ -56,7 +56,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   require(ValueIterationInitializationCount > 0)
   require(Policy == "greedy" || Policy == "oneMinusEpsilon" || Policy == "decreasingOneMinusEpsilon")
   require(Reward == "preferScaleInWhenLoadIsDescreasing" || Reward == "preferNoActionWhenLoadIsDecreasing")
-  require(ExecutorStrategy == "static" || ExecutorStrategy == "linear")
+  require(ExecutorStrategy == "static" || ExecutorStrategy == "linear" || ExecutorStrategy == "relative")
 
   val config: String =
     s""" --- Configuration ---

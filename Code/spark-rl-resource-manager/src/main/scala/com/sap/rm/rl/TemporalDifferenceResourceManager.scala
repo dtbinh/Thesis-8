@@ -9,10 +9,10 @@ import scala.util.Random.shuffle
 class TemporalDifferenceResourceManager(
                                          cfg: ResourceManagerConfig,
                                          ssc: StreamingContext,
-                                         stateSpace: StateSpace,
-                                         policy: Policy,
-                                         reward: Reward,
-                                         executorStrategy: ExecutorStrategy
+                                         stateSpaceOpt: Option[StateSpace] = None,
+                                         policyOpt: Option[Policy] = None,
+                                         rewardOpt: Option[Reward] = None,
+                                         executorStrategyOpt: Option[ExecutorStrategy] = None
                                        ) extends ResourceManager {
 
   override lazy val streamingContext: StreamingContext = ssc
@@ -21,9 +21,15 @@ class TemporalDifferenceResourceManager(
   import config._
   import logger._
 
+  lazy val targetWaitingListLength: Int = TargetLatency / batchDuration.toInt
+  lazy val stateSpace: StateSpace = stateSpaceOpt.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace()))
+  lazy val policy: Policy = policyOpt.getOrElse(PolicyFactory.getPolicy(config))
+  lazy val reward: Reward = rewardOpt.getOrElse(RewardFactory.getReward(config))
+  lazy val executorStrategy: ExecutorStrategy = executorStrategyOpt.getOrElse(ExecutorStrategyFactory.getExecutorStrategy(config, this))
+
   protected lazy val totalDelayWindow = CountBasedSlidingWindow(WindowSize)
   protected lazy val incomingMessageWindow = CountBasedSlidingWindow(WindowSize)
-  protected lazy val batchWaitingList = BatchWaitingList(config, TargetLatency / batchDuration.toInt)
+  protected lazy val batchWaitingList = BatchWaitingList(targetWaitingListLength)
   protected var lastState: State = _
   protected var lastAction: Action = _
   protected var currentState: State = _
@@ -123,23 +129,18 @@ class TemporalDifferenceResourceManager(
 
     logQValueUpdate(lastState, lastAction, oldQVal, rewardForLastAction, currentState, actionToTake, currentStateQVal, newQVal)
   }
+
+  def waitingListLength: Int = batchWaitingList.length
 }
 
 object TemporalDifferenceResourceManager {
   def apply(config: ResourceManagerConfig,
             streamingContext: StreamingContext,
-            stateSpace: Option[StateSpace] = None,
-            policy: Option[Policy] = None,
-            reward: Option[Reward] = None,
-            executorStrategy: Option[ExecutorStrategy] = None
+            stateSpaceOpt: Option[StateSpace] = None,
+            policyOpt: Option[Policy] = None,
+            rewardOpt: Option[Reward] = None,
+            executorStrategyOpt: Option[ExecutorStrategy] = None
            ): ResourceManager = {
-
-    new TemporalDifferenceResourceManager(
-      config,
-      streamingContext,
-      stateSpace.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace())),
-      policy.getOrElse(PolicyFactory.getPolicy(config)),
-      reward.getOrElse(RewardFactory.getReward(config)),
-      executorStrategy.getOrElse(ExecutorStrategyFactory.getExecutorStrategy(config)))
+    new TemporalDifferenceResourceManager(config, streamingContext, stateSpaceOpt, policyOpt, rewardOpt, executorStrategyOpt)
   }
 }

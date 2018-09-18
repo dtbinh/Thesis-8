@@ -1,16 +1,11 @@
 package com.sap.rm.rl
 
-import com.sap.rm.{ResourceManagerConfig, ResourceManagerLogger}
-
 import scala.collection.mutable.{HashSet => MutableHashSet, Set => MutableSet}
 
-class BatchWaitingList(config: ResourceManagerConfig, batchWaitingListThreshold: Int) {
+class BatchWaitingList(batchWaitingListThreshold: Int) {
 
   private lazy val waitingList: MutableSet[Long] = MutableHashSet()
   private var lastWaitingBatches: Int = 0
-  @transient private lazy val logger = ResourceManagerLogger(config)
-  import logger._
-  logWaitingListLength(batchWaitingListThreshold)
 
   def enqueue(batchSubmissionTime: Long): Unit = waitingList += batchSubmissionTime
 
@@ -26,5 +21,5 @@ class BatchWaitingList(config: ResourceManagerConfig, batchWaitingListThreshold:
 }
 
 object BatchWaitingList {
-  def apply(config: ResourceManagerConfig, batchWaitingListThreshold: Int): BatchWaitingList = new BatchWaitingList(config, batchWaitingListThreshold)
+  def apply(batchWaitingListThreshold: Int): BatchWaitingList = new BatchWaitingList(batchWaitingListThreshold)
 }

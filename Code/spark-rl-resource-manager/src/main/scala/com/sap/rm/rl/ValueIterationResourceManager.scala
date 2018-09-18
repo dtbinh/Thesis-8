@@ -9,11 +9,11 @@ import scala.collection.mutable.{HashMap => MutableHashMap, HashSet => MutableHa
 class ValueIterationResourceManager(
                                      cfg: ResourceManagerConfig,
                                      ssc: StreamingContext,
-                                     stateSpace: StateSpace,
-                                     policy: Policy,
-                                     reward: Reward,
-                                     executorStrategy: ExecutorStrategy
-                                   ) extends TemporalDifferenceResourceManager(cfg, ssc, stateSpace, policy, reward, executorStrategy) {
+                                     stateSpaceOpt: Option[StateSpace] = None,
+                                     policyOpt: Option[Policy] = None,
+                                     rewardOpt: Option[Reward] = None,
+                                     executorStrategyOpt: Option[ExecutorStrategy] = None
+                                   ) extends TemporalDifferenceResourceManager(cfg, ssc, stateSpaceOpt, policyOpt, rewardOpt, executorStrategyOpt) {
 
   private lazy val stateActionCount = MutableHashMap[(State, Action), Int]().withDefaultValue(0)
   private lazy val stateActionReward = MutableHashMap[(State, Action), Double]().withDefaultValue(0)
@@ -115,17 +115,11 @@ class ValueIterationResourceManager(
 object ValueIterationResourceManager {
   def apply(config: ResourceManagerConfig,
             streamingContext: StreamingContext,
-            stateSpace: Option[StateSpace] = None,
-            policy: Option[Policy] = None,
-            reward: Option[Reward] = None,
-            executorStrategy: Option[ExecutorStrategy] = None
+            stateSpaceOpt: Option[StateSpace] = None,
+            policyOpt: Option[Policy] = None,
+            rewardOpt: Option[Reward] = None,
+            executorStrategyOpt: Option[ExecutorStrategy] = None
            ): ResourceManager = {
-    new ValueIterationResourceManager(
-      config,
-      streamingContext,
-      stateSpace.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace())),
-      policy.getOrElse(PolicyFactory.getPolicy(config)),
-      reward.getOrElse(RewardFactory.getReward(config)),
-      executorStrategy.getOrElse(ExecutorStrategyFactory.getExecutorStrategy(config)))
+    new ValueIterationResourceManager(config, streamingContext, stateSpaceOpt, policyOpt, rewardOpt, executorStrategyOpt)
   }
 }
