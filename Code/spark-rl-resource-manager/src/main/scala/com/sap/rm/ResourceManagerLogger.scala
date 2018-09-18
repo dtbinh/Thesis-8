@@ -160,4 +160,8 @@ object ResourceManagerLogger {
   def logUnvisitedState(state: State, qValues: Seq[(Action, Double)]): Unit = {
     log.info("{} - {} - (state,qValues) = ({},{})", UNVISITED_STATE, correlationId, state, qValues)
   }
+
+  def logWaitingListLength(length: Int): Unit = {
+    log.info("{} - length = {}", correlationId, length)
+  }
 }

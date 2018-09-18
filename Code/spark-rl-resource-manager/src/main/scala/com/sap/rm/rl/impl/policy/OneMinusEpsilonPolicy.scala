@@ -2,7 +2,7 @@ package com.sap.rm.rl.impl.policy
 
 import com.sap.rm.{ResourceManagerConfig, ResourceManagerLogger}
 import com.sap.rm.rl.Action.{Action, _}
-import com.sap.rm.rl.{Policy, RandomNumberGenerator, State, StateSpace}
+import com.sap.rm.rl._
 
 class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, generator: RandomNumberGenerator) extends Policy {
 
@@ -13,7 +13,7 @@ class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, gener
 
   def epsilon: Double = Epsilon
 
-  override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Action = {
+  override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList): Action = {
     val r = generator.nextDouble()
     val e = epsilon
     var randomAction = false
@@ -37,7 +37,7 @@ class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, gener
       }
     } else {
       // take action based on policy
-      policy.nextActionFrom(stateSpace, lastState, lastAction, currentState)
+      policy.nextActionFrom(stateSpace, lastState, lastAction, currentState, waitingList)
     }
 
     if (randomAction) logRandomAction(r, e, action) else logOptimalAction(r, e, action)

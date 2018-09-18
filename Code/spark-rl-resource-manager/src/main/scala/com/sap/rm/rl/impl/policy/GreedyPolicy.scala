@@ -2,15 +2,18 @@ package com.sap.rm.rl.impl.policy
 
 import com.sap.rm.{ResourceManagerConfig, ResourceManagerLogger}
 import com.sap.rm.rl.Action._
-import com.sap.rm.rl.{Policy, State, StateSpace}
+import com.sap.rm.rl.{BatchWaitingList, Policy, State, StateSpace}
 
 class GreedyPolicy(config: ResourceManagerConfig) extends Policy {
 
-  import config._
   @transient private lazy val logger = ResourceManagerLogger(config)
+  import config._
   import logger._
 
-  override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Action = {
+  override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList): Action = {
+    if (waitingList.isGrowing) {
+      return ScaleOut
+    }
     val currentExecutors = currentState.numberOfExecutors
     val stateActionSet = stateSpace(currentState)
 

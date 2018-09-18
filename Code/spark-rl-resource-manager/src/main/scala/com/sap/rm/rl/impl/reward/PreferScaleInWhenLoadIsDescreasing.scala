@@ -5,12 +5,12 @@ import java.lang.Math.{max, min}
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.Action.Action
 import com.sap.rm.rl.Action._
-import com.sap.rm.rl.{Reward, State, StateSpace}
+import com.sap.rm.rl.{BatchWaitingList, Reward, State, StateSpace}
 
 class PreferScaleInWhenLoadIsDescreasing(val config: ResourceManagerConfig) extends Reward {
 
-  override def forAction(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Option[Double] = {
-    val partialReward: Option[Double] = super.forAction(stateSpace, lastState, lastAction, currentState)
+  override def forAction(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList): Option[Double] = {
+    val partialReward: Option[Double] = super.forAction(stateSpace, lastState, lastAction, currentState, waitingList)
     if (partialReward.nonEmpty) {
       return partialReward
     }
@@ -20,8 +20,12 @@ class PreferScaleInWhenLoadIsDescreasing(val config: ResourceManagerConfig) exte
 
     // current is not in danger zone, now check for last state
     if (!isStateInDangerZone(lastState)) {
-      // taking scale out action when last state was not in danger zone too is really bad.
       if (lastAction == ScaleOut) {
+        // if ScaleOut helped to reduce latency, then it is good
+        if (currentState.latency <= lastState.latency) {
+          return Some(min(ratio, safeZoneLatencyDiff))
+        }
+        // otherwise it was a bad decision.
         return Some(-max(ratio, safeZoneLatencyDiff))
       }
 

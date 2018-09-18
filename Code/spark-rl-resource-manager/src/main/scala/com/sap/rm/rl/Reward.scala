@@ -8,13 +8,12 @@ trait Reward extends StateSpaceUtils {
 
   import config._
 
-  def forAction(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Option[Double] = {
-
+  def forAction(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList): Option[Double] = {
     if (isStateInDangerZone(currentState)) {
       val currentStateDiff = dangerZoneLatencyDifference(currentState)
       val lastStateDiff = dangerZoneLatencyDifference(lastState)
 
-      if ((lastAction == ScaleOut && (currentState.loadIsIncreasing || (isStateInDangerZone(lastState) && currentStateDiff < lastStateDiff))) ||
+      if ((lastAction == ScaleOut && (currentState.loadIsIncreasing || waitingList.isGrowing  || waitingList.isShrinking || (isStateInDangerZone(lastState) && currentStateDiff < lastStateDiff))) ||
           (lastAction == NoAction && (currentState.latency < lastState.latency || lastState.numberOfExecutors == MaximumExecutors))) {
         return Some(currentStateDiff)
       }

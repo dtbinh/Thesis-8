@@ -1,15 +1,15 @@
 package com.sap.rm.rl.impl.reward
 
-import java.lang.Math.{min, max}
+import java.lang.Math.{max, min}
 
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.Action._
-import com.sap.rm.rl.{Reward, State, StateSpace}
+import com.sap.rm.rl.{BatchWaitingList, Reward, State, StateSpace}
 
 class PreferNoActionWhenLoadIsDecreasing(val config: ResourceManagerConfig) extends Reward {
 
-  override def forAction(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State): Option[Double] = {
-    val partialReward: Option[Double] = super.forAction(stateSpace, lastState, lastAction, currentState)
+  override def forAction(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList): Option[Double] = {
+    val partialReward: Option[Double] = super.forAction(stateSpace, lastState, lastAction, currentState, waitingList)
     if (partialReward.nonEmpty) {
       return partialReward
     }

@@ -3,8 +3,7 @@ package com.sap.rm.rl
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import Action._
 import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted}
-
+import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted, StreamingListenerBatchSubmitted}
 import scala.util.Random.shuffle
 
 class TemporalDifferenceResourceManager(
@@ -24,6 +23,7 @@ class TemporalDifferenceResourceManager(
 
   protected lazy val totalDelayWindow = CountBasedSlidingWindow(WindowSize)
   protected lazy val incomingMessageWindow = CountBasedSlidingWindow(WindowSize)
+  protected lazy val batchWaitingList = BatchWaitingList(config, TargetLatency / batchDuration.toInt)
   protected var lastState: State = _
   protected var lastAction: Action = _
   protected var currentState: State = _
@@ -33,11 +33,14 @@ class TemporalDifferenceResourceManager(
   protected var lastWindowAverageIncomingMessage: Int = 0
   protected var currentBatch: BatchInfo = _
 
+  override def onBatchSubmitted(batchSubmitted: StreamingListenerBatchSubmitted): Unit = batchWaitingList.enqueue(batchSubmitted.batchInfo.submissionTime)
+
   override def onBatchCompleted(batchCompleted: StreamingListenerBatchCompleted): Unit = synchronized {
     processBatch(batchCompleted.batchInfo)
   }
 
   override def processBatch(info: BatchInfo): Boolean = {
+    batchWaitingList.dequeue(info.submissionTime)
     if (!super.processBatch(info)) return false
 
     currentBatch = info
@@ -73,6 +76,7 @@ class TemporalDifferenceResourceManager(
       lastAction = actionToTake
       lastWindowAverageIncomingMessage = currentWindowAverageIncomingMessage
       lastTimeDecisionMade = batchTime
+      batchWaitingList.reset()
     }
 
     true
@@ -105,10 +109,10 @@ class TemporalDifferenceResourceManager(
       case MaximumExecutors => logNoMoreExecutorsLeft(currentState)
       case _ =>
     }
-    policy.nextActionFrom(stateSpace, lastState, lastAction, currentState)
+    policy.nextActionFrom(stateSpace, lastState, lastAction, currentState, batchWaitingList)
   }
 
-  def calculateReward(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState).get
+  def calculateReward(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState, batchWaitingList).get
 
   def updateStateSpace(): Unit = {
     val oldQVal: Double = stateSpace(lastState, lastAction)
