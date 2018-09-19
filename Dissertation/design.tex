@@ -26,8 +26,8 @@ As discussed in Section~\ref{ias:alg-fam}, Auto-Scalers can be categorized into 
     \end{itemize}
     \item[Control Theory] Techniques based on Control Theory are also promising for elastic data streaming. Because it monitors input and output of the application, it can respond to workload changes very fast and adapt the system if necessary. Thus it is perfectly capable of handling dynamic environments. The comparison between Reinforcement Learning and Control Theory techniques is left for future work.
 \end{description}
-As mentioned, two techniques -- \emph{Temporal Difference} and \emph{Value Iteration} -- will be implemented in this thesis. In next two sections, theoretical foundation of these algorithms will be laid out. Noteworthy to mention, these sections are heavily inspired by~\textcite{rlIntro}. Furthermore, Section~\ref{related} discusses more techniques and the reasoning why they have been accepted or rejected by this thesis.
-
+As mentioned, two techniques -- \emph{Temporal Difference} and \emph{Value Iteration} -- will be implemented in this thesis. In next two sections, theoretical foundation of these algorithms will be laid out. Noteworthy to mention, these sections are heavily inspired by~\textcite{rlIntro}. Furthermore, Section~\ref{related} discusses more techniques and the reasoning why they have been rejected by this thesis.
+\clearpage
 \subsection{Temporal Difference}
 \label{des:temp}
 Section~\ref{ias:alg-rl} explains the basics of Reinforcement Learning. Temporal Difference (TD) learning is one of the foundational algorithms of Reinforcement Learning. It can learn from applying experience without having prior knowledge about environment's dynamics. This property is potentially useful for data stream processing systems in which the incoming workload is changing without any particular pattern.
@@ -47,47 +47,106 @@ V(S_t) \longleftarrow (1-\alpha)V(S_t) + \alpha\big[R_{t+1} + \gamma\,V(S_{t+1})
 \end{equation}
 \begin{itemize}
 	\item $\bm{\alpha}$ denotes \emph{Learning Factor}. It specifies, how much the agent shall learn from new experiences. A higher $\alpha$ means learning with a faster pace. It also leads to forgetting history faster. On the other hand, a lower $\alpha$ leads to slower learning process which means the agent trusts its experience history more -- it gives more weight to history rather than new experiences. $\alpha$ is defined as a number between (0,1].
-	\item $\bm{\gamma}$ denotes \emph{Reward Factor} or \emph{Discount Factor}. It specifies, whether the agent shall optimize for \emph{future} or \emph{immediate} reward. A higher $\gamma$ leads to optimizing for future reward, whereas a lower $\gamma$ leads to optimizing for immediate reward. It is defined as a number between (0,1). As defined by Equation~\ref{des:eq:reward}, reward is cumulating at each time step which causes the sum to grow infinitely. In order to prevent infinite reward problem, it is crucial to define $\gamma$ as a number less than one to force convergence.
+	\item $\bm{\gamma}$ denotes \emph{Reward Factor} or \emph{Discount Factor}. It specifies, whether the agent shall optimize for \emph{future} or \emph{immediate} reward. A higher $\gamma$ leads to optimizing for future reward, whereas a lower $\gamma$ leads to optimizing for immediate reward. It is defined as a number between (0,1). As defined by Equation~\ref{des:eq:reward}, reward is cumulating at each time step which causes the sum to grow indefinitely. In order to prevent infinite reward problem, it is crucial to define $\gamma$ as a number less than one to force convergence.
 	\begin{equation}
 	R_t = r_{t+1}+\gamma r_{t+2}+\gamma^2 r_{t+3}+\dots=\sum_{0}^{\infty}\gamma^k r_{t+k+1}
 	\label{des:eq:reward}
 	\end{equation}
 \end{itemize}
 
-Since expected future reward is defined per action, Equation~\ref{des:eq:std} changes slightly and becomes as Equation~\ref{des:eq:qtd}. This update is applied after every transition from a nonterminal state $S_t$. In case $S_{t+1}$ is terminal, then $Q(S_{t+1},\,A_{t+1})$ is set to zero. As a consequence, each experiment can be defined with a quadruple of (State, Action, Reward, State) or $(S_{t},\,A_{t},\,R_{t+1},\,S_{t+1})$. This method is known as \emph{Sarsa} algorithm and named \emph{Q-Learning} because of the Q-Table used in the equation.
+Since expected future reward is defined per action, Equation~\ref{des:eq:std} changes slightly and becomes as Equation~\ref{des:eq:qtd}. This update is applied after every transition from a nonterminal state $S_t$. In case $S_{t+1}$ is terminal, then $Q(S_{t+1},\,A_{t+1})$ is set to zero. As a consequence, each experiment can be defined with a quadruple of (State, Action, Reward, State$'$) or $(S_{t},\,A_{t},\,R_{t+1},\,S_{t+1})$. This method is known as \emph{Sarsa} algorithm and named \emph{Q-Learning} because of the Q-Table used in the equation. Algorithm~\ref{des:a:ql}\footnote{The pseudocode has been taken from~\textcite{rlIntro}} describes this procedure.
 \begin{equation}
 Q(S_t,\,A_t) \longleftarrow (1-\alpha)Q(S_t,\,A_t) + \alpha\big[R_{t+1} + \gamma\,Q(S_{t+1},\,A_{t+1})\big]
 \label{des:eq:qtd}
 \end{equation}
-
-
-
-Algorithm~\ref{des:a:ql}\footnote{The algorithm has been taken from~\textcite{rlIntro}} describes this procedure.
-\begin{algorithm}[h]
+\begin{algorithm}[t]
 	\DontPrintSemicolon
 	
-	\textup{Algorithm parameters: $\alpha \in (0,1]$, $\gamma \in (0,1)$}\;
-	\textup{Initialize $Q(s,\,a)$ for all $s \in S$, $a \in A(s)$} arbitrarily or from previous episodes\;
+	Algorithm parameters: $\alpha \in (0,1]$, $\gamma \in (0,1)$\;
+	Initialize $Q(s,\,a)$ for all $s \in \{S - terminal\}$, $a \in A(s)$ arbitrarily and $Q(terminal,a) = 0$\;
 	\BlankLine
-	\Repeat{\textup{End of episode or $S$ is terminal}} {
-		\textup{Take action $A$ based on policy $\pi$ derived from $Q$ table}\;
-		\textup{Observe reward $R$ and land in state $S^\prime$}\;
-		\textup{Choose $A^\prime$ from $S^\prime$ using the same policy $\pi$}\;
-		\BlankLine
-		$Q(S,\,A) \gets (1-\alpha)Q(S,\,A) + \alpha\big[R + \gamma\,Q(S^\prime,\,A^\prime)\big]$\;
-		\BlankLine
-		$S \gets S^\prime$\;
-		$A \gets A^\prime$
+	\Repeat{\text{End of episode or $S$ is terminal}} {
+		Take action $A$ based on policy $\pi$ derived from $Q$ table\;
+		Observe reward $R$ and land in state $S'$\;
+		Choose $A'$ from $S'$ using the same policy $\pi$\;
+		$Q(S,\,A) \gets (1-\alpha)\;Q(S,\,A) + \alpha\;\big[R + \gamma\;Q(S',\,A')\big]$\;
+		$S \gets S'$\;
+		$A \gets A'$\;
 	}
 	\caption{Q-Learning Work-Flow}
 	\label{des:a:ql}
 \end{algorithm}
 
+An agent takes action based on a policy function~$\pi$ which in turn is derived -- partially or completely -- from the Q-Table. However, it shall be noted that in the beginning of episode the Q-Table is initialized to zero. In such situations, it takes very long time for agent to discover new states which is particularly harmful for data stream processing systems. This problem is usually solved by introducing small degree of randomness. The policy function decides randomly with a small probability~$\epsilon$ and in any other case~($1-\epsilon$), it behaves based on Q-Table. Other solutions do exist to solve state discovery problem. For example, Q-Table can be initialized with a random value or based on some \emph{heuristic} function that is partially derived from domain knowledge. 
+
+Furthermore, if two or more actions have equal expected reward, then policy function has to decide on one of them by breaking the tie. There are different strategies to solve this issue. Choosing a random action is one of them. However, in some domains this might be dangerous or harmful. Rather than choosing randomly, a simple heuristic inspired by domain knowledge can be helpful too.
 \subsection{Value Iteration}
 \label{des:val}
 
-\section{Project Structure}
+As mentioned in last section, in streaming workloads the common belief is that the workload is not predictable. In other words, reward values of each action and probability of landing in a specific state after taking an action -- environment dynamics -- is unknown. However for the sake of discussion, let us assume environment dynamics is \emph{known}. In such situations, Reinforcement Learning can be solved using \emph{Dynamic Programming} techniques. In this section, the problem will be solved for environments with known dynamics. Then, some of the core ideas will be applied to adopt the solution for environments with unknown dynamics.
+
+Finding an optimal policy function, when environments dynamics is known can be \emph{recursively} solved by applying dynamic programming. As mentioned previously, the agent is trying to maximize expected reward by taking optimal actions. Here expected reward is defined with $\mathbb E$ and $\underset{a}{\text{max}}$ selects maximum value based on specified action.
+
+\begin{equation}
+\begin{aligned}[h]
+V^*(s) &= \underset{a}{\text{max}} \; \mathbb E\;\big[R_{t+1} + \gamma\:V^*(S_{t+1})\,|\,S_t=s,\,A_t=a\big] \\
+&= \underset{a}{\text{max}} \; \sum_{s',r} p(s',r\,|\,s,a)\;\Big[r + \gamma\:V^*(s')\Big]
+\end{aligned}
+\label{des:eq:dpv}
+\end{equation}
+\begin{equation}
+\begin{aligned}[h]
+Q^*(s,a) &= \mathbb E\;\big[R_{t+1} + \gamma\:\underset{a'}{\text{max}}\;Q^*(S_{t+1},a')\,|\,S_t=s,\,A_t=a\big] \\
+&= \sum_{s',r} p(s',r\,|\,s,a)\;\Big[r + \gamma\:\underset{a'}{\text{max}}\;Q^*(S_{t+1},a')\Big]
+\end{aligned}
+\label{des:eq:dpq}
+\end{equation}
+
+For scenarios where $p$ and $r$ are unknown -- which is the case for this thesis -- these values can estimated by collecting samples. As the agent runs for some period of time, it collects samples and then estimates $p$ and $r$. Given that $p$ and $r$ are estimated to some degree, it is possible to initialize Q-Table with more useful values -- compared to zero or random values -- and speed up learning process. Whether this estimation is accurate or not -- how many samples shall be collected for a precise estimation -- is another question which will be evaluated in Section~\ref{eval}.
+
+The following procedure is applied for collecting samples which is inspired by \textcite{dutreilh:hal-01122123}. As agent runs and observes a quadruple of ($s,a,r,s'$), the following counters are updated.
+\begin{equation}
+\begin{aligned}[h]
+P[s,a,s'] &= P[s,a,s'] + 1\\
+R[s,a] &= R[s,a] + r \\
+C[s,a] &= C[s,a] + 1
+\end{aligned}
+\end{equation}
+Given these statistics, estimators $\overline{P}$, $\overline{R}$ are calculated to replace original $p$, $r$ in Equation~\ref{des:eq:dpq} respectively.
+\begin{equation}
+\begin{aligned}[h]
+\overline{P}[s,a,s'] &= \frac{P[s,a,s']}{C[s,a]} \\
+\overline{R}[s,a] &= \frac{R[s,a]}{C[s,a]}
+\end{aligned}
+\end{equation}
+
+After estimating $p$, $r$, Algorithm~\ref{des:a:vi}\footnote{The pseudocode has been taken from~\textcite{rlIntro}} can be used to produce optimal policy. Not the difference between \textbf{max} and \textbf{argmax} functions. The former returns the \emph{maximum value} and the later returns the \emph{action that has the maximum value}. Value Iteration that described in Algorithm~\ref{des:a:vi} can be used independent of Temporal Difference. However, in this thesis it is used to get a useful initialized Q-Table. Thus, when sample collection period is over and Q-Table is initialized, normal Q-Learning approach is used thereafter. The reason is that in Value Iteration, after sampling period, Q-Table is never updated again. However, by combining Value Iteration -- for initializing Q-Table -- and Q-Learning, Q-Table is also updated at runtime which improves decision accuracy.
+\begin{algorithm}[h]
+	\DontPrintSemicolon
+	
+	A small threshold $\theta > 0$ determining accuracy of estimation\;
+	Initialize $V(s)$ for all $s \in \{S - terminal\}$ arbitrarily and $V(terminal) = 0$\;
+	\BlankLine
+	\Repeat{$\Delta < \theta$} {
+		$\Delta \gets 0$\;
+		\ForEach{$s \in S$}{
+			$v \gets V(s)$\;
+			$V(s) \gets \text{max}_a\;\sum_{s',r} p(s',r\,|\,s,a)\;\Big[r + \gamma\:V(s')\Big]$ \;
+			$\Delta \gets \text{max}(\Delta,|v - V(s)|)$
+		}
+		\BlankLine
+		Output policy $\pi \approx \pi^*$, such that\;
+		$\pi(s) = \text{argmax}_a\;\sum_{s',r} p(s',r\,|\,s,a)\;\Big[r + \gamma\:V(s')\Big]$
+	}
+	\caption{Value Iteration for estimating $\pi \approx \pi^*$}
+	\label{des:a:vi}
+\end{algorithm}
+
+\clearpage
+\section{Design}
 \label{des:proj}
+
+In this section technical design and structure of the thesis will be explained and discussed. 
 
 \section{Configuration}
 \label{des:conf}
