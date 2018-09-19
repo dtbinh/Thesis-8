@@ -26,11 +26,62 @@ As discussed in Section~\ref{ias:alg-fam}, Auto-Scalers can be categorized into 
     \end{itemize}
     \item[Control Theory] Techniques based on Control Theory are also promising for elastic data streaming. Because it monitors input and output of the application, it can respond to workload changes very fast and adapt the system if necessary. Thus it is perfectly capable of handling dynamic environments. The comparison between Reinforcement Learning and Control Theory techniques is left for future work.
 \end{description}
-Section~\ref{related} discusses more techniques and the reasoning why they have been accepted or rejected by this thesis.
+As mentioned, two techniques -- \emph{Temporal Difference} and \emph{Value Iteration} -- will be implemented in this thesis. In next two sections, theoretical foundation of these algorithms will be laid out. Noteworthy to mention, these sections are heavily inspired by~\textcite{rlIntro}. Furthermore, Section~\ref{related} discusses more techniques and the reasoning why they have been accepted or rejected by this thesis.
 
 \subsection{Temporal Difference}
 \label{des:temp}
+Section~\ref{ias:alg-rl} explains the basics of Reinforcement Learning. Temporal Difference (TD) learning is one of the foundational algorithms of Reinforcement Learning. It can learn from applying experience without having prior knowledge about environment's dynamics. This property is potentially useful for data stream processing systems in which the incoming workload is changing without any particular pattern.
 
+Before starting to dig into details, some formal notions shall to be explained. An \emph{episode} is series of experiences that is taken by the agent. At each time step~$t$, the agent moves from one \emph{state}~$S_t$ to another state~$S_{t+1}$. A \emph{policy} $\pi$ defines the action~$A_t$ that should be taken by the agent at each state. Followed by each action, the agent receives a \emph{reward}~$R_{t+1}$ from the environment. Note that, the agent will receive reward for its corresponding action at next state~$S_{t+1}$. Thus, an episode can be viewed as Equation~\ref{des:eq:episode}.
+\begin{equation}
+\dots\,S_t,\,A_t,\,R_{t+1},\,S_{t+1},\,A_{t+1},\,R_{t+2},\,S_{t+2},\,A_{t+2},\,R_{t+3}\,\dots
+\label{des:eq:episode}
+\end{equation}
+
+An episode does not necessarily have a \emph{terminal} state. In some environments -- like data stream processing -- an episode is a never ending sequence of experiences. Prior to taking an action, the agent has an estimate of \emph{expected reward}~$V$ which specifies future reward if it follows the same actions returned by policy~$\pi$ from that specific state. Thus, it is referred as $V_\pi$ which translates to expected future reward under policy~$\pi$. During the episode, the agent tries to \emph{maximize} the reward that it received from the environment. Any policy that leads to maximum possible reward is called the \emph{optimal} policy~$\pi^*$ and its corresponding estimate of future reward is referred to as~$V^{*}_{\pi}$.
+
+Unlike Monte Carlo~\cite{rlIntro} methods that requires agent to wait until the end of episode, TD approaches only need to wait until the end of next time step to get a feedback from environment. Then, the agent updates corresponding estimate of previous state. Thus, the most simple TD approach can be formulated as Equation~\ref{des:eq:std}. Equation~\ref{des:eq:std} contains two important parameters of TD.
+\begin{equation}
+V(S_t) \longleftarrow (1-\alpha)V(S_t) + \alpha\big[R_{t+1} + \gamma\,V(S_{t+1})\big]
+\label{des:eq:std}
+\end{equation}
+\begin{itemize}
+	\item $\bm{\alpha}$ denotes \emph{Learning Factor}. It specifies, how much the agent shall learn from new experiences. A higher $\alpha$ means learning with a faster pace. It also leads to forgetting history faster. On the other hand, a lower $\alpha$ leads to slower learning process which means the agent trusts its experience history more -- it gives more weight to history rather than new experiences. $\alpha$ is defined as a number between (0,1].
+	\item $\bm{\gamma}$ denotes \emph{Reward Factor} or \emph{Discount Factor}. It specifies, whether the agent shall optimize for \emph{future} or \emph{immediate} reward. A higher $\gamma$ leads to optimizing for future reward, whereas a lower $\gamma$ leads to optimizing for immediate reward. It is defined as a number between (0,1). As defined by Equation~\ref{des:eq:reward}, reward is cumulating at each time step which causes the sum to grow infinitely. In order to prevent infinite reward problem, it is crucial to define $\gamma$ as a number less than one to force convergence.
+	\begin{equation}
+	R_t = r_{t+1}+\gamma r_{t+2}+\gamma^2 r_{t+3}+\dots=\sum_{0}^{\infty}\gamma^k r_{t+k+1}
+	\label{des:eq:reward}
+	\end{equation}
+\end{itemize}
+
+Since expected future reward is defined per action, Equation~\ref{des:eq:std} changes slightly and becomes as Equation~\ref{des:eq:qtd}. This update is applied after every transition from a nonterminal state $S_t$. In case $S_{t+1}$ is terminal, then $Q(S_{t+1},\,A_{t+1})$ is set to zero. As a consequence, each experiment can be defined with a quadruple of (State, Action, Reward, State) or $(S_{t},\,A_{t},\,R_{t+1},\,S_{t+1})$. This method is known as \emph{Sarsa} algorithm and named \emph{Q-Learning} because of the Q-Table used in the equation.
+\begin{equation}
+Q(S_t,\,A_t) \longleftarrow (1-\alpha)Q(S_t,\,A_t) + \alpha\big[R_{t+1} + \gamma\,Q(S_{t+1},\,A_{t+1})\big]
+\label{des:eq:qtd}
+\end{equation}
+
+
+
+Algorithm~\ref{des:a:ql}\footnote{The algorithm has been taken from~\textcite{rlIntro}} describes this procedure.
+\begin{algorithm}[h]
+	\DontPrintSemicolon
+	
+	\textup{Algorithm parameters: $\alpha \in (0,1]$, $\gamma \in (0,1)$}\;
+	\textup{Initialize $Q(s,\,a)$ for all $s \in S$, $a \in A(s)$} arbitrarily or from previous episodes\;
+	\BlankLine
+	\Repeat{\textup{End of episode or $S$ is terminal}} {
+		\textup{Take action $A$ based on policy $\pi$ derived from $Q$ table}\;
+		\textup{Observe reward $R$ and land in state $S^\prime$}\;
+		\textup{Choose $A^\prime$ from $S^\prime$ using the same policy $\pi$}\;
+		\BlankLine
+		$Q(S,\,A) \gets (1-\alpha)Q(S,\,A) + \alpha\big[R + \gamma\,Q(S^\prime,\,A^\prime)\big]$\;
+		\BlankLine
+		$S \gets S^\prime$\;
+		$A \gets A^\prime$
+	}
+	\caption{Q-Learning Work-Flow}
+	\label{des:a:ql}
+\end{algorithm}
 
 \subsection{Value Iteration}
 \label{des:val}
