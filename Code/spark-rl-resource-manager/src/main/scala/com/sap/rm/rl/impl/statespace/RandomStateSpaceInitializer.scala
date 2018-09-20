@@ -9,14 +9,13 @@ class RandomStateSpaceInitializer(config: ResourceManagerConfig) extends StateSp
 
     val rand = new scala.util.Random(System.currentTimeMillis())
     for {
-      exe <- MinimumExecutors to MaximumExecutors
       lat <- 0 until CoarseMaximumLatency
       loadIsIncreasing <- List(false, true)
     } {
       val scaleOutReward = (rand.nextDouble() * 2) - 1
       val noActionReward = (rand.nextDouble() * 2) - 1
       val scaleInReward = (rand.nextDouble() * 2) - 1
-      space.addState(exe, lat, loadIsIncreasing, scaleOutReward, noActionReward, scaleInReward)
+      space.addState(lat, loadIsIncreasing, scaleOutReward, noActionReward, scaleInReward)
     }
 
     space

@@ -17,7 +17,6 @@ class StateSpace(value: MutableHashMap[State, StateActionSet]) extends Serializa
   }
 
   def addState(
-                numberOfExecutors: Int,
                 latency: Int,
                 loadIsIncreasing: Boolean,
                 scaleOutReward: Double,
@@ -26,7 +25,7 @@ class StateSpace(value: MutableHashMap[State, StateActionSet]) extends Serializa
               ): Unit = {
 
     value += (
-      State(numberOfExecutors, latency, loadIsIncreasing) ->
+      State(latency, loadIsIncreasing) ->
         StateActionSet(
           qValues = MutableHashMap(ScaleOut -> scaleOutReward, NoAction -> noActionReward, ScaleIn -> scaleInReward)
         )

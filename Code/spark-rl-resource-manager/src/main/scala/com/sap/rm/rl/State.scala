@@ -3,17 +3,15 @@ package com.sap.rm.rl
 import com.sap.rm.ResourceManagerConfig._
 
 @SerialVersionUID(1L)
-case class State(numberOfExecutors: Int, latency: Int, loadIsIncreasing: Boolean) extends Serializable with Ordered[State] {
+case class State(latency: Int, loadIsIncreasing: Boolean) extends Serializable with Ordered[State] {
 
   override def compare(that: State): Int = {
-    if (numberOfExecutors < that.numberOfExecutors) LessThan
-    else if (numberOfExecutors > that.numberOfExecutors) GreaterThan
-    else if (latency < that.latency) LessThan
+    if (latency < that.latency) LessThan
     else if (latency > that.latency) GreaterThan
     else if (!loadIsIncreasing) LessThan
     else if (loadIsIncreasing) GreaterThan
     else Equal
   }
 
-  override def toString: String = "State(NumberOfExecutors=%d,Latency=%d,loadIsIncreasing=%b)".format(numberOfExecutors, latency, loadIsIncreasing)
+  override def toString: String = "State(Latency=%d,loadIsIncreasing=%b)".format(latency, loadIsIncreasing)
 }

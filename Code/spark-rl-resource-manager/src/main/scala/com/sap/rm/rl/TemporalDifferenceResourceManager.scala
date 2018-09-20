@@ -38,6 +38,7 @@ class TemporalDifferenceResourceManager(
   protected var lastTimeDecisionMade: Long = 0
   protected var lastWindowAverageIncomingMessage: Int = 0
   protected var currentBatch: BatchInfo = _
+  protected var numberOfExecutors: Int = 0
 
   override def onBatchSubmitted(batchSubmitted: StreamingListenerBatchSubmitted): Unit = batchWaitingList.enqueue(batchSubmitted.batchInfo.submissionTime)
 
@@ -62,7 +63,8 @@ class TemporalDifferenceResourceManager(
 
       // build the state variable
       val loadIsIncreasing = if (currentWindowAverageIncomingMessage > lastWindowAverageIncomingMessage) true else false
-      currentState = State(numberOfActiveExecutors, currentWindowAverageTotalDelay, loadIsIncreasing)
+      numberOfExecutors = numberOfActiveExecutors
+      currentState = State(currentWindowAverageTotalDelay, loadIsIncreasing)
 
       // do nothing and just initialize to no action
       if (lastState == null) {
@@ -108,17 +110,9 @@ class TemporalDifferenceResourceManager(
     else logScaleOutError()
   }
 
-  def whatIsTheNextAction(): Action = {
-    val currentExecutors = currentState.numberOfExecutors
-    currentExecutors match {
-      case MinimumExecutors => logExecutorNotEnough(currentState)
-      case MaximumExecutors => logNoMoreExecutorsLeft(currentState)
-      case _ =>
-    }
-    policy.nextActionFrom(stateSpace, lastState, lastAction, currentState, batchWaitingList)
-  }
+  def whatIsTheNextAction(): Action = policy.nextActionFrom(stateSpace, lastState, lastAction, currentState, batchWaitingList, numberOfExecutors)
 
-  def calculateReward(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState, batchWaitingList).get
+  def calculateReward(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState, batchWaitingList, numberOfExecutors).get
 
   def updateStateSpace(): Unit = {
     val oldQVal: Double = stateSpace(lastState, lastAction)

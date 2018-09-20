@@ -10,48 +10,36 @@ class GreedyPolicy(config: ResourceManagerConfig) extends Policy {
   import config._
   import logger._
 
-  override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList): Action = {
-    if (waitingList.isGrowing) {
-      return ScaleOut
-    }
-    val currentExecutors = currentState.numberOfExecutors
+  override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList, numberOfExecutors: Int): Action = {
     val stateActionSet = stateSpace(currentState)
+    var qValues: Seq[(Action, Double)] = removeUnfeasibleActions(numberOfExecutors, currentState, stateActionSet.qValues.toSeq)
+
+    // monotonicity property
+    qValues = if (currentState.latency < lastState.latency && lastAction == ScaleIn)
+      qValues.filter(_._1 != ScaleOut)
+    else if (currentState.latency > lastState.latency && lastAction == ScaleOut)
+      qValues.filter(_._1 != ScaleIn)
+    else qValues
 
     if (stateActionSet.isVisited) {
-      var qValues: Seq[(Action, Double)] = removeUnfeasibleActions(currentExecutors, stateActionSet.qValues.toSeq)
-
-      // monotonicity property
-      qValues = if (currentState.latency < lastState.latency && lastAction == ScaleIn)
-        qValues.filter(_._1 != ScaleOut)
-      else if (currentState.latency > lastState.latency && lastAction == ScaleOut)
-        qValues.filter(_._1 != ScaleIn)
-      else qValues
-
       logVisitedState(currentState, qValues)
-
-      return qValues.maxBy(_._2)._1
+    } else {
+      logUnvisitedState(currentState, qValues)
     }
 
-    // look for neighbor state
-    var qValues: Seq[(Action, Double)] = stateActionSet.qValues.toSeq ++
-      stateSpace(State(currentState.numberOfExecutors - ExecutorGranularity, currentState.latency, currentState.loadIsIncreasing)).qValues.toSeq ++
-      stateSpace(State(currentState.numberOfExecutors + ExecutorGranularity, currentState.latency, currentState.loadIsIncreasing)).qValues.toSeq ++
-      stateSpace(State(currentState.numberOfExecutors - ExecutorGranularity, currentState.latency + 1, currentState.loadIsIncreasing)).qValues.toSeq ++
-      stateSpace(State(currentState.numberOfExecutors, currentState.latency + 1, currentState.loadIsIncreasing)).qValues.toSeq ++
-      stateSpace(State(currentState.numberOfExecutors + ExecutorGranularity, currentState.latency + 1, currentState.loadIsIncreasing)).qValues.toSeq ++
-      stateSpace(State(currentState.numberOfExecutors - ExecutorGranularity, currentState.latency - 1, currentState.loadIsIncreasing)).qValues.toSeq ++
-      stateSpace(State(currentState.numberOfExecutors, currentState.latency - 1, currentState.loadIsIncreasing)).qValues.toSeq ++
-      stateSpace(State(currentState.numberOfExecutors + ExecutorGranularity, currentState.latency - 1, currentState.loadIsIncreasing)).qValues.toSeq
-
-    qValues = removeUnfeasibleActions(currentExecutors, qValues)
-    logUnvisitedState(currentState, qValues)
     qValues.maxBy(_._2)._1
   }
 
-  private def removeUnfeasibleActions(currentExecutors: Int, qValues: Seq[(Action, Double)]): Seq[(Action, Double)] = {
-    currentExecutors match {
-      case MinimumExecutors => qValues.filter(_._1 != ScaleIn)
-      case MaximumExecutors => qValues.filter(_._1 != ScaleOut)
+  private def removeUnfeasibleActions(numberOfExecutors: Int, currentState: State, qValues: Seq[(Action, Double)]): Seq[(Action, Double)] = {
+    numberOfExecutors match {
+      case MinimumExecutors => {
+        logExecutorNotEnough(numberOfExecutors, currentState)
+        qValues.filter(_._1 != ScaleIn)
+      }
+      case MaximumExecutors => {
+        logNoMoreExecutorsLeft(numberOfExecutors, currentState)
+        qValues.filter(_._1 != ScaleOut)
+      }
       case _ => qValues
     }
   }

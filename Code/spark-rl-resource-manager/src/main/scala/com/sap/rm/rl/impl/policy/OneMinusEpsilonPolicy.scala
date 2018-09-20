@@ -13,7 +13,7 @@ class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, gener
 
   def epsilon: Double = Epsilon
 
-  override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList): Action = {
+  override def nextActionFrom(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList, numberOfExecutors: Int): Action = {
     val r = generator.nextDouble()
     val e = epsilon
     var randomAction = false
@@ -26,18 +26,18 @@ class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, gener
         NoAction
       } else if (r >= e/3 && r < e*2/3) {
         // scale in, if can't be done then choose between NoAction and ScaleOut
-        if (currentState.numberOfExecutors == MinimumExecutors) {
+        if (numberOfExecutors == MinimumExecutors) {
           if (generator.nextBoolean()) ScaleOut else NoAction
         } else ScaleIn
       } else {
         // scaleout, if can't be done then choose between NoAction and ScaleIn
-        if (currentState.numberOfExecutors == MaximumExecutors) {
+        if (numberOfExecutors == MaximumExecutors) {
           if (generator.nextBoolean()) ScaleIn else NoAction
         } else ScaleOut
       }
     } else {
       // take action based on policy
-      policy.nextActionFrom(stateSpace, lastState, lastAction, currentState, waitingList)
+      policy.nextActionFrom(stateSpace, lastState, lastAction, currentState, waitingList, numberOfExecutors)
     }
 
     if (randomAction) logRandomAction(r, e, action) else logOptimalAction(r, e, action)

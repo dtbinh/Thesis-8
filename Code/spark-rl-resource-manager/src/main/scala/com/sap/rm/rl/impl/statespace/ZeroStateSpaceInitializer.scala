@@ -8,12 +8,11 @@ class ZeroStateSpaceInitializer(config: ResourceManagerConfig) extends StateSpac
     import config._
 
     for {
-      exe <- MinimumExecutors to MaximumExecutors
       lat <- 0 until CoarseMaximumLatency
       loadIsIncreasing <- List(false, true)
     } {
       // zero out everything
-      space.addState(exe, lat, loadIsIncreasing, scaleOutReward = NoReward, noActionReward = NoReward, scaleInReward = NoReward)
+      space.addState(lat, loadIsIncreasing, scaleOutReward = NoReward, noActionReward = NoReward, scaleInReward = NoReward)
     }
 
     space

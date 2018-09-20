@@ -15,5 +15,5 @@ trait StateSpaceUtils {
 
   def isStateInDangerZone(s: State): Boolean = s.latency >= config.CoarseTargetLatency
 
-  def executorRatio(s: State): Double = config.MaximumExecutors.toDouble / s.numberOfExecutors
+  def executorRatio(numberOfExecutors: Int): Double = config.MaximumExecutors.toDouble / numberOfExecutors
 }

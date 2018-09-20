@@ -93,12 +93,12 @@ object ResourceManagerLogger {
          | oldQValue=$oldQVal --- newQValue=$newQVal""".stripMargin)
   }
 
-  def logExecutorNotEnough(currentState: State): Unit = {
-    log.warn("{} - {} - currentState = {}", REMOVED_ACTION_SCALE_IN, correlationId, currentState)
+  def logExecutorNotEnough(numberOfExecutors: Int, currentState: State): Unit = {
+    log.warn("{} - {} - (currentState,numberOfExecutors) = ({},{})", REMOVED_ACTION_SCALE_IN, correlationId, currentState, numberOfExecutors)
   }
 
-  def logNoMoreExecutorsLeft(currentState: State): Unit = {
-    log.warn("{} - {} - currentState = {}", REMOVED_ACTION_SCALE_OUT, correlationId, currentState)
+  def logNoMoreExecutorsLeft(numberOfExecutors: Int, currentState: State): Unit = {
+    log.warn("{} - {} - (currentState,numberOfExecutors) = ({},{})", REMOVED_ACTION_SCALE_OUT, correlationId, currentState, numberOfExecutors)
   }
 
   def logStateActionState(lastState: State, lastAction: Action, rewardForLastAction: Double, currentState: State,

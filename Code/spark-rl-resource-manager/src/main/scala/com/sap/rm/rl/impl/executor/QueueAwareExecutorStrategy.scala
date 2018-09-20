@@ -5,7 +5,7 @@ import java.lang.Math.{ceil, max}
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.{ExecutorStrategy, TemporalDifferenceResourceManager}
 
-class RelativeIncreaseStaticDecreaseExecutorStrategy(config: ResourceManagerConfig, rm: TemporalDifferenceResourceManager) extends ExecutorStrategy {
+class QueueAwareExecutorStrategy(config: ResourceManagerConfig, rm: TemporalDifferenceResourceManager) extends ExecutorStrategy {
 
   import config._
   import rm._
@@ -18,6 +18,6 @@ class RelativeIncreaseStaticDecreaseExecutorStrategy(config: ResourceManagerConf
   override def howManyExecutorsToRemove(totalExecutors: Int): Int = ExecutorGranularity
 }
 
-object RelativeIncreaseStaticDecreaseExecutorStrategy {
-  def apply(config: ResourceManagerConfig, rm: TemporalDifferenceResourceManager): RelativeIncreaseStaticDecreaseExecutorStrategy = new RelativeIncreaseStaticDecreaseExecutorStrategy(config, rm)
+object QueueAwareExecutorStrategy {
+  def apply(config: ResourceManagerConfig, rm: TemporalDifferenceResourceManager): QueueAwareExecutorStrategy = new QueueAwareExecutorStrategy(config, rm)
 }
