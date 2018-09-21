@@ -36,6 +36,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val Reward: String = sparkConf.get(RewardKey, RewardDefault)
   final val DecisionInterval: Int = sparkConf.getTimeAsMs(DecisionIntervalKey, DecisionIntervalDefault).toInt
   final val ExecutorStrategy: String = sparkConf.get(ExecutorStrategyKey, ExecutorStrategyDefault)
+  final val Seed: Long = sparkConf.getLong(SeedKey, SeedDefault)
 
   require(CoresPerExecutor == CoresPerTask)
   require(ExecutorGranularity >= 0)
@@ -87,6 +88,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | Reward: $Reward
        | DecisionInterval: $DecisionInterval
        | ExecutorStrategy: $ExecutorStrategy
+       | Seed: $Seed
        | --- Configuration ---""".stripMargin
 
   log.info(config)
@@ -150,6 +152,8 @@ object ResourceManagerConfig {
   final val DecisionIntervalDefault = "60s"
   final val ExecutorStrategyKey = "spark.streaming.dynamicAllocation.executorStrategy"
   final val ExecutorStrategyDefault = "static" // linear
+  final val SeedKey = "spark.streaming.dynamicAllocation.seed"
+  final val SeedDefault = System.currentTimeMillis()
 
   def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }

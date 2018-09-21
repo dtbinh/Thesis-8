@@ -2,9 +2,9 @@ package com.sap.rm.rl.impl
 
 import com.sap.rm.rl.RandomNumberGenerator
 
-class DefaultRandomNumberGenerator extends RandomNumberGenerator {
+class DefaultRandomNumberGenerator(seed: Long = System.currentTimeMillis()) extends RandomNumberGenerator {
 
-  @transient private lazy val rand = new scala.util.Random(System.currentTimeMillis())
+  @transient private lazy val rand = new scala.util.Random(seed)
 
   override def nextDouble(): Double = rand.nextDouble()
 
@@ -12,5 +12,5 @@ class DefaultRandomNumberGenerator extends RandomNumberGenerator {
 }
 
 object DefaultRandomNumberGenerator {
-  def apply(): DefaultRandomNumberGenerator = new DefaultRandomNumberGenerator()
+  def apply(seed: Long = System.currentTimeMillis()): DefaultRandomNumberGenerator = new DefaultRandomNumberGenerator(seed)
 }
