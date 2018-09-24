@@ -11,13 +11,24 @@ trait Reward extends StateSpaceUtils {
   def forAction(stateSpace: StateSpace, lastState: State, lastAction: Action, currentState: State, waitingList: BatchWaitingList, numberOfExecutors: Int): Option[Double] = {
     if (isStateInDangerZone(currentState)) {
       val currentStateDiff = dangerZoneLatencyDifference(currentState)
-      if (currentState.latency <= lastState.latency) {
+
+      if (currentState.latency < lastState.latency || waitingList.isShrinking) {
         return Some(currentStateDiff)
       }
 
-      if ((lastAction == ScaleOut && currentState.loadIsIncreasing) || (lastAction == NoAction && numberOfExecutors == MaximumExecutors)) {
+      if (lastAction == ScaleOut && (currentState.latency == lastState.latency || currentState.loadIsIncreasing)) {
         return Some(currentStateDiff)
       }
+
+      if (lastAction == NoAction) {
+        if (numberOfExecutors == MaximumExecutors) {
+          return Some(BestReward)
+        }
+        if (currentState.latency == lastState.latency && !currentState.loadIsIncreasing) {
+          return Some(currentStateDiff)
+        }
+      }
+
       return Some(-currentStateDiff)
     }
 

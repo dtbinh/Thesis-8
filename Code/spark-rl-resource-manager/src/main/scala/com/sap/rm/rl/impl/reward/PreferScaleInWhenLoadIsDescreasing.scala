@@ -1,6 +1,6 @@
 package com.sap.rm.rl.impl.reward
 
-import java.lang.Math.min
+import java.lang.Math.{min, max}
 
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.Action.Action
@@ -19,11 +19,16 @@ class PreferScaleInWhenLoadIsDescreasing(val config: ResourceManagerConfig) exte
     val ratio = executorRatio(numberOfExecutors)
 
     // current is not in danger zone, now check for last state
-    if (!isStateInDangerZone(lastState)) {
+    if (!isStateInDangerZone(lastState) && lastAction == NoAction && !currentState.loadIsIncreasing) {
       // if latency is decreasing, then no action gets negative reward
-      if (currentState.latency < lastState.latency && !currentState.loadIsIncreasing && lastAction == NoAction) {
+      if ((currentState.latency < lastState.latency) || (currentState.latency == lastState.latency && currentState.latency == 0)) {
         return Some(-ratio)
       }
+    }
+
+    // if scale out didn't improve latency, then negative reward
+    if (lastAction == ScaleOut && currentState.latency >= lastState.latency && !currentState.loadIsIncreasing) {
+      return Some(-max(ratio, safeZoneLatencyDiff))
     }
 
     // positive reward for everything else

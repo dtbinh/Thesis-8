@@ -14,6 +14,8 @@ class BatchWaitingList(batchWaitingListThreshold: Int) {
   def reset(): Unit = lastWaitingBatches = waitingList.size
 
   def length: Int = waitingList.size
+
+  def isShrinking: Boolean = length < lastWaitingBatches
 }
 
 object BatchWaitingList {
