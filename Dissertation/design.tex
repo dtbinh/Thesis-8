@@ -138,7 +138,7 @@ After estimating $p$, $r$, Algorithm~\ref{des:a:vi}\footnote{The pseudocode has 
 		Output policy $\pi \approx \pi^*$, such that\;
 		$\pi(s) = \text{argmax}_a\;\sum_{s',r} p(s',r\,|\,s,a)\;\Big[r + \gamma\:V(s')\Big]$
 	}
-	\caption{Value Iteration for estimating $\pi \approx \pi^*$}
+	\caption{Value Iteration for Estimating $\pi \approx \pi^*$}
 	\label{des:a:vi}
 \end{algorithm}
 
@@ -146,7 +146,78 @@ After estimating $p$, $r$, Algorithm~\ref{des:a:vi}\footnote{The pseudocode has 
 \section{Design}
 \label{des:proj}
 
-In this section technical design and structure of the thesis will be explained and discussed. 
+In this section technical design and structure of the thesis will be explained and discussed. As mentioned in previous section, two Reinforcement Learning techniques -- namely Q-Learning (Temporal Difference) and Value Iteration -- have been implemented. Both of these methods require defining \emph{state space}, \emph{policy} and \emph{reward} functions. Typically, Reinforcement Learning agents move from one state to another by taking an action which is proposed by policy function, getting feedback -- known as reward -- from environment and landing into destination state. In next sections each of these components will be discussed.
+
+\subsection{State Space}
+\label{des:state-space}
+
+State space defines -- models -- the environment where the agent is living. Usually, it is combination of environment's properties. The following is list of sample state spaces that could be defined for different applications.
+\begin{description}[leftmargin=0pt]
+    \item[Web Applications] For a typical web application, a sample state space could be defined as a tuple of
+    \begin{center}
+        [Number of web servers, Total workload defined as requests per second, Average round trip delay of requests]
+    \end{center}
+    \item[Virtualization Server] For a Hypervisor, a sample state space can be defined as a tuple of
+    \begin{center}
+        [Number of running virtual machines, Total CPU utilization, Total used RAM]
+    \end{center}
+    \item[Stream Processing] For a data stream processing system, a sample state space can be defined as a tuple of
+    \begin{center}
+        [Number of worker nodes, Total workload defined as messages per second, Average latency of messages]
+    \end{center}
+\end{description}
+As state space contains more precise information, it gets bigger and bigger. Thus, in most systems it is \emph{discretized} to some degree to reduce its size. State space reduction has a couple of benefits.
+\begin{itemize}
+    \item \textbf{Change Observation}. For example, in most systems a 1\% increase/decrease in CPU utilization is not considered as a noticeable change but 5\% is.
+    \item \textbf{Absorbing Sudden Bursts}. In some applications, there might be a sudden change in one aspect of the system for a slightly short time. For example 20\% increase in CPU utilization for 5 seconds may not be considered as sustained workload increase.
+    \item \textbf{Preventing Zig-Zag Decisions}. If state space is discretized to fine-grained states, it might lead to consecutive contradictory decisions -- A phenomena known as \emph{Zig-Zag} decisions. For example, Auto-Scaler may decide to perform a scale-in action in one step and scale-out action in next step. A reasonable way to prevent this never ending loop is to discretize the state space into coarse-grained states.
+\end{itemize}
+However, it shall be noted that \emph{over discretizing} the state space may have negative impacts on target system. Section~\ref{eval} contains an experiment to evaluate discretization impact.
+
+In this thesis, a combination of latency and direction of workload is incorporated in to state space.
+\begin{description}[leftmargin=0pt]
+    \item[Latency] Each micro-batch is associated with two latencies. First, \emph{Processing Latency} -- time that takes to process a single micro-batch from start to end. second, \emph{Scheduling Latency} -- time that each micro-batch stays in a queue \emph{waiting} to be processed. In this project, total latency (processing latency + scheduling latency) is stored as an average value calculated over a window of time.
+    \item[Workload Direction] It is reasonable to consider average number of messages that are being processed in state space. However, in order to reduce state space only its \emph{direction} is stored. That is, instead of storing a pure number as average number of messages processed per window of time, only a boolean value indicating that incoming messages are increased to decreased -- compared to last window -- is stored.
+\end{description}
+
+As mentioned in Section~\ref{intro-auto-scale} each state is associated with three actions -- No-Action, Scale-In and Scale-Out. Each action has corresponding reward -- Q-Value-- attached to it. Figure~\ref{des:l:state-space} depicts this relationship.
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[show background grid]
+    \begin{class}[text width=10cm]{StateSpace}{7,0}
+        \attribute{- stateToActionSet: HashMap<State, HashMap<Action, Double>{}>}
+        \operation{+ addState(s: State)}
+        \operation{+ size()}
+        \operation{+ updateQValueForAction(s: State, a: Action, qValue: Double)}
+    \end{class}
+    \begin{class}{State}{12,-5}
+        \attribute{+ latency: Integer}
+        \attribute{+ isLoadIncreasing: Boolean}
+    \end{class}
+    \begin{interface}{Action}{4,-5}
+        \operation[0]{+ toString()}
+    \end{interface}
+    \begin{class}[text width=3cm]{NoAction}{0,-8}
+        \implement{Action}
+        \operation{+ toString()}
+    \end{class}
+    \begin{class}[text width=3cm]{ScaleIn}{4,-8}
+        \implement{Action}
+        \operation{+ toString()}
+    \end{class}
+    \begin{class}[text width=3cm]{ScaleOut}{8,-8}
+        \implement{Action}
+        \operation{+ toString()}
+    \end{class}
+    
+    \aggregation{StateSpace}{states}{1..*}{State}
+    \aggregation{StateSpace}{actionSet}{1..*}{Action}
+    \end{tikzpicture}
+    \caption{State Space Class Diagram}
+    \label{des:l:state-space}
+\end{figure}
+
+\subsection{State Space Initialization}
 
 \clearpage
 \section{Configuration}
