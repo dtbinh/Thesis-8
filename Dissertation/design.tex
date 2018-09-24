@@ -210,8 +210,13 @@ As mentioned in Section~\ref{intro-auto-scale} each state is associated with thr
         \operation{+ toString()}
     \end{class}
     
-    \aggregation{StateSpace}{states}{1..*}{State}
-    \aggregation{StateSpace}{actionSet}{1..*}{Action}
+    \aggregation{StateSpace}{}{}{State}
+    \aggregation{StateSpace}{}{}{Action}
+    
+    \path (StateSpace) -- (State) node[midway,sloped,above]{states}
+    node[midway,sloped,below] {1..*};
+    \path (StateSpace) -- (Action) node[midway,sloped,above]{actionSet}
+    node[midway,sloped,below] {1..*};
     \end{tikzpicture}
     \caption{State Space Class Diagram}
     \label{des:l:state-space}
