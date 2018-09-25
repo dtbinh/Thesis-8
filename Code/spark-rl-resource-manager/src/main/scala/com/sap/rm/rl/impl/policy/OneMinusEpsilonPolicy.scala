@@ -21,27 +21,16 @@ class OneMinusEpsilonPolicy(config: ResourceManagerConfig, policy: Policy, gener
     // take random action
     val action = if (r > 0 && r <= e) {
       randomAction = true
-      if (r < e/3) {
-        // do nothing
-        NoAction
-      } else if (r >= e/3 && r < e*2/3) {
-        // scale in, if can't be done then choose between NoAction and ScaleOut
-        if (numberOfExecutors == MinimumExecutors) {
-          if (generator.nextBoolean()) ScaleOut else NoAction
-        } else ScaleIn
-      } else {
-        // scaleout, if can't be done then choose between NoAction and ScaleIn
-        if (numberOfExecutors == MaximumExecutors) {
-          if (generator.nextBoolean()) ScaleIn else NoAction
-        } else ScaleOut
-      }
+      if (numberOfExecutors == MinimumExecutors) ScaleOut
+      else if (numberOfExecutors == MaximumExecutors) ScaleIn
+      else if (r <= e/2) ScaleIn
+      else ScaleOut
     } else {
       // take action based on policy
       policy.nextActionFrom(stateSpace, lastState, lastAction, currentState, waitingList, numberOfExecutors)
     }
 
     if (randomAction) logRandomAction(r, e, action) else logOptimalAction(r, e, action)
-
     action
   }
 }

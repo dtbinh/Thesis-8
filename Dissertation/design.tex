@@ -223,6 +223,183 @@ As mentioned in Section~\ref{intro-auto-scale} each state is associated with thr
 \end{figure}
 
 \subsection{State Space Initialization}
+\label{des:state-init}
+
+Typically when the agent starts, its Q-Table is empty -- initialized with zero. Over time, as the agent take more actions and discovers its environment, it updates its Q-Table. Since Q-Table is initialized with zero, the agent usually takes some random actions from time to time with a small probability.This helps to discover the environment. In some applications, this behavior is sufficient. However, in fast changing environments like streaming systems this process takes very long time to converge. Thus developers usually try to initialize Q-Table beforehand to speedup the learning process. In this thesis, three different initializers have been implemented. Figure~\ref{des:f:ss-init} shows class diagram of these initializers.
+\begin{description}[leftmargin=0pt]
+\item[Zero Initializer] This is the default implementation which initializes all the Q-Values -- reward values -- to zero.
+\item[Random Initializer] This initializer assigns a random value between (-1,1) to Q-Values.
+\item[Optimized Initializer] This initializer uses a \emph{heuristic} to initialize the Q-Table. Typically in most systems, there is a well defined set of SLOs defined by users that should be respected by Auto-Scaling system. This initializer exploits a normalization function defined in Equation~\ref{des:eq:normal}. If recent latency window is sufficiently large enough, workload-to-latency graph looks similar to Figure~\ref{des:f:ss-region}. This graph is divided into four regions. As workload increases, latency is approaching target latency (Region 1). In case the workload keeps increasing, the agent goes beyond the target latency and SLOs are violated (Region 2). Assuming the agent takes some reasonable action, latency starts to decrease (Region 3). Finally, at some point it will drop below the target latency line (Region 4). For each region, Q-Table is initialized with different values.
+\begin{equation}
+n = \frac{\text{current latency}}{\text{target latency}}
+\label{des:eq:normal}
+\end{equation}
+\end{description}
+\begin{figure}[t]
+    \centering
+    \begin{tikzpicture}[show background grid]
+    \begin{interface}{StateSpaceInitializer}{5,0}
+        \operation{+ getInstance()}
+        \operation[0]{+ initialize(ss: StateSpace)}
+    \end{interface}
+    \begin{class}[text width=5cm]{ZeroStateSpaceInitializer}{0,-4}
+        \implement{StateSpaceInitializer}
+        \operation{+ initialize(ss: StateSpace)}
+    \end{class}
+    \begin{class}[text width=5cm]{RandomStateSpaceInitializer}{5,-6}
+        \implement{StateSpaceInitializer}
+        \operation{+ initialize(ss: StateSpace)}
+    \end{class}
+    \begin{class}[text width=5cm]{OptimizedStateSpaceInitializer}{10,-4}
+        \implement{StateSpaceInitializer}
+        \operation{+ initialize(ss: StateSpace)}
+    \end{class}
+    \end{tikzpicture}
+    \caption{State Space Initializer}
+    \label{des:f:ss-init}
+\end{figure}
+\begin{figure}[h]
+    \begin{tikzpicture}
+        \begin{axis}[
+            ticks=none,
+            axis x line=center,
+            x axis line style=-,
+            hide y axis,
+            xlabel style={right},
+            samples = 200,
+            domain = -7:7,
+            xmin = -7, xmax = 7,
+            ymin = -15, ymax = 7,
+            xlabel={Target Latency}]
+            \addplot[black, thick, mark=none] {-x^2 + 5};
+            \node[] at (axis cs: -5,-4) {Region 1};
+            \node[] at (axis cs: -3,3) {Region 2};
+            \node[] at (axis cs: 3,3) {Region 3};
+            \node[] at (axis cs: 5,-4) {Region 4};
+        \end{axis}
+    \end{tikzpicture}
+    \centering
+    \caption{Different Regions of a Typical Workload}
+    \label{des:f:ss-region}
+\end{figure}
+\clearpage
+The following describes the way all four regions are initialized. Table~\ref{des:tab:rules} summarizes each region and describes preferred action in each region.
+\begin{description}[leftmargin=0pt]
+    \item[Region 1] In this region, latency is increasing as workload is increasing. So it is reasonable to give more reward to Scale-Out as the agent approaches target latency line. This is called \emph{Early Scale-Out} action which helps to add worker tasks in order to prevent violating SLOs. Thus the reward for each action is initialized as Equation~\ref{des:eq:r1}. In this region, Scale-Out and NoAction rewards are positive but less than one.
+    \begin{equation}
+    \text{Scale-Out}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{NoAction}=1-\frac{\text{current latency}}{\text{target latency}} \qquad \text{ScaleIn}=0
+    \label{des:eq:r1}
+    \end{equation}
+    \item[Region 2] In this region, the agent has fall behind and latency has been increased up to the point that it is more than target latency. At this point Scale-Out is still the preferred action. It is reasonable to initialize Scale-In with a negative reward to prevent the agent from taking unjustifiable action.
+    Reward for each action is initialized as Equation~\ref{des:eq:r2}. In this region, Scale-Out reward is larger than one but NoAction reward is less than one.
+    \begin{equation}
+    \text{Scale-Out}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{NoAction}=\frac{\text{current latency}}{\text{target latency}}-1 \qquad \text{ScaleIn}=-1
+    \label{des:eq:r2}
+    \end{equation}
+    \item[Region 3] In this region, either the workload is decreasing or the agent has taken a presumably reasonable action that has led latency to decrease. Usually, it is not required to take any further action here. Thus, to let latency stabilize, NoAction is a preferred action in this region. Additionally, Scale-In is still prohibited.
+    \begin{equation}
+    \text{Scale-Out}=0 \qquad \text{NoAction}=1 \qquad \text{ScaleIn}=-1
+    \label{des:eq:r3}
+    \end{equation}
+    \item[Region 4] In this region, the latency has dropped below target latency and is decreasing gradually. Thus, as the agent gets farther away from target latency line, we encourage the agent to take Scale-In action. However, near target latency line, we still prefer to take NoAction, since it is still dangerous to take Scale-In.
+    \begin{equation}
+    \text{Scale-Out}=0 \qquad \text{NoAction}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{ScaleIn}=1-\frac{\text{current latency}}{\text{target latency}}
+    \label{des:eq:r4}
+    \end{equation}
+\end{description}
+\begin{table*}[h]
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Region} & \textbf{Preferred Behavior}\\
+        \midrule
+        Region 1 & Early Scale-Out is preferred to avoid hitting target latency.\\
+        Region 2 & Target latency is already violated, so Scale-Out is still preferred.\\
+        Region 3 & Although latency is higher than target -- but decreasing, NoAction is preferred to let latency stabilize.\\
+        Region 4 & Latency is stable again. If latency is sufficiently low, then Scale-In is preferred.\\
+        \bottomrule
+    \end{tabular}
+    \centering
+    \caption{Summary of Latency Regions}
+    \label{des:tab:rules}
+\end{table*}
+
+\clearpage
+\subsection{Policy Functions}
+\label{des:pol}
+
+Policy $\pi$ is a function that guides the agent to take an action in each state. Different strategies can be implemented but at its core, a policy function is either extracted from Q-Table. An optimal policy $\pi^*$ is a policy that returns actions that lead to maximum expected reward. Before getting into details about implemented policies of this thesis, \emph{monotonicity constraint}~\cite{Herodotou:2011} shall be explained. Monotonicity constraint mandates:
+\begin{itemize}
+    \item If Scale-Out was the chosen action in last state and latency has been increased -- compared to last state, then it is not possible to take Scale-In in current state. The reason is that, even by applying Scale-Out, latency has been increased. So, for a even higher latency, there is no reason that Scale-In could ever help.
+    \item If Scale-In was the chosen action in last state and latency has been decreased -- compared to last state, then it is not possible to take Scale-Out in current state. The reason is that, latency is decreasing without taking Scale-Out. So, for a even lower latency, there is no need for Scale-Out. Even though Scale-Out is a safe action in this case, but in Spark Streaming any Scale-In/Out action cause reshuffling of intermediate results. Thus, it is crucial to avoid unnecessary -- although safe -- actions.
+\end{itemize}
+As confirmed by~\textcite{Heinze:2014}, monotonicity constraint improves learning process. Algorithm~\ref{des:a:mono} shows the pseudocode of this procedure.
+\begin{algorithm}[h]
+    \DontPrintSemicolon
+    \SetKwData{cs}{currentState}
+    \SetKwData{ls}{lastState}
+    \SetKwData{la}{lastAction}
+    \SetKwArray{ca}{feasibleActions}
+    \ca $\gets$ GetActionsFromStateSpace(\cs)\;
+    \BlankLine
+    \If{\cs.latency > \ls.latency AND \la == ScaleOut}{
+        \ca $\gets \ca\;-\;$ScaleIn
+    }
+    \BlankLine
+    \If{\cs.latency < \ls.latency AND \la == ScaleIn}{
+        \ca $\gets \ca\;-\;$ScaleOut
+    }
+    \caption{Monotonicity Constraint}
+    \label{des:a:mono}
+\end{algorithm}
+
+
+Three different policies have been implemented in this thesis. Figure~\ref{des:f:policy} depicts class diagram of these polices. Table~\ref{des:tab:policy} summarizes the behavior of each policy.
+\begin{description}[leftmargin=0pt]
+    \item[Greedy Policy] This policy takes action in two phases. First, it applies monotonicity property. After that, it selects the best possible action. Best action here means the action with largest/lowest Q-Value, depending on how reward function has been implemented.
+    \item[One Minus Epsilon Policy] This policy wrap any other policy and adds some degree of randomness to it. That is, with a probability of $\epsilon$ it returns a random action and with a probability of $1-\epsilon$ it hands over the process to underlying policy. Underlying policy is not necessarily an optimal -- greedy -- policy.
+    \item[Decreasing One Minus Epsilon Policy] This policy is similar to previous policy. The different is that randomness~($\epsilon$) is decreasing over time until it reaches zero after which it unconditionally hands over to underlying policy.
+\end{description}
+\begin{table*}[h]
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Policy} & \textbf{Behavior}\\
+        \midrule
+        Greedy & Always stick to action with highest/lowest Q-Value.\\
+        One Minus Epsilon & Take random action with a probability of $\epsilon$, otherwise stick to underlying policy. \\
+        Decreasing One Minus Epsilon & Same as $1-\epsilon$ policy, but $\epsilon$ is decreasing over time.\\
+        \bottomrule
+    \end{tabular}
+    \centering
+    \caption{Summary of Policy Functions}
+    \label{des:tab:policy}
+\end{table*}
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[show background grid]
+    \begin{interface}{Policy}{4,0}
+    \operation[0]{+ nextAction(currentState: State)}
+    \end{interface}
+    \begin{class}[text width=6cm]{GreedyPolicy}{0,-4}
+    \implement{Policy}
+    \operation{+ nextAction(currentState: State)}
+    \end{class}
+    \begin{class}[text width=6cm]{OneMinusEpsilonPolicy}{8,-4}
+    \implement{Policy}
+    \attribute{- underlyingPolicy: Policy}
+    \attribute{- epsilon: Double}
+    \operation{+ nextAction(currentState: State)}
+    \end{class}
+    \begin{class}[text width=6cm]{DecreasingOneMinusEpsilonPolicy}{8,-8}
+    \inherit{OneMinusEpsilonPolicy}
+    \attribute{- epsilon: Double}
+    \operation{+ nextAction(currentState: State)}
+    \end{class}
+    \end{tikzpicture}
+    \caption{Policy Functions}
+    \label{des:f:policy}
+\end{figure}
+
+\subsection{Reward Function}
 
 \clearpage
 \section{Configuration}
