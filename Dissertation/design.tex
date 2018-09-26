@@ -285,25 +285,25 @@ n = \frac{\text{current latency}}{\text{target latency}}
 \clearpage
 The following describes the way all four regions are initialized. Table~\ref{des:tab:rules} summarizes each region and describes preferred action in each region.
 \begin{description}[leftmargin=0pt]
-    \item[Region 1] In this region, latency is increasing as workload is increasing. So it is reasonable to give more reward to Scale-Out as the agent approaches target latency line. This is called \emph{Early Scale-Out} action which helps to add worker tasks in order to prevent violating SLOs. Thus the reward for each action is initialized as Equation~\ref{des:eq:r1}. In this region, Scale-Out and NoAction rewards are positive but less than one.
+    \item[Region 1] In this region, latency is increasing as workload is increasing. So it is reasonable to give more reward to Scale-Out as the agent approaches target latency line. This is called \emph{Early Scale-Out} action which helps to add worker tasks in order to prevent violating SLOs. Thus the reward for each action is initialized as Equation~\ref{des:eq:r1}. In this region, Scale-Out and No-Action rewards are positive but less than one.
     \begin{equation}
-    \text{Scale-Out}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{NoAction}=1-\frac{\text{current latency}}{\text{target latency}} \qquad \text{ScaleIn}=0
+    \text{Scale-Out}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{No-Action}=1-\frac{\text{current latency}}{\text{target latency}} \qquad \text{Scale-In}=0
     \label{des:eq:r1}
     \end{equation}
     \item[Region 2] In this region, the agent has fall behind and latency has been increased up to the point that it is more than target latency. At this point Scale-Out is still the preferred action. It is reasonable to initialize Scale-In with a negative reward to prevent the agent from taking unjustifiable action.
-    Reward for each action is initialized as Equation~\ref{des:eq:r2}. In this region, Scale-Out reward is larger than one but NoAction reward is less than one.
+    Reward for each action is initialized as Equation~\ref{des:eq:r2}. In this region, Scale-Out reward is larger than one but No-Action reward is less than one.
     \begin{equation}
-    \text{Scale-Out}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{NoAction}=\frac{\text{current latency}}{\text{target latency}}-1 \qquad \text{ScaleIn}=-1
+    \text{Scale-Out}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{No-Action}=\frac{\text{current latency}}{\text{target latency}}-1 \qquad \text{Scale-In}=-1
     \label{des:eq:r2}
     \end{equation}
-    \item[Region 3] In this region, either the workload is decreasing or the agent has taken a presumably reasonable action that has led latency to decrease. Usually, it is not required to take any further action here. Thus, to let latency stabilize, NoAction is a preferred action in this region. Additionally, Scale-In is still prohibited.
+    \item[Region 3] In this region, either the workload is decreasing or the agent has taken a presumably reasonable action that has led latency to decrease. Usually, it is not required to take any further action here. Thus, to let latency stabilize, No-Action is a preferred action in this region. Additionally, Scale-In is still prohibited.
     \begin{equation}
-    \text{Scale-Out}=0 \qquad \text{NoAction}=1 \qquad \text{ScaleIn}=-1
+    \text{Scale-Out}=0 \qquad \text{No-Action}=1 \qquad \text{Scale-In}=-1
     \label{des:eq:r3}
     \end{equation}
-    \item[Region 4] In this region, the latency has dropped below target latency and is decreasing gradually. Thus, as the agent gets farther away from target latency line, we encourage the agent to take Scale-In action. However, near target latency line, we still prefer to take NoAction, since it is still dangerous to take Scale-In.
+    \item[Region 4] In this region, the latency has dropped below target latency and is decreasing gradually. Thus, as the agent gets farther away from target latency line, we encourage the agent to take Scale-In action. However, near target latency line, we still prefer to take No-Action, since it is still dangerous to take Scale-In.
     \begin{equation}
-    \text{Scale-Out}=0 \qquad \text{NoAction}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{ScaleIn}=1-\frac{\text{current latency}}{\text{target latency}}
+    \text{Scale-Out}=0 \qquad \text{No-Action}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{Scale-In}=1-\frac{\text{current latency}}{\text{target latency}}
     \label{des:eq:r4}
     \end{equation}
 \end{description}
@@ -314,7 +314,7 @@ The following describes the way all four regions are initialized. Table~\ref{des
         \midrule
         Region 1 & Early Scale-Out is preferred to avoid hitting target latency.\\
         Region 2 & Target latency is already violated, so Scale-Out is still preferred.\\
-        Region 3 & Although latency is higher than target -- but decreasing, NoAction is preferred to let latency stabilize.\\
+        Region 3 & Although latency is higher than target -- but decreasing, No-Action is preferred to let latency stabilize.\\
         Region 4 & Latency is stable again. If latency is sufficiently low, then Scale-In is preferred.\\
         \bottomrule
     \end{tabular}
@@ -401,9 +401,105 @@ Three different policies have been implemented in this thesis. Figure~\ref{des:f
 
 \subsection{Reward Function}
 
+Reward function is used as a mechanism to return environment's feedback to agent. Reward is usually abstracted as floating point number. Depending on how a \emph{good action} is defined, the agent might get a negative or positive reward. In this thesis two reward functions are implemented. Both reward functions are based on the same behavior as state space initializers~\ref{des:state-init}. Specifically, rewards are assigned based on general rules.
+\begin{enumerate}
+    \item \label{des:rules:1} If the taken action didn't improve the latency -- compared to last state, generally negative reward should be returned. There are exceptions to this rule.
+    \item If latency and workload are increasing simultaneously, then rule~\ref{des:rules:1} does not apply. Thus, Scale-Out gets positive reward.
+    \item If the agent is at region 3 -- refer to Figure~\ref{des:f:ss-region}, then No-Action gets positive reward to help the agent stabilize.
+\end{enumerate}
+Two reward functions have similar behavior in region 1, 2 and 3. The difference comes down to region 4.
+\begin{description}[leftmargin=0pt]
+    \item[Prefer Scale-In When Load is Decreasing] This reward function gives priority to Scale-In, when the agent is in region 4. That is, when latency and workload are decreasing, No-Action gets negative reward to encourage the agent apply Scale-In action.
+    \item[Prefer No-Action When Load is Decreasing] In case workload is too variable -- increasing/decreasing without any kind particular pattern, then it is better to avoid Scale-In action in region 4. This reward function, prefers No-Action in region~4. It shall be noted that this strategy will lead to more tasks/executors to use. But in some workloads it is the safer option. 
+\end{description}
 \clearpage
+
+\subsection{Executor Strategy}
+
+Deciding when to add/remove resources is one problem -- which is solved by policy function -- and deciding \emph{how many} resources to add/remove is another problem. The strategy heavily depends on workload's characteristics. As a consequence multiple strategies have been implemented in this thesis. Figure~\ref{des:f:exec} depict the class diagram and Table~\ref{des:tab:exec} summarizes them.
+\begin{description}[leftmargin=0pt]
+    \item[Static Strategy] This strategy adds or removes executors by a static -- fixed -- number. No further measure is considered.
+    \item[Linear Strategy] This strategy adds or removes executors, with a linear coefficient. The ration behind this strategy is that, if multiple consecutive Scale-Out decision is taken, then most probably the workload has been increased considerably. Thus, at each step the number of added executors are increased by a fixed factor. As an example, if in case of consecutive Scale-Out actions, this strategy adds 1, 2, 4, 6, 8, \dots executors at each step. Additionally, if a Scale-In occurs between consecutive Scale-Out actions, then the coefficient factor is reset to one. The same also applies when consecutive Scale-In actions occur. 
+    \item[Queue Aware Strategy] As mentioned in Section~\ref{des:state-init}, all micro-batches are associated with scheduling latency. This strategy builds a queue of batches that are waiting to be processed. Addition of executors depends upon the length of waiting queue. Thus, if cluster is struggling to process batches and many of them are queued in waiting queue, then this strategy adds more executors in one decision -- the precise number depends on queue length. However, removing executors is done with caution. That is, removing executors is done using static strategy with a fixed number. The result is exponentially increasing - statically decreasing strategy.
+\end{description}
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[show background grid]
+    \begin{interface}[text width=9cm]{ExecutorStrategy}{5,0}
+    \operation[0]{+ howManyExecutorsToAdd(totalExecutors: Integer)}
+    \operation[0]{+ howManyExecutorsToRemove(totalExecutors: Integer)}
+    \end{interface}
+    \begin{class}[text width=9cm]{StaticExecutorStrategy}{0,-4}
+    \implement{ExecutorStrategy}
+    \operation{+ howManyExecutorsToAdd(totalExecutors: Integer)}
+    \operation{+ howManyExecutorsToRemove(totalExecutors: Integer)}
+    \end{class}
+    \begin{class}[text width=9cm]{LinearExecutorStrategy}{4,-10}
+    \implement{ExecutorStrategy}
+    \operation{+ howManyExecutorsToAdd(totalExecutors: Integer)}
+    \operation{+ howManyExecutorsToRemove(totalExecutors: Integer)}
+    \end{class}
+    \begin{class}[text width=9cm]{QueueAwareExecutorStrategy}{7,-7}
+    \implement{ExecutorStrategy}
+    \operation{+ howManyExecutorsToAdd(totalExecutors: Integer)}
+    \operation{+ howManyExecutorsToRemove(totalExecutors: Integer)}
+    \end{class}
+    \end{tikzpicture}
+    \caption{Executor Strategies}
+    \label{des:f:exec}
+\end{figure}
+\begin{table*}[h]
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        \textbf{Executor Strategy} & \textbf{Behavior}\\
+        \midrule
+        Static & Add or remove at a fixed rate.\\
+        Linear & Add or remove with a fixed coefficient for same consecutive actions. Reset the coefficient when action changes. \\
+        Queue Aware & Add based on waiting queue length. Remove statically at a fixed rate. \\
+        \bottomrule
+    \end{tabularx}
+    \centering
+    \caption{Summary of Executor Strategies}
+    \label{des:tab:exec}
+\end{table*}
+
 \section{Configuration}
 \label{des:conf}
 
+In this section configuration parameters that are being utilized by the project will be explained. As mentioned in Section~\ref{prob-def}, the proposed solution should be highly configurable. Table~\ref{des:tab:config} lists all the configuration parameters and describes them briefly. Note that all the parameters should be prefixed with \lstinline|spark.streaming.dynamicAllocation|.
+\begin{table*}[h]
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        \textbf{Parameter} & \textbf{Description}\\
+        \midrule
+        \lstinline|minExecutors| & Minimum executors for Auto-Scaler.\\
+        \lstinline|maxExecutors| & Maximum executors available for Auto-Scaler to use. \\
+        \lstinline|executorGranularity| & Number of executors to add/remove at each step. \\
+        \lstinline|maxLatency| & Maximum latency to limit the size of state space. \\
+        \lstinline|targetLatency| & Latency that is acceptable for user. \\
+        \lstinline|latencyGranularity| & Granularity of latency that is used for state space discretization. \\
+        \lstinline|incomingMessageGranularity| & Granularity of workload that is used for state space discretization. \\
+        \lstinline|windowSize| & Sliding window size that is utilized for making decision. \\
+        \lstinline|learningFactor| & Learning factor of the agent. \\
+        \lstinline|discountFactor| & Discount or reward factor of the agent. \\
+        \lstinline|initializationMode| & Different modes of state space. One of \lstinline|zero|, \lstinline|random| or \lstinline|optimal|. \\
+        \lstinline|epsilon| & The value of $\epsilon$ used for randomized policy. \\
+        \lstinline|epsilonStep| & $\epsilon$ is reduced by this amount when used in decreasing random policy. \\
+        \lstinline|valueIterationInitializationCount| & Iterations that Value Iteration algorithm performs to initialize state space.\\
+        \lstinline|valueIterationInitializationTime| & Time to let Value Iteration algorithm collect metrics and samples. \\
+        \lstinline|policy| & Defines the policy function.\\
+        \lstinline|reward| & Defines the reward function.\\
+        \lstinline|decisionInterval| & The interval of time that the agent makes decision. \\
+        \lstinline|executorStrategy| & Defines the executor strategy. One of \lstinline|static|, \lstinline|linear|, \lstinline|relative|. \\
+        \lstinline|seed| & Seed value to control the randomized behavior in consecutive runs.\\
+        \bottomrule
+    \end{tabularx}
+    \centering
+    \caption{Summary of Configuration Parameters}
+    \label{des:tab:config}
+\end{table*}
+
 \section{Conclusion}
 \label{des:conc}
+
+In this chapter design and structure of this thesis has been explored. Since Reinforcement Learning approaches are capable of adapting to ever changing streaming workloads, two techniques, namely Temporal Difference and Value Iteration, have been selected and implemented. State space have been designed to contain enough information of the environment and at the same time be small enough. Multiple state space initializers have been designed to show the initialization effect on learning process. Furthermore, in order to make the implementation highly flexible against different environments, multiple policy, reward and executor strategies have been implemented. Section~\ref{eval} evaluates the effect of changing these parameters. 
