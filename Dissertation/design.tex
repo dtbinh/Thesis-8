@@ -225,17 +225,50 @@ As mentioned in Section~\ref{intro-auto-scale} each state is associated with thr
 \subsection{State Space Initialization}
 \label{des:state-init}
 
-Typically when the agent starts, its Q-Table is empty -- initialized with zero. Over time, as the agent take more actions and discovers its environment, it updates its Q-Table. Since Q-Table is initialized with zero, the agent usually takes some random actions from time to time with a small probability.This helps to discover the environment. In some applications, this behavior is sufficient. However, in fast changing environments like streaming systems this process takes very long time to converge. Thus developers usually try to initialize Q-Table beforehand to speedup the learning process. In this thesis, three different initializers have been implemented. Figure~\ref{des:f:ss-init} shows class diagram of these initializers.
+A typical workload either looks like the ones depicted by Figure~\ref{fig:workload}, or they can be built by combining multiple graphs in Figure~\ref{fig:workload}. However they have one thing in common. It rises from a base state, goes to a peak and then returns back. Without loosing generality and with a sufficiently large sliding window, workload-to-latency graph can be modeled as Figure~\ref{des:f:ss-region}. This graph is divided into four regions. As workload increases, latency is approaching target latency (Region~1). In case the workload keeps increasing, the agent goes beyond the target latency which leads to violating SLOs (Region~2). Assuming the agent takes some reasonable action, latency starts to decrease (Region~3). Finally, at some point it will drop below the target latency line (Region~4).
+\begin{figure}[th]
+    \begin{tikzpicture}
+    \begin{axis}[
+    ticks=none,
+    axis x line=center,
+    x axis line style=-,
+    hide y axis,
+    xlabel style={right},
+    samples = 200,
+    domain = -7:7,
+    xmin = -7, xmax = 7,
+    ymin = -7, ymax = 7,
+    xlabel={Target Latency}]
+    \addplot[black, thick, mark=none] {-x^2 + 5};
+    \node[] at (axis cs: -5,-3) {Region 1};
+    \node[] at (axis cs: -3,3) {Region 2};
+    \node[] at (axis cs: 3,3) {Region 3};
+    \node[] at (axis cs: 5,-3) {Region 4};
+    \end{axis}
+    \end{tikzpicture}
+    \centering
+    \caption{Different Regions of a Typical Workload}
+    \label{des:f:ss-region}
+\end{figure}
+\begin{figure}[th]
+    \centering
+    \includegraphics[clip, trim=3cm 5cm 3cm 2cm]{workload-type.pdf}
+    \caption{Workload Categories}
+    \label{fig:workload}
+\end{figure}
+
+\clearpage
+Typically when the agent starts, its Q-Table is empty -- initialized with zero. Over time, as the agent takes actions and discovers its environment, it updates its Q-Table. Since Q-Table is initialized with zero, the agent usually takes some random actions from time to time with a small probability. This helps to discover the environment. In some applications, this behavior is sufficient. However, in fast changing environments like streaming systems this process takes very long time to converge. Thus developers usually try to initialize Q-Table beforehand to speedup the learning process. In this thesis, three different initializers have been implemented. Figure~\ref{des:f:ss-init} illustrates class diagram of state space initializers.
 \begin{description}[leftmargin=0pt]
 \item[Zero Initializer] This is the default implementation which initializes all the Q-Values -- reward values -- to zero.
 \item[Random Initializer] This initializer assigns a random value between (-1,1) to Q-Values.
-\item[Optimized Initializer] This initializer uses a \emph{heuristic} to initialize the Q-Table. Typically in most systems, there is a well defined set of SLOs defined by users that should be respected by Auto-Scaling system. This initializer exploits a normalization function defined in Equation~\ref{des:eq:normal}. If recent latency window is sufficiently large enough, workload-to-latency graph looks similar to Figure~\ref{des:f:ss-region}. This graph is divided into four regions. As workload increases, latency is approaching target latency (Region 1). In case the workload keeps increasing, the agent goes beyond the target latency and SLOs are violated (Region 2). Assuming the agent takes some reasonable action, latency starts to decrease (Region 3). Finally, at some point it will drop below the target latency line (Region 4). For each region, Q-Table is initialized with different values.
+\item[Optimized Initializer] This initializer uses a \emph{heuristic} to initialize the Q-Table. Typically in most systems, there is a well defined set of SLOs defined by users that should be respected by Auto-Scaling system. This initializer exploits a normalization function defined in Equation~\ref{des:eq:normal}.  For each region, Q-Table is initialized with different values.
 \begin{equation}
 n = \frac{\text{current latency}}{\text{target latency}}
 \label{des:eq:normal}
 \end{equation}
 \end{description}
-\begin{figure}[t]
+\begin{figure}[hb]
     \centering
     \begin{tikzpicture}[show background grid]
     \begin{interface}{StateSpaceInitializer}{5,0}
@@ -258,38 +291,15 @@ n = \frac{\text{current latency}}{\text{target latency}}
     \caption{State Space Initializer}
     \label{des:f:ss-init}
 \end{figure}
-\begin{figure}[h]
-    \begin{tikzpicture}
-        \begin{axis}[
-            ticks=none,
-            axis x line=center,
-            x axis line style=-,
-            hide y axis,
-            xlabel style={right},
-            samples = 200,
-            domain = -7:7,
-            xmin = -7, xmax = 7,
-            ymin = -15, ymax = 7,
-            xlabel={Target Latency}]
-            \addplot[black, thick, mark=none] {-x^2 + 5};
-            \node[] at (axis cs: -5,-4) {Region 1};
-            \node[] at (axis cs: -3,3) {Region 2};
-            \node[] at (axis cs: 3,3) {Region 3};
-            \node[] at (axis cs: 5,-4) {Region 4};
-        \end{axis}
-    \end{tikzpicture}
-    \centering
-    \caption{Different Regions of a Typical Workload}
-    \label{des:f:ss-region}
-\end{figure}
-\clearpage
-The following describes the way all four regions are initialized. Table~\ref{des:tab:rules} summarizes each region and describes preferred action in each region.
+
+The following describes the method that optimized initializer applies to four regions defined in previous section. Table~\ref{des:tab:rules} summarizes each region and describes preferred action in each region.
 \begin{description}[leftmargin=0pt]
     \item[Region 1] In this region, latency is increasing as workload is increasing. So it is reasonable to give more reward to Scale-Out as the agent approaches target latency line. This is called \emph{Early Scale-Out} action which helps to add worker tasks in order to prevent violating SLOs. Thus the reward for each action is initialized as Equation~\ref{des:eq:r1}. In this region, Scale-Out and No-Action rewards are positive but less than one.
     \begin{equation}
     \text{Scale-Out}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{No-Action}=1-\frac{\text{current latency}}{\text{target latency}} \qquad \text{Scale-In}=0
     \label{des:eq:r1}
     \end{equation}
+    \clearpage
     \item[Region 2] In this region, the agent has fall behind and latency has been increased up to the point that it is more than target latency. At this point Scale-Out is still the preferred action. It is reasonable to initialize Scale-In with a negative reward to prevent the agent from taking unjustifiable action.
     Reward for each action is initialized as Equation~\ref{des:eq:r2}. In this region, Scale-Out reward is larger than one but No-Action reward is less than one.
     \begin{equation}
@@ -323,7 +333,6 @@ The following describes the way all four regions are initialized. Table~\ref{des
     \label{des:tab:rules}
 \end{table*}
 
-\clearpage
 \subsection{Policy Functions}
 \label{des:pol}
 
@@ -352,7 +361,6 @@ As confirmed by~\textcite{Heinze:2014}, monotonicity constraint improves learnin
     \label{des:a:mono}
 \end{algorithm}
 
-
 Three different policies have been implemented in this thesis. Figure~\ref{des:f:policy} depicts class diagram of these polices. Table~\ref{des:tab:policy} summarizes the behavior of each policy.
 \begin{description}[leftmargin=0pt]
     \item[Greedy Policy] This policy takes action in two phases. First, it applies monotonicity property. After that, it selects the best possible action. Best action here means the action with largest/lowest Q-Value, depending on how reward function has been implemented.
@@ -379,19 +387,17 @@ Three different policies have been implemented in this thesis. Figure~\ref{des:f
     \begin{interface}{Policy}{4,0}
     \operation[0]{+ nextAction(currentState: State)}
     \end{interface}
-    \begin{class}[text width=6cm]{GreedyPolicy}{0,-4}
+    \begin{class}[text width=6cm]{GreedyPolicy}{0,-2.5}
     \implement{Policy}
     \operation{+ nextAction(currentState: State)}
     \end{class}
-    \begin{class}[text width=6cm]{OneMinusEpsilonPolicy}{8,-4}
+    \begin{class}[text width=6cm]{OneMinusEpsilonPolicy}{8,-2.5}
     \implement{Policy}
     \attribute{- underlyingPolicy: Policy}
-    \attribute{- epsilon: Double}
     \operation{+ nextAction(currentState: State)}
     \end{class}
-    \begin{class}[text width=6cm]{DecreasingOneMinusEpsilonPolicy}{8,-8}
+    \begin{class}[text width=6cm]{DecreasingOneMinusEpsilonPolicy}{8,-5}
     \inherit{OneMinusEpsilonPolicy}
-    \attribute{- epsilon: Double}
     \operation{+ nextAction(currentState: State)}
     \end{class}
     \end{tikzpicture}
@@ -412,10 +418,8 @@ Two reward functions have similar behavior in region 1, 2 and 3. The difference 
     \item[Prefer Scale-In When Load is Decreasing] This reward function gives priority to Scale-In, when the agent is in region 4. That is, when latency and workload are decreasing, No-Action gets negative reward to encourage the agent apply Scale-In action.
     \item[Prefer No-Action When Load is Decreasing] In case workload is too variable -- increasing/decreasing without any kind particular pattern, then it is better to avoid Scale-In action in region 4. This reward function, prefers No-Action in region~4. It shall be noted that this strategy will lead to more tasks/executors to use. But in some workloads it is the safer option. 
 \end{description}
-\clearpage
 
 \subsection{Executor Strategy}
-
 Deciding when to add/remove resources is one problem -- which is solved by policy function -- and deciding \emph{how many} resources to add/remove is another problem. The strategy heavily depends on workload's characteristics. As a consequence multiple strategies have been implemented in this thesis. Figure~\ref{des:f:exec} depict the class diagram and Table~\ref{des:tab:exec} summarizes them.
 \begin{description}[leftmargin=0pt]
     \item[Static Strategy] This strategy adds or removes executors by a static -- fixed -- number. No further measure is considered.
@@ -499,6 +503,7 @@ In this section configuration parameters that are being utilized by the project 
     \label{des:tab:config}
 \end{table*}
 
+\newpage
 \section{Conclusion}
 \label{des:conc}
 
