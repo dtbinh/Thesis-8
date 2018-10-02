@@ -18,7 +18,6 @@
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{graphicx}
-%\usepackage{subfigure}
 \usepackage{placeins}
 \usepackage{breakurl}
 \usepackage[ruled,linesnumbered,commentsnumbered]{algorithm2e}
@@ -33,6 +32,8 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{pgf-umlcd}
+\usepackage{gnuplottex}
+\usepackage{multirow}
 
 \lstset{
     numbers = left, 
@@ -82,8 +83,7 @@
 \include{intro-auto-scale}
 \include{spark}
 \include{design}
-\chapter{Evaluation}
-\label{eval}
+\include{eval}
 \include{related-work}
 \chapter{Conclusion}
 \label{conc}
@@ -95,4 +95,4 @@
 
 \printbibliography
 
-\end{document}
+\end{document}  
