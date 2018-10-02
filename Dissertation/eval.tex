@@ -7,6 +7,45 @@ In this chapter the two implemented techniques will be evaluated under three rea
 \section{Workload Characteristic}
 \label{eval:workload}
 
+DEBS 2014~\cite{debs2014} has been chosen as a real world workload to test the implementation. Each workload contains data from a random location of the original workload and replayed to feed Spark cluster. All experiments were run for one hour. Figure~\ref{eval:fig:workload} shows distribution of messages in three workloads which have been captured from Spark UI.
+\begin{figure}
+    \centering
+      \begin{subfigure}[h]{\linewidth}
+        \centering\includegraphics[scale=0.6]{workload1.png}
+        \caption{Workload 1}
+    \end{subfigure}
+    \begin{subfigure}[h]{\linewidth}
+        \centering\includegraphics[scale=0.6]{workload2.png}
+        \caption{Workload 2}
+    \end{subfigure}
+    \caption{Three Workloads of DEBS 2014}
+    \label{eval:fig:workload}
+\end{figure}
+
+The workload involves sensors that measure energy consumption of devices. Each device is connected to one household which in turn is located in one house. This creates a hierarchy from house as parent of households and household as parent of devices. The workload asks to predict energy consumption per device, per household, and per house  for next window of time. The prediction runs over a sliding window of historical measurements which contains $n$ elements. Assuming $window$ variable contains $n$ elements of the history, Equation~\ref{eval:l:pred} defines how the predicted value is calculated.
+\begin{equation}
+\text{predicted value} = \frac{\text{average(window)} + \text{median(window)}}{2}
+\label{eval:l:pred}
+\end{equation}
+
+In all experiments \emph{batch size} is set to 10 seconds. The cluster uses 24 executors with minimum of 4 executors that should be respected by Auto-Scaler. All experiments start with minimum number of executors -- 4 in this case -- and run for \emph{one} hour. In case any training is required to run the experiment, training data set is separated from the original workload dataset.
+
+In order to make each workload CPU intensive enough, window size is changed for each workload. Table~\ref{eval:tab:history} defines the history window size for each workload.
+\begin{table*}[h]
+    \begin{tabular}{lc}
+        \toprule
+        \textbf{Workload} & \textbf{Window Size = $n$ }\\
+        \midrule
+        Workload 1 & 1650\\
+        Workload 2 & 2050\\
+        Workload 3 & 2050\\
+        \bottomrule
+    \end{tabular}
+    \centering
+    \caption{Workload Window Size}
+    \label{eval:tab:history}
+\end{table*}
+
 \input{ex3}
 
 \section{Conclusion}
