@@ -24,7 +24,7 @@ class PreferScaleInWhenLoadIsDescreasing(val config: ResourceManagerConfig) exte
     if (!isStateInDangerZone(lastState) && lastAction == NoAction && !currentState.loadIsIncreasing && numberOfExecutors != MinimumExecutors) {
       // if latency is decreasing, then no action gets negative reward
       if ((currentState.latency < lastState.latency) || (currentState.latency == lastState.latency && currentState.latency == 0)) {
-        return Some(-ratio)
+        return Some(-max(ratio, safeZoneLatencyDiff))
       }
     }
 
@@ -34,7 +34,10 @@ class PreferScaleInWhenLoadIsDescreasing(val config: ResourceManagerConfig) exte
     }
 
     // positive reward for everything else
-    Some(min(ratio, safeZoneLatencyDiff))
+    if (lastAction == NoAction && numberOfExecutors == MinimumExecutors) {
+      return Some(NoReward)
+    }
+    Some(1)
   }
 }
 

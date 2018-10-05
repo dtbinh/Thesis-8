@@ -37,8 +37,7 @@ In order to make each workload CPU intensive enough, window size is changed for 
         \textbf{Workload} & \textbf{Window Size = $n$ }\\
         \midrule
         Workload 1 & 1650\\
-        Workload 2 & 2050\\
-        Workload 3 & 2050\\
+        Workload 2 & 1900\\
         \bottomrule
     \end{tabular}
     \centering
@@ -46,7 +45,19 @@ In order to make each workload CPU intensive enough, window size is changed for 
     \label{eval:tab:history}
 \end{table*}
 
-\input{ex3}
+\clearpage
+\section{Experiment 1: Executor Strategy}
+This experiment has been designed to illustrate the strategy of adding/removing executors when taking Scale-In or Scale-Out actions. Table~\ref{eval:tab:ex1} shows the configuration this experiment.
+\begin{table}[h]
+    \includegraphics[clip,trim=4.7cm 21.18cm 4.7cm 2.5cm]{tables/ex1.pdf}
+    \centering
+    \caption{Executor Strategy Configuration Parameters}
+    \label{eval:tab:ex1}
+\end{table}
+
+\subsection{Workload 1}
+
+\subsection{Workload 2}
 
 \section{Conclusion}
 \label{eval:conc}

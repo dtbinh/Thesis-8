@@ -11,7 +11,8 @@ class QueueAwareExecutorStrategy(config: ResourceManagerConfig, rm: TemporalDiff
   import rm._
 
   override def howManyExecutorsToAdd(totalExecutors: Int): Int = {
-    val diff = max(ceil(waitingListLength.toDouble / targetWaitingListLength), 1)
+    //val diff = max(ceil(waitingListLength.toDouble / targetWaitingListLength), 1)
+    val diff = max(waitingListLength - targetWaitingListLength, 1)
     if (diff + totalExecutors > MaximumExecutors) MaximumExecutors - totalExecutors else diff.toInt
   }
 
