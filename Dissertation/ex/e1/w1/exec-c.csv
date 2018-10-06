@@ -1,0 +1,4 @@
+Index;10th;Min;Max;90th;Average;Name
+1;6,9;4;17;13,1;10,06666667;Static
+2;4;4;24;24;15,7;Linear
+3;4;4;21;20;12,31666667;Q-Aware
