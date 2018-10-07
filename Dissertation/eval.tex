@@ -55,7 +55,8 @@ This experiment has been designed to illustrate the strategy of adding/removing 
     \label{eval:tab:ex1}
 \end{table}
 
-Figure~\ref{eval:f:e1:w1:lat},~\ref{eval:f:e1:w1:lat-c} depicts the latency charts. Furthermore, figure~\ref{eval:f:e1:w1:exec},~\ref{eval:f:e1:w1:exec-c} depicts the behavior of strategies regarding number of executors.
+Figure~\ref{eval:f:e1:w1:lat},~\ref{eval:f:e1:w1:lat-c} depicts latency charts for first workload. Furthermore, Figure~\ref{eval:f:e1:w1:exec},~\ref{eval:f:e1:w1:exec-c} depicts the behavior of strategies regarding number of executors. Similarity, Figure~\ref{eval:f:e1:w2:lat},~\ref{eval:f:e1:w2:lat-c},~\ref{eval:f:e1:w2:exec} and~\ref{eval:f:e1:w2:exec-c} illustrates latency and executor charts for second workload.
+
 \begin{figure}[!htbp]
 \centering
 \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
@@ -249,7 +250,9 @@ plot 'ex/e1/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'b
 \end{figure}
 \FloatBarrier
 \subsection{Conclusion}
+As depicted in last section, for Workload 1, Static strategy performs slightly better than Queue Aware strategy. Both of them are able to respect target latency which is set to 30 seconds. However, for Workload 2 Queue Aware strategy outperforms all other strategies, since Static and Linear strategies violate target latency.
 
+It can be speculated that Queue Aware strategy is the best strategy amongst three strategies. However, it can't be proven now. More experiments shall be done. Thus, for next set of experiments Queue Aware strategy is chosen to be evaluated extensively. Furthermore, the conclusion is only based on two workloads and it can't be generalized.
 \clearpage
 \section{Experiment 2: History Window}
 This experiment has been designed to illustrate the effect of history window on quality of decision made by Auto-Scaler. Table~\ref{eval:tab:ex2} shows the configuration of this experiment.
@@ -259,6 +262,9 @@ This experiment has been designed to illustrate the effect of history window on 
     \caption{History Window Configuration Parameters}
     \label{eval:tab:ex2}
 \end{table}
+
+Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec} and ~\ref{eval:f:e2:w1:exec-c} illustrates latency and executor charts for Workload 1. Figures~\ref{eval:f:e2:w2:lat},~\ref{eval:f:e2:w2:lat-c},~\ref{eval:f:e2:w2:exec} and~\ref{eval:f:e2:w2:exec-c} illustrates latency and executor charts for Workload 2.
+
 \begin{figure}[!htbp]
     \centering
     \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
@@ -452,6 +458,10 @@ This experiment has been designed to illustrate the effect of history window on 
 \end{figure}
 \FloatBarrier
 \subsection{Conclusion}
+For Workload 1, three-minute history window leads to better latency albeit with slightly more executors. However, for second workload two-minute window outperforms both one and three minute windows.
 
+Also note that, short history window (like one-minute) makes Auto-Scaler too sensitive to noisy workloads. This can be confirmed by Figure~\ref{eval:f:e2:w2:exec}. As depicted, one-minute history window suffers from zig-zag decisions when it reaches 24 executors. Two-minute window to some degree suffers from this issue as well. However, three-minute window is resistant to this issue.
+
+In general, history window of two minutes shows better results than the others. Thus, for rest of the experiments this window size will be used.
 \clearpage
 \section{Experiment 3: Decision Interval}
