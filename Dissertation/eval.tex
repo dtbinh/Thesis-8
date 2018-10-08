@@ -49,7 +49,7 @@ In order to make each workload CPU intensive enough, window size is changed for 
 \section{Experiment 1: Executor Strategy}
 This experiment has been designed to illustrate the strategy of adding/removing executors when taking Scale-In or Scale-Out actions. Table~\ref{eval:tab:ex1} shows the configuration of this experiment.
 \begin{table}[h]
-    \includegraphics[clip,trim=4.7cm 21.18cm 4.7cm 2.5cm]{tables/ex1.pdf}
+    \includegraphics[clip,trim=3.6cm 21.18cm 2.75cm 2.5cm]{tables/ex1.pdf}
     \centering
     \caption{Executor Strategy Configuration Parameters}
     \label{eval:tab:ex1}
@@ -91,6 +91,7 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			set terminal epslatex size 16cm,7.5cm
 			set key outside center top horizontal
 			set datafile separator ';'
+            set key width -12
 			set xr [0.5:3.5]
 			set yr [0:150]
 			set ytics 0,20 nomirror
@@ -101,9 +102,10 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			unset xl
 			set yl 'Latency (Seconds)'
 			plot 'ex/e1/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
-			'' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+			'' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
 		\end{gnuplot}
-		\caption{Executor Strategy -- Workload 1 -- Latency -- Min/Max/Percentiles/Average}
+		\caption{Executor Strategy -- Workload 1 -- Latency}
 		\label{eval:f:e1:w1:lat-c}
 	\end{minipage}\hfil
 	\begin{minipage}[h]{\linewidth}
@@ -149,7 +151,7 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			plot 'ex/e1/w1/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
 			'' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
 		\end{gnuplot}
-		\caption{Executor Strategy -- Workload 1 -- Number of Executors -- Min/Max/Percentiles/Average}
+		\caption{Executor Strategy -- Workload 1 -- Number of Executors}
 		\label{eval:f:e1:w1:exec-c}
 	\end{minipage}
 \end{figure}
@@ -158,7 +160,7 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 	\begin{minipage}[h]{\linewidth}
 		\centering
 		\begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-			set terminal epslatex size 16cm,7.2cm
+			set terminal epslatex size 16cm,7.5cm
 			set key outside center top horizontal
 			set datafile separator ';'
 			set xdata time
@@ -184,9 +186,10 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 	\begin{minipage}[h]{\linewidth}
 		\centering
 		\begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-			set terminal epslatex size 16cm,7.2cm
+			set terminal epslatex size 16cm,7.5cm
 			set key outside center top horizontal
 			set datafile separator ';'
+            set key width -12
 			set xr [0.5:3.5]
 			set yr [0:170]
 			set y2r [0:170]
@@ -197,15 +200,16 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			unset xl
 			set yl 'Latency (Seconds)'
 			plot 'ex/e1/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
-			'' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+			'' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
 		\end{gnuplot}
-		\caption{Executor Strategy -- Workload 2 -- Latency -- Min/Max/Percentiles/Average}
+		\caption{Executor Strategy -- Workload 2 -- Latency}
 		\label{eval:f:e1:w2:lat-c}
 	\end{minipage}\hfil
 	\begin{minipage}[h]{\linewidth}
 		\centering
 		\begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-			set terminal epslatex size 16cm,7.2cm
+			set terminal epslatex size 16cm,7.5cm
 			set key outside center top horizontal
 			set datafile separator ';'
 			set xdata time
@@ -231,7 +235,7 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 \begin{figure}[!htbp]
 \centering
 \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-set terminal epslatex size 16cm,7.2cm
+set terminal epslatex size 16cm,7.5cm
 set key outside center top horizontal
 set datafile separator ';'
 set xr [0.5:3.5]
@@ -245,12 +249,12 @@ unset xl
 set yl 'Number of Executors'
 plot 'ex/e1/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles','' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
 \end{gnuplot}
-\caption{Executor Strategy -- Workload 2 -- Number of Executors -- Min/Max/Percentiles/Average}
+\caption{Executor Strategy -- Workload 2 -- Number of Executors}
 \label{eval:f:e1:w2:exec-c}
 \end{figure}
 \FloatBarrier
 \subsection{Conclusion}
-As depicted in last section, for Workload 1, Static strategy performs slightly better than Queue Aware strategy. Both of them are able to respect target latency which is set to 30 seconds. However, for Workload 2 Queue Aware strategy outperforms all other strategies, since Static and Linear strategies violate target latency.
+As depicted in last section, for Workload 1, Static strategy performs slightly better than Queue Aware strategy. Both of them were able reach target latency to some degree, though they are still above target latency. However, for Workload 2 Queue Aware strategy outperforms all other strategies, since Static and Linear strategies violate target latency.
 
 It can be speculated that Queue Aware strategy is the best strategy amongst three strategies. However, it can't be proven now. More experiments shall be done. Thus, for next set of experiments Queue Aware strategy is chosen to be evaluated extensively. Furthermore, the conclusion is only based on two workloads and it can't be generalized.
 \clearpage
@@ -299,6 +303,7 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             set terminal epslatex size 16cm,7.5cm
             set key outside center top horizontal
             set datafile separator ';'
+            set key width -12
             set xr [0.5:3.5]
             set yr [0:110]
             set ytics 0,20 nomirror
@@ -309,7 +314,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             unset xl
             set yl 'Latency (Seconds)'
             plot 'ex/e2/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
-            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
         \end{gnuplot}
         \caption{History Window -- Workload 1 -- Latency}
         \label{eval:f:e2:w1:lat-c}
@@ -366,7 +372,7 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
     \begin{minipage}[h]{\linewidth}
         \centering
         \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-            set terminal epslatex size 16cm,7.2cm
+            set terminal epslatex size 16cm,7.5cm
             set key outside center top horizontal
             set datafile separator ';'
             set xdata time
@@ -392,9 +398,10 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
     \begin{minipage}[h]{\linewidth}
         \centering
         \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-            set terminal epslatex size 16cm,7.2cm
+            set terminal epslatex size 16cm,7.5cm
             set key outside center top horizontal
             set datafile separator ';'
+            set key width -12
             set xr [0.5:3.5]
             set yr [0:130]
             set y2r [0:130]
@@ -405,7 +412,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             unset xl
             set yl 'Latency (Seconds)'
             plot 'ex/e2/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
-            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
         \end{gnuplot}
         \caption{History Window -- Workload 2 -- Latency}
         \label{eval:f:e2:w2:lat-c}
@@ -413,7 +421,7 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
     \begin{minipage}[h]{\linewidth}
         \centering
         \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-            set terminal epslatex size 16cm,7.2cm
+            set terminal epslatex size 16cm,7.5cm
             set key outside center top horizontal
             set datafile separator ';'
             set xdata time
@@ -439,7 +447,7 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
 \begin{figure}[!htbp]
     \centering
     \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-        set terminal epslatex size 16cm,7.2cm
+        set terminal epslatex size 16cm,7.5cm
         set key outside center top horizontal
         set datafile separator ';'
         set xr [0.5:3.5]
@@ -465,3 +473,216 @@ Also note that, short history window (like one-minute) makes Auto-Scaler too sen
 In general, history window of two minutes shows better results than the others. Thus, for rest of the experiments this window size will be used.
 \clearpage
 \section{Experiment 3: Decision Interval}
+The Auto-Scaler implemented in thesis makes decisions in intervals defined by \lstinline|decisionInterval| parameter. This experiment has been designed to illustrate the effect of this parameter on behvaior of the Auto-Scaler. Table~\ref{eval:tab:ex3} shows the configuration of this experiment.
+\begin{table}[h]
+    \includegraphics[clip,trim=3.3cm 21.18cm 3.25cm 2.5cm]{tables/ex3.pdf}
+    \centering
+    \caption{Decision Interval Configuration Parameters}
+    \label{eval:tab:ex3}
+\end{table}
+
+Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec} and ~\ref{eval:f:e3:w1:exec-c} illustrates latency and executor charts for Workload 1. Figures~\ref{eval:f:e3:w2:lat},~\ref{eval:f:e3:w2:lat-c},~\ref{eval:f:e3:w2:exec} and~\ref{eval:f:e3:w2:exec-c} illustrates latency and executor charts for Workload 2.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 16cm,7.5cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xdata time
+        set timefmt '%H:%M:%S'
+        set xr ['0:00:00':'1:00:00']
+        set yr [0:110]
+        set xtics '00:00:00',600 nomirror
+        set ytics 0,20 nomirror
+        set y2r [0:110]
+        set y2tics 0,20
+        set samples 50000 
+        unset mxtics
+        unset mytics
+        unset xl
+        set yl 'Latency (Seconds)'
+        plot 'ex/e3/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '1 Min',\
+        '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '2 Min',\
+        '' using 1:4 w l lc 'black' lw 4 smooth csplines t '3 Min'
+    \end{gnuplot}
+    \caption{Decision Interval -- Workload 1 -- Latency}
+    \label{eval:f:e3:w1:lat}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set key width -12
+            set xr [0.5:3.5]
+            set yr [0:110]
+            set ytics 0,20 nomirror
+            set y2r [0:110]
+            set y2tics 0,20
+            set boxwidth 0.3 absolute
+            set style fill empty
+            unset xl
+            set yl 'Latency (Seconds)'
+            plot 'ex/e3/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
+        \end{gnuplot}
+        \caption{Decision Interval -- Workload 1 -- Latency}
+        \label{eval:f:e3:w1:lat-c}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [2:26]
+            set y2r [2:26]
+            set ytics 0,4 nomirror
+            set xtics '00:00:00',600 nomirror
+            set y2tics 0,4
+            unset mxtics
+            unset mytics
+            unset xl
+            set yl 'Number of Executors'
+            plot 'ex/e3/w1/exec.csv' using 1:2 w l lc 'red' lw 4 t '1 Min',\
+            '' using 1:3 w l lc 'blue' lw 4 t '2 Min',\
+            '' using 1:4 w l lc 'black' lw 4 t '3 Min'
+        \end{gnuplot}
+        \caption{Decision Interval -- Workload 1 -- Number of Executors}
+        \label{eval:f:e3:w1:exec}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xr [0.5:3.5]
+            set yr [2:26]
+            set y2r [2:26]
+            set ytics 0,4 nomirror
+            set y2tics 0,4 nomirror
+            set boxwidth 0.3 absolute
+            set style fill empty
+            unset xl
+            set yl 'Number of Executors'
+            plot 'ex/e3/w1/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+        \end{gnuplot}
+        \caption{Decision Interval -- Workload 1 -- Number of Executors}
+        \label{eval:f:e3:w1:exec-c}
+    \end{minipage}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [0:130]
+            set y2r [0:130]
+            set xtics '00:00:00',600 nomirror
+            set ytics 0,20 nomirror
+            set y2tics 0,20
+            unset mxtics
+            unset mytics
+            set samples 50000 
+            unset xl
+            set yl 'Latency (Seconds)'
+            plot 'ex/e3/w2/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '1 Min',\
+            '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '2 Min',\
+            '' using 1:4 w l lc 'black' lw 4 smooth csplines t '3 Min'
+        \end{gnuplot}
+        \caption{Decision Interval -- Workload 2 -- Latency}
+        \label{eval:f:e3:w2:lat}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set key width -12
+            set xr [0.5:3.5]
+            set yr [0:130]
+            set y2r [0:130]
+            set ytics nomirror
+            set y2tics 0,20
+            set boxwidth 0.3 absolute
+            set style fill empty
+            unset xl
+            set yl 'Latency (Seconds)'
+            plot 'ex/e3/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
+        \end{gnuplot}
+        \caption{Decision Interval -- Workload 2 -- Latency}
+        \label{eval:f:e3:w2:lat-c}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [2:26]
+            set y2r [2:26]
+            set xtics '00:00:00',600 nomirror
+            set ytics 0,4 nomirror
+            set y2tics 0,4
+            unset mxtics
+            unset mytics
+            unset xl
+            set yl 'Number of Executors'
+            plot 'ex/e3/w2/exec.csv' using 1:2 w l lc 'red' lw 4 t '1 Min',\
+            '' using 1:3 w l lc 'blue' lw 4 t '2 Min',\
+            '' using 1:4 w l lc 'black' lw 4 t '3 Min'
+        \end{gnuplot}
+        \caption{Decision Interval -- Workload 2 -- Number of Executors}
+        \label{eval:f:e3:w2:exec}
+    \end{minipage}
+\end{figure}
+ \begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 16cm,7.5cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xr [0.5:3.5]
+        set yr [2:26]
+        set ytics 0,4 nomirror
+        set y2r [2:26]
+        set y2tics 0,4
+        set boxwidth 0.3 absolute
+        set style fill empty
+        unset xl
+        set yl 'Number of Executors'
+        plot 'ex/e3/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles','' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+    \end{gnuplot}
+    \caption{Decision Interval -- Workload 2 -- Number of Executors}
+    \label{eval:f:e3:w2:exec-c}
+ \end{figure}
+\FloatBarrier
+\subsection{Conclusion}
+For Workload 1, two and three-minute decision interval leads to better latency with much fewer executors (around half of one-minute decision interval) and they lead to even better latency than defined target latency. However, for second workload two and three-minute decision intervals have worse characteristics than one-minute window as they violate target latency more.
+
+At this point selecting the best configuration becomes more difficult. Note that two and three-minute decision intervals perform extremely well for Workload 1 and poor for Workload 2. On the other hand one-minute decision interval performs reasonable in both workloads. Thus, this configuration is still preferred.
+
+\clearpage
+\section{Experiment 4: Table Initializer}
