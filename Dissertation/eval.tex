@@ -74,6 +74,8 @@ set y2tics 0,20
 set samples 50000 
 unset mxtics
 unset mytics
+set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
 unset xl
 set yl 'Latency (Seconds)'
 plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Static',\
@@ -100,6 +102,8 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			set boxwidth 0.3 absolute
 			set style fill empty
 			unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
 			set yl 'Latency (Seconds)'
 			plot 'ex/e1/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
 			'' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
@@ -125,6 +129,8 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			unset mxtics
 			unset mytics
 			unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
 			set yl 'Number of Executors'
 			plot 'ex/e1/w1/exec.csv' using 1:2 w l lc 'red' lw 4 t 'Static',\
 			'' using 1:3 w l lc 'blue' lw 4 t 'Linear',\
@@ -147,6 +153,8 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			set boxwidth 0.3 absolute
 			set style fill empty
 			unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
 			set yl 'Number of Executors'
 			plot 'ex/e1/w1/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
 			'' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
@@ -175,6 +183,8 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			unset mytics
 			set samples 50000 
 			unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
 			set yl 'Latency (Seconds)'
 			plot 'ex/e1/w2/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Static',\
 			'' using 1:3 w l lc 'blue' lw 4 smooth csplines t 'Linear',\
@@ -198,6 +208,8 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			set boxwidth 0.3 absolute
 			set style fill empty
 			unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
 			set yl 'Latency (Seconds)'
 			plot 'ex/e1/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
 			'' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
@@ -223,6 +235,8 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			unset mxtics
 			unset mytics
 			unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
 			set yl 'Number of Executors'
 			plot 'ex/e1/w2/exec.csv' using 1:2 w l lc 'red' lw 4 t 'Static',\
 			'' using 1:3 w l lc 'blue' lw 4 t 'Linear',\
@@ -246,6 +260,8 @@ set y2tics 0,4
 set boxwidth 0.3 absolute
 set style fill empty
 unset xl
+set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
 set yl 'Number of Executors'
 plot 'ex/e1/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles','' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
 \end{gnuplot}
@@ -287,6 +303,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
         unset mxtics
         unset mytics
         unset xl
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
         set yl 'Latency (Seconds)'
         plot 'ex/e2/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '1 Min',\
         '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '2 Min',\
@@ -312,6 +330,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Latency (Seconds)'
             plot 'ex/e2/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
             '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
@@ -337,6 +357,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             unset mxtics
             unset mytics
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Number of Executors'
             plot 'ex/e2/w1/exec.csv' using 1:2 w l lc 'red' lw 4 t '1 Min',\
             '' using 1:3 w l lc 'blue' lw 4 t '2 Min',\
@@ -359,6 +381,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Number of Executors'
             plot 'ex/e2/w1/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
             '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
@@ -387,6 +411,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             unset mytics
             set samples 50000 
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Latency (Seconds)'
             plot 'ex/e2/w2/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '1 Min',\
             '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '2 Min',\
@@ -410,6 +436,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Latency (Seconds)'
             plot 'ex/e2/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
             '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
@@ -435,6 +463,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             unset mxtics
             unset mytics
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Number of Executors'
             plot 'ex/e2/w2/exec.csv' using 1:2 w l lc 'red' lw 4 t '1 Min',\
             '' using 1:3 w l lc 'blue' lw 4 t '2 Min',\
@@ -458,6 +488,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
         set boxwidth 0.3 absolute
         set style fill empty
         unset xl
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
         set yl 'Number of Executors'
         plot 'ex/e2/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles','' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
     \end{gnuplot}
@@ -501,6 +533,8 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
         unset mxtics
         unset mytics
         unset xl
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
         set yl 'Latency (Seconds)'
         plot 'ex/e3/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '1 Min',\
         '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '2 Min',\
@@ -526,6 +560,8 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Latency (Seconds)'
             plot 'ex/e3/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
             '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
@@ -551,6 +587,8 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             unset mxtics
             unset mytics
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Number of Executors'
             plot 'ex/e3/w1/exec.csv' using 1:2 w l lc 'red' lw 4 t '1 Min',\
             '' using 1:3 w l lc 'blue' lw 4 t '2 Min',\
@@ -573,6 +611,8 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Number of Executors'
             plot 'ex/e3/w1/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
             '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
@@ -601,6 +641,8 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             unset mytics
             set samples 50000 
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Latency (Seconds)'
             plot 'ex/e3/w2/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '1 Min',\
             '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '2 Min',\
@@ -624,6 +666,8 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Latency (Seconds)'
             plot 'ex/e3/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
             '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
@@ -649,6 +693,8 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             unset mxtics
             unset mytics
             unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
             set yl 'Number of Executors'
             plot 'ex/e3/w2/exec.csv' using 1:2 w l lc 'red' lw 4 t '1 Min',\
             '' using 1:3 w l lc 'blue' lw 4 t '2 Min',\
@@ -672,6 +718,8 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
         set boxwidth 0.3 absolute
         set style fill empty
         unset xl
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
         set yl 'Number of Executors'
         plot 'ex/e3/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles','' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
     \end{gnuplot}
@@ -685,4 +733,241 @@ For Workload 1, two and three-minute decision interval leads to better latency w
 At this point selecting the best configuration becomes more difficult. Note that two and three-minute decision intervals perform extremely well for Workload 1 and poor for Workload 2. On the other hand one-minute decision interval performs reasonable in both workloads. Thus, this configuration is still preferred.
 
 \clearpage
-\section{Experiment 4: Table Initializer}
+\section{Experiment 4: State Space Initializer}
+As mentioned in Section~\ref{design}, in order to speedup learning process, state space can be initialized using different techniques. This experiment has been designed to illustrate the effect of different state space initializers. In particular, it evaluates effectiveness of optimized initializer in comparison to random and zero initializers. Table~\ref{eval:tab:ex4} shows the configuration of this experiment. Note that, Queue Aware executor strategy is optimized to complement Auto-Scaler's decisions. In order to eliminate positive effect of Queue Aware strategy, Static strategy is used instead to better illustrate the negative effects of random actions.
+\begin{table}[h]
+    \includegraphics[clip,trim=3.3cm 21.18cm 4.1cm 2.5cm]{tables/ex4.pdf}
+    \centering
+    \caption{State Space Initializer Configuration Parameters}
+    \label{eval:tab:ex4}
+\end{table}
+
+Figures~\ref{eval:f:e4:w1:lat},~\ref{eval:f:e4:w1:lat-c},~\ref{eval:f:e4:w1:exec} and ~\ref{eval:f:e4:w1:exec-c} illustrates latency and executor charts for Workload 1. Figures~\ref{eval:f:e4:w2:lat},~\ref{eval:f:e4:w2:lat-c},~\ref{eval:f:e4:w2:exec} and~\ref{eval:f:e4:w2:exec-c} illustrates latency and executor charts for Workload 2.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 16cm,7.5cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xdata time
+        set timefmt '%H:%M:%S'
+        set xr ['0:00:00':'1:00:00']
+        set yr [0:250]
+        set xtics '00:00:00',600 nomirror
+        set ytics 0,30 nomirror
+        set y2r [0:250]
+        set y2tics 0,30
+        set samples 50000 
+        unset mxtics
+        unset mytics
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+        unset xl
+        set yl 'Latency (Seconds)'
+        plot 'ex/e4/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Optimized',\
+        '' using 1:3 w l lc 'blue' lw 4 smooth csplines t 'Zero',\
+        '' using 1:4 w l lc 'black' lw 4 smooth csplines t 'Random'
+    \end{gnuplot}
+    \caption{State Space Initializer -- Workload 1 -- Latency}
+    \label{eval:f:e4:w1:lat}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set key width -12
+            set xr [0.5:3.5]
+            set yr [0:250]
+            set ytics 0,30 nomirror
+            set y2r [0:250]
+            set y2tics 0,30
+            set boxwidth 0.3 absolute
+            set style fill empty
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            unset xl
+            set yl 'Latency (Seconds)'
+            plot 'ex/e4/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
+        \end{gnuplot}
+        \caption{State Space Initializer -- Workload 1 -- Latency}
+        \label{eval:f:e4:w1:lat-c}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [2:26]
+            set y2r [2:26]
+            set ytics 0,4 nomirror
+            set xtics '00:00:00',600 nomirror
+            set y2tics 0,4
+            unset mxtics
+            unset mytics
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            unset xl
+            set yl 'Number of Executors'
+            plot 'ex/e4/w1/exec.csv' using 1:2 w l lc 'red' lw 4 t 'Optimized',\
+            '' using 1:3 w l lc 'blue' lw 4 t 'Zero',\
+            '' using 1:4 w l lc 'black' lw 4 t 'Random'
+        \end{gnuplot}
+        \caption{State Space Initializer -- Workload 1 -- Number of Executors}
+        \label{eval:f:e4:w1:exec}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xr [0.5:3.5]
+            set yr [2:26]
+            set y2r [2:26]
+            set ytics 0,4 nomirror
+            set y2tics 0,4 nomirror
+            set boxwidth 0.3 absolute
+            set style fill empty
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            set yl 'Number of Executors'
+            plot 'ex/e4/w1/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+        \end{gnuplot}
+        \caption{State Space Initializer -- Workload 1 -- Number of Executors}
+        \label{eval:f:e4:w1:exec-c}
+    \end{minipage}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [0:170]
+            set y2r [0:170]
+            set xtics '00:00:00',600 nomirror
+            set ytics 0,20 nomirror
+            set y2tics 0,20
+            unset mxtics
+            unset mytics
+            set samples 50000 
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            set yl 'Latency (Seconds)'
+            plot 'ex/e4/w2/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Optimized',\
+            '' using 1:3 w l lc 'blue' lw 4 smooth csplines t 'Zero',\
+            '' using 1:4 w l lc 'black' lw 4 smooth csplines t 'Random'
+        \end{gnuplot}
+        \caption{State Space Initializer -- Workload 2 -- Latency}
+        \label{eval:f:e4:w2:lat}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set key width -12
+            set xr [0.5:3.5]
+            set yr [0:410]
+            set y2r [0:410]
+            set ytics nomirror
+            set y2tics 0,50
+            set ytics 0,50
+            set boxwidth 0.3 absolute
+            set style fill empty
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0            
+            set yl 'Latency (Seconds)'
+            plot 'ex/e4/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
+        \end{gnuplot}
+        \caption{State Space Initializer -- Workload 2 -- Latency}
+        \label{eval:f:e4:w2:lat-c}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [2:26]
+            set y2r [2:26]
+            set xtics '00:00:00',600 nomirror
+            set ytics 0,4 nomirror
+            set y2tics 0,4
+            unset mxtics
+            unset mytics
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0     
+            set yl 'Number of Executors'
+            plot 'ex/e4/w2/exec.csv' using 1:2 w l lc 'red' lw 4 t 'Optimized',\
+            '' using 1:3 w l lc 'blue' lw 4 t 'Zero',\
+            '' using 1:4 w l lc 'black' lw 4 t 'Random'
+        \end{gnuplot}
+        \caption{State Space Initializer -- Workload 2 -- Number of Executors}
+        \label{eval:f:e4:w2:exec}
+    \end{minipage}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 16cm,7.5cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xr [0.5:3.5]
+        set yr [2:26]
+        set ytics 0,4 nomirror
+        set y2r [2:26]
+        set y2tics 0,4
+        set boxwidth 0.3 absolute
+        set style fill empty
+        unset xl
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0  
+        set yl 'Number of Executors'
+        plot 'ex/e4/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles','' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+    \end{gnuplot}
+    \caption{State Space Initializer -- Workload 2 -- Number of Executors}
+    \label{eval:f:e4:w2:exec-c}
+\end{figure}
+\FloatBarrier
+\subsection{Conclusion}
+
+For Workload 1 as depicted, optimized initializer beats zero and random initializers and to a large degree it is able to respect target latency. For Workload 2, random initializer performs similar to optimized initializer. But this is only achieved by chance. Looking at Figure~\ref{eval:f:e4:w2:exec} reveals two pieces of information.
+\begin{itemize}
+    \item Since the first part of Workload 2 is not intensive and Auto-Scaler is running with minimum executors, random initializer performs early Scale-Out -- there is no other option with minimum executors. Since this action helps to improve the latency, Auto-Scaler learns this bit of information and performs another Scale-Out which in turn improves latency further. Up until the workload reaches critical point -- in terms of latency -- Auto-Scaler has already performed consecutive Scale-Out actions which helps to diverge faster. Note that if the workload begins with a peak -- just like Workload 1, there is little chance that random initializer could win the game.
+    \item Considering final stage of workload, where Auto-Scaler has removed so many executors that the latency started to increase fast -- Figure~\ref{eval:f:e4:w2:lat} -- which indicates state space still contains wrong information. Note that optimized initializer removes executors at a slower rate.
+\end{itemize}
+
+Looking at behavior of zero initializer reveals an interesting point. Since Auto-Scaler has started with minimum executors, it wasn't able to process the workload. On the other hand all states are initialized to zero. Thus, Auto-Scaler will stick to No-Action -- with a probability of $\epsilon$ will perform random action. Staying with No-Action leads to even higher latency which is a new state initialized with zero. Again, Auto-Scaler will stick to No-Action which in turn increases latency and causes Auto-Scaler to land in another new state. This process keeps going -- latency increases leading Auto-Scaler to land in a new state. This means, Auto-Scaler never sees the previous states to utilize learned information. This is the point where Queue-Aware executor strategy could potentially help to complement Auto-Scaler's actions. In case Auto-Scaler is behind schedule and by any chance takes a random Scale-Out action, Queue-Aware strategy adds a batch of executors at once which would considerably improve latency.
+
+In general, if an Auto-Scaler starts with zero or random initializer, it is better to start with maximum -- or at least reasonable -- number of executors such that initial random actions don't cause serious SLO violations.
+
+\clearpage
+\section{Experiment 5: Learning Factor}
