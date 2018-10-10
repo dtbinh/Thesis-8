@@ -7,8 +7,8 @@ In this chapter the two implemented techniques will be evaluated under three rea
 \section{Workload Characteristic}
 \label{eval:workload}
 
-DEBS 2014~\cite{debs2014} has been chosen as a real world workload to test the implementation. Each workload contains data from a random location of the original workload and replayed to feed Spark cluster. All experiments were run for one hour. Figure~\ref{eval:fig:workload} shows distribution of messages in three workloads which have been captured from Spark UI.
-\begin{figure}
+DEBS 2014~\cite{debs2014} has been chosen as a real world workload to test the implementation. Each workload contains data from a random location of the original workload and replayed to feed Spark cluster. All experiments were run for one hour. Figure~\ref{eval:fig:workload} shows distribution of messages in two workloads which have been captured from Spark UI.
+\begin{figure}[!htbp]
     \centering
       \begin{subfigure}[h]{\linewidth}
         \centering\includegraphics[scale=0.6]{workload1.png}
@@ -18,7 +18,7 @@ DEBS 2014~\cite{debs2014} has been chosen as a real world workload to test the i
         \centering\includegraphics[scale=0.6]{workload2.png}
         \caption{Workload 2}
     \end{subfigure}
-    \caption{Three Workloads of DEBS 2014}
+    \caption{Two Workloads of DEBS 2014}
     \label{eval:fig:workload}
 \end{figure}
 
@@ -27,6 +27,20 @@ The workload involves sensors that measure energy consumption of devices. Each d
 \text{predicted value} = \frac{\text{average(window)} + \text{median(window)}}{2}
 \label{eval:l:pred}
 \end{equation}
+
+Note that intensity of the workload does not solely depend on number of incoming messages. It also depends on uniqueness of device IDs. A unique device ID inside a micro batch leads to recalculation of Equation~\ref{eval:l:pred} which on its own depends on sort operation to calculate median value. That is, the following cases might occur in one micro batch:
+\begin{itemize}
+    \item Number of incoming messages is high and uniqueness of devices is also high.
+    \item Number if incoming messages is high but uniqueness of devices is low.
+    \item Number of incoming messages is low but uniqueness of devices is high.
+    \item Number of incoming messages is low and uniqueness of devices is also low.
+\end{itemize}
+As an example, consider these two batches:
+\begin{enumerate}
+    \item \label{eval:wl-ex1} A batch of 500 records belonging to 500 hundred devices -- one record for each device -- which leads to 500 sort operations. Bare in mind that, it is \emph{not} 500 hundred sort operation on a 1-element list. Each record is accumulated with previous records of the sliding window and then sorted.
+    \item \label{eval:wl-ex2} A batch of 2000 records belonging to 5 devices -- 400 hundred records for each device -- which leads to 5 sort operations.
+\end{enumerate}
+Case~\ref{eval:wl-ex1} is much more CPU intensive than case~\ref{eval:wl-ex2}.
 
 In all experiments \emph{batch size} is set to 10 seconds. The cluster uses 24 executors with minimum of 4 executors that should be respected by Auto-Scaler. All experiments start with minimum number of executors -- 4 in this case -- and run for \emph{one} hour. In case any training is required to run the experiment, training data set is separated from the original workload dataset.
 
@@ -971,3 +985,234 @@ In general, if an Auto-Scaler starts with zero or random initializer, it is bett
 
 \clearpage
 \section{Experiment 5: Learning Factor}
+As mentioned in previous chapters, A Q-Learning agent learns new information and merges it with its own knowledge. The speed of learning is controlled by learning factor which defined by \lstinline|learningFactor| in this thesis. This experiment has been designed to show the effect of different learning factor values. Note that learning factor affects Auto-Scaler's behavior in long run. Thus, for a 1-Hour experiment extreme values should be chosen to make difference observable. Furthermore, since there is no random action involved in this experiment, Queue Aware executor strategy can be used again. Table~\ref{eval:tab:ex5} describes the configuration parameters of this experiment. 
+\begin{table}[h]
+    \includegraphics[clip,trim=3.3cm 21.18cm 4.5cm 2.5cm]{tables/ex5.pdf}
+    \centering
+    \caption{Learning Factor Configuration Parameters}
+    \label{eval:tab:ex5}
+\end{table}
+
+Figures~\ref{eval:f:e5:w1:lat},~\ref{eval:f:e5:w1:lat-c},~\ref{eval:f:e5:w1:exec} and ~\ref{eval:f:e5:w1:exec-c} illustrates latency and executor charts for Workload 1. Figures~\ref{eval:f:e5:w2:lat},~\ref{eval:f:e5:w2:lat-c},~\ref{eval:f:e5:w2:exec} and~\ref{eval:f:e5:w2:exec-c} illustrates latency and executor charts for Workload 2.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 16cm,7.5cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xdata time
+        set timefmt '%H:%M:%S'
+        set xr ['0:00:00':'1:00:00']
+        set yr [0:150]
+        set xtics '00:00:00',600 nomirror
+        set ytics 0,20 nomirror
+        set y2r [0:150]
+        set y2tics 0,20
+        set samples 50000 
+        unset mxtics
+        unset mytics
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+        unset xl
+        set yl 'Latency (Seconds)'
+        plot 'ex/e5/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '0.7',\
+        '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '0.07',\
+        '' using 1:4 w l lc 'black' lw 4 smooth csplines t '0.007'
+    \end{gnuplot}
+    \caption{Learning Factor -- Workload 1 -- Latency}
+    \label{eval:f:e5:w1:lat}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set key width -12
+            set xr [0.5:3.5]
+            set yr [0:150]
+            set ytics 0,20 nomirror
+            set y2r [0:150]
+            set y2tics 0,20
+            set boxwidth 0.3 absolute
+            set style fill empty
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            unset xl
+            set yl 'Latency (Seconds)'
+            plot 'ex/e5/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
+        \end{gnuplot}
+        \caption{Learning Factor -- Workload 1 -- Latency}
+        \label{eval:f:e5:w1:lat-c}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [2:26]
+            set y2r [2:26]
+            set ytics 0,4 nomirror
+            set xtics '00:00:00',600 nomirror
+            set y2tics 0,4
+            unset mxtics
+            unset mytics
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            unset xl
+            set yl 'Number of Executors'
+            plot 'ex/e5/w1/exec.csv' using 1:2 w l lc 'red' lw 4 t '0.7',\
+            '' using 1:3 w l lc 'blue' lw 4 t '0.07',\
+            '' using 1:4 w l lc 'black' lw 4 t '0.007'
+        \end{gnuplot}
+        \caption{Learning Factor -- Workload 1 -- Number of Executors}
+        \label{eval:f:e5:w1:exec}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xr [0.5:3.5]
+            set yr [2:26]
+            set y2r [2:26]
+            set ytics 0,4 nomirror
+            set y2tics 0,4 nomirror
+            set boxwidth 0.3 absolute
+            set style fill empty
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            set yl 'Number of Executors'
+            plot 'ex/e5/w1/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+        \end{gnuplot}
+        \caption{Learning Factor -- Workload 1 -- Number of Executors}
+        \label{eval:f:e5:w1:exec-c}
+    \end{minipage}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [0:110]
+            set y2r [0:110]
+            set xtics '00:00:00',600 nomirror
+            set ytics 0,20 nomirror
+            set y2tics 0,20
+            unset mxtics
+            unset mytics
+            set samples 50000 
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            set yl 'Latency (Seconds)'
+            plot 'ex/e5/w2/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '0.7',\
+            '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '0.07',\
+            '' using 1:4 w l lc 'black' lw 4 smooth csplines t '0.007'
+        \end{gnuplot}
+        \caption{Learning Factor -- Workload 2 -- Latency}
+        \label{eval:f:e5:w2:lat}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set key width -12
+            set xr [0.5:3.5]
+            set yr [0:110]
+            set y2r [0:110]
+            set ytics nomirror
+            set y2tics 0,50
+            set ytics 0,50
+            set boxwidth 0.3 absolute
+            set style fill empty
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0            
+            set yl 'Latency (Seconds)'
+            plot 'ex/e5/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
+        \end{gnuplot}
+        \caption{Learning Factor -- Workload 2 -- Latency}
+        \label{eval:f:e5:w2:lat-c}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [2:26]
+            set y2r [2:26]
+            set xtics '00:00:00',600 nomirror
+            set ytics 0,4 nomirror
+            set y2tics 0,4
+            unset mxtics
+            unset mytics
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0     
+            set yl 'Number of Executors'
+            plot 'ex/e5/w2/exec.csv' using 1:2 w l lc 'red' lw 4 t '0.7',\
+            '' using 1:3 w l lc 'blue' lw 4 t '0.07',\
+            '' using 1:4 w l lc 'black' lw 4 t '0.007'
+        \end{gnuplot}
+        \caption{Learning Factor -- Workload 2 -- Number of Executors}
+        \label{eval:f:e5:w2:exec}
+    \end{minipage}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 16cm,7.5cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xr [0.5:3.5]
+        set yr [2:26]
+        set ytics 0,4 nomirror
+        set y2r [2:26]
+        set y2tics 0,4
+        set boxwidth 0.3 absolute
+        set style fill empty
+        unset xl
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0  
+        set yl 'Number of Executors'
+        plot 'ex/e5/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles','' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+    \end{gnuplot}
+    \caption{Learning Factor -- Workload 2 -- Number of Executors}
+    \label{eval:f:e5:w2:exec-c}
+\end{figure}
+\FloatBarrier
+\subsection{Conclusion}
+For Workload 1, learning factor of 0.7 achieves a better result both in terms of latency and number of executors. It is tempting to conclude that for unpredictable workloads, it is better to apply a higher learning factor.
+
+But the above conclusion doesn't hold when we look at the result of Workload 2. In terms of latency, 0.007 is slightly below target latency which is better than 0.7 and 0.07. In terms of number of executors, it achieves an outstanding result of 8 executors on average. Combining latency and number of executors this is the best result that has been achieved for Workload 2.
+
+It seems that the effect of learning factor is totally workload dependent and no generalized conclusion can be made based on these two workloads.
+\clearpage
+\section{Experiment 6: Discretization}
