@@ -25,7 +25,7 @@ case class StateActionSet(var isVisited: Boolean = false, qValues: MutableHashMa
 }
 
 @SerialVersionUID(4933078L)
-class StateSpace(value: MutableHashMap[State, StateActionSet]) extends Serializable {
+case class StateSpace(value: MutableHashMap[State, StateActionSet]) extends Serializable {
 
   def updateQValueForAction(state: State, action: Action, qVal: Double): Unit = {
     val stateActionSet = value(state)
@@ -84,8 +84,4 @@ class StateSpace(value: MutableHashMap[State, StateActionSet]) extends Serializa
        | ----------------
      """.stripMargin
   }
-}
-
-object StateSpace {
-  def apply(): StateSpace = new StateSpace(MutableHashMap[State, StateActionSet]())
 }

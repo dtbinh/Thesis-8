@@ -1,9 +1,10 @@
 package com.sap.rm.rl
 
-import java.io.{ObjectInputStream, ObjectOutputStream}
+import java.io.{DataInputStream, DataOutputStream}
 import java.net.URI
 
 import com.sap.rm.rl.Action.Action
+import com.sap.rm.rl.impl.statespace.StateSpaceUtils
 import com.sap.rm.{ResourceManager, ResourceManagerConfig}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -40,17 +41,21 @@ class ValueIterationResourceManager(
   private var learningPhaseIsDone: Boolean = false
   private var firstRun: Boolean = true
 
-  override lazy val stateSpace: StateSpace = {
-    if (!ValueIterationLearningPhase) {
-      // load from HDFS
-      val in: ObjectInputStream = new ObjectInputStream(fs.open(stateSpacePath))
-      val ss = in.readObject().asInstanceOf[StateSpace]
-      in.close()
+  private var ss: StateSpace = _
 
-      ss
-    } else {
-      stateSpaceOpt.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace()))
+  override def getStateSpace: StateSpace = {
+    if (ss == null) {
+      if (!ValueIterationLearningPhase) {
+        // load from HDFS
+        val in: DataInputStream = new DataInputStream(fs.open(stateSpacePath))
+        ss = StateSpaceUtils.loadFrom(in)
+        in.close()
+      } else {
+        ss = stateSpaceOpt.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace(MutableHashMap[State, StateActionSet]())))
+      }
     }
+
+    ss
   }
 
   override def updateStateSpace(): Unit = {
@@ -109,10 +114,10 @@ class ValueIterationResourceManager(
             }
 
             val QVal: Double = stateActionRewardBar(stateAction) + DiscountFactor * sum
-            stateSpace.updateQValueForAction(startingState, action, QVal)
+            getStateSpace.updateQValueForAction(startingState, action, QVal)
           }
 
-          startingStates.foreach(s => VValues(s) = stateSpace(s).qValues.maxBy(_._2)._2)
+          startingStates.foreach(s => VValues(s) = getStateSpace(s).qValues.maxBy(_._2)._2)
           logVValues(VValues)
         }
 
@@ -126,8 +131,8 @@ class ValueIterationResourceManager(
         VValues.clear()
 
         // write to hdfs here
-        val out: ObjectOutputStream = new ObjectOutputStream(fs.create(stateSpacePath, true))
-        out.writeObject(stateSpace)
+        val out: DataOutputStream = new DataOutputStream(fs.create(stateSpacePath, true))
+        StateSpaceUtils.writeTo(out, getStateSpace)
         out.close()
 
         // learning phase is done

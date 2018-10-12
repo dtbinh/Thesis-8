@@ -5,6 +5,7 @@ import Action._
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.scheduler.{BatchInfo, StreamingListenerBatchCompleted, StreamingListenerBatchSubmitted}
 import scala.util.Random.shuffle
+import scala.collection.mutable.{HashMap => MutableHashMap}
 
 class TemporalDifferenceResourceManager(
                                          cfg: ResourceManagerConfig,
@@ -22,10 +23,10 @@ class TemporalDifferenceResourceManager(
   import logger._
 
   lazy val targetWaitingListLength: Int = TargetLatency / batchDuration.toInt
-  lazy val stateSpace: StateSpace = stateSpaceOpt.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace()))
-  lazy val policy: Policy = policyOpt.getOrElse(PolicyFactory.getPolicy(config))
-  lazy val reward: Reward = rewardOpt.getOrElse(RewardFactory.getReward(config))
-  lazy val executorStrategy: ExecutorStrategy = executorStrategyOpt.getOrElse(ExecutorStrategyFactory.getExecutorStrategy(config, this))
+  private lazy val ss: StateSpace = stateSpaceOpt.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace(MutableHashMap[State, StateActionSet]())))
+  private lazy val policy: Policy = policyOpt.getOrElse(PolicyFactory.getPolicy(config))
+  private lazy val reward: Reward = rewardOpt.getOrElse(RewardFactory.getReward(config))
+  private lazy val executorStrategy: ExecutorStrategy = executorStrategyOpt.getOrElse(ExecutorStrategyFactory.getExecutorStrategy(config, this))
 
   protected lazy val totalDelayWindow = CountBasedSlidingWindow(WindowSize)
   protected lazy val incomingMessageWindow = CountBasedSlidingWindow(WindowSize)
@@ -39,6 +40,7 @@ class TemporalDifferenceResourceManager(
   protected var lastWindowAverageIncomingMessage: Int = 0
   protected var currentBatch: BatchInfo = _
   protected var numberOfExecutors: Int = 0
+  protected def getStateSpace: StateSpace = ss
 
   override def onBatchSubmitted(batchSubmitted: StreamingListenerBatchSubmitted): Unit = batchWaitingList.enqueue(batchSubmitted.batchInfo.submissionTime)
 
@@ -110,16 +112,16 @@ class TemporalDifferenceResourceManager(
     else logScaleOutError()
   }
 
-  def whatIsTheNextAction(): Action = policy.nextActionFrom(stateSpace, lastState, lastAction, currentState, batchWaitingList, numberOfExecutors)
+  def whatIsTheNextAction(): Action = policy.nextActionFrom(getStateSpace, lastState, lastAction, currentState, batchWaitingList, numberOfExecutors)
 
-  def calculateReward(): Double = reward.forAction(stateSpace, lastState, lastAction, currentState, batchWaitingList, numberOfExecutors).get
+  def calculateReward(): Double = reward.forAction(getStateSpace, lastState, lastAction, currentState, batchWaitingList, numberOfExecutors).get
 
   def updateStateSpace(): Unit = {
-    val oldQVal: Double = stateSpace(lastState, lastAction)
-    val currentStateQVal: Double = stateSpace(currentState, actionToTake)
+    val oldQVal: Double = getStateSpace(lastState, lastAction)
+    val currentStateQVal: Double = getStateSpace(currentState, actionToTake)
 
     val newQVal: Double = ((1 - LearningFactor) * oldQVal) + (LearningFactor * (rewardForLastAction + (DiscountFactor * currentStateQVal)))
-    stateSpace.updateQValueForAction(lastState, lastAction, newQVal)
+    getStateSpace.updateQValueForAction(lastState, lastAction, newQVal)
 
     logQValueUpdate(lastState, lastAction, oldQVal, rewardForLastAction, currentState, actionToTake, currentStateQVal, newQVal)
   }
