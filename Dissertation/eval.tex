@@ -82,9 +82,9 @@ set timefmt '%H:%M:%S'
 set xr ['0:00:00':'1:00:00']
 set yr [0:150]
 set xtics '00:00:00',600 nomirror
-set ytics 0,20 nomirror
+set ytics 0,30 nomirror
 set y2r [0:150]
-set y2tics 0,20
+set y2tics 0,30
 set samples 50000 
 unset mxtics
 unset mytics
@@ -110,9 +110,9 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
             set key width -12
 			set xr [0.5:3.5]
 			set yr [0:150]
-			set ytics 0,20 nomirror
+			set ytics 0,30 nomirror
 			set y2r [0:150]
-			set y2tics 0,20
+			set y2tics 0,30 nomirror
 			set boxwidth 0.3 absolute
 			set style fill empty
 			unset xl
@@ -191,8 +191,8 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			set yr [0:170]
 			set y2r [0:170]
 			set xtics '00:00:00',600 nomirror
-			set ytics 0,20 nomirror
-			set y2tics 0,20
+			set ytics 0,30 nomirror
+			set y2tics 0,30
 			unset mxtics
 			unset mytics
 			set samples 50000 
@@ -217,8 +217,8 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
 			set xr [0.5:3.5]
 			set yr [0:170]
 			set y2r [0:170]
-			set ytics nomirror
-			set y2tics 0,20
+			set ytics 0,30 nomirror
+			set y2tics 0,30 nomirror
 			set boxwidth 0.3 absolute
 			set style fill empty
 			unset xl
@@ -270,7 +270,7 @@ set xr [0.5:3.5]
 set yr [2:26]
 set ytics 0,4 nomirror
 set y2r [2:26]
-set y2tics 0,4
+set y2tics 0,4 nomirror
 set boxwidth 0.3 absolute
 set style fill empty
 unset xl
@@ -308,11 +308,11 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
         set xdata time
         set timefmt '%H:%M:%S'
         set xr ['0:00:00':'1:00:00']
-        set yr [0:110]
+        set yr [0:120]
         set xtics '00:00:00',600 nomirror
-        set ytics 0,20 nomirror
-        set y2r [0:110]
-        set y2tics 0,20
+        set ytics 0,30 nomirror
+        set y2r [0:120]
+        set y2tics 0,30 nomirror
         set samples 50000 
         unset mxtics
         unset mytics
@@ -337,10 +337,10 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             set datafile separator ';'
             set key width -12
             set xr [0.5:3.5]
-            set yr [0:110]
-            set ytics 0,20 nomirror
-            set y2r [0:110]
-            set y2tics 0,20
+            set yr [0:120]
+            set ytics 0,30 nomirror
+            set y2r [0:120]
+            set y2tics 0,30 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
@@ -367,7 +367,7 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             set y2r [2:26]
             set ytics 0,4 nomirror
             set xtics '00:00:00',600 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             unset xl
@@ -419,8 +419,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             set yr [0:130]
             set y2r [0:130]
             set xtics '00:00:00',600 nomirror
-            set ytics 0,20 nomirror
-            set y2tics 0,20
+            set ytics 0,30 nomirror
+            set y2tics 0,30 nomirror
             unset mxtics
             unset mytics
             set samples 50000 
@@ -445,8 +445,8 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             set xr [0.5:3.5]
             set yr [0:130]
             set y2r [0:130]
-            set ytics nomirror
-            set y2tics 0,20
+            set ytics 0,30 nomirror
+            set y2tics 0,30 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
@@ -473,7 +473,7 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
             set y2r [2:26]
             set xtics '00:00:00',600 nomirror
             set ytics 0,4 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             unset xl
@@ -498,7 +498,7 @@ Figures~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:lat-c},~\ref{eval:f:e2:w1:exec
         set yr [2:26]
         set ytics 0,4 nomirror
         set y2r [2:26]
-        set y2tics 0,4
+        set y2tics 0,4 nomirror
         set boxwidth 0.3 absolute
         set style fill empty
         unset xl
@@ -538,11 +538,11 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
         set xdata time
         set timefmt '%H:%M:%S'
         set xr ['0:00:00':'1:00:00']
-        set yr [0:110]
+        set yr [0:120]
         set xtics '00:00:00',600 nomirror
-        set ytics 0,20 nomirror
-        set y2r [0:110]
-        set y2tics 0,20
+        set ytics 0,30 nomirror
+        set y2r [0:120]
+        set y2tics 0,30 nomirror
         set samples 50000 
         unset mxtics
         unset mytics
@@ -567,10 +567,10 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             set datafile separator ';'
             set key width -12
             set xr [0.5:3.5]
-            set yr [0:110]
-            set ytics 0,20 nomirror
-            set y2r [0:110]
-            set y2tics 0,20
+            set yr [0:120]
+            set ytics 0,30 nomirror
+            set y2r [0:120]
+            set y2tics 0,30 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
@@ -597,7 +597,7 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             set y2r [2:26]
             set ytics 0,4 nomirror
             set xtics '00:00:00',600 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             unset xl
@@ -646,11 +646,11 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             set xdata time
             set timefmt '%H:%M:%S'
             set xr ['0:00:00':'1:00:00']
-            set yr [0:130]
-            set y2r [0:130]
+            set yr [0:120]
+            set y2r [0:120]
             set xtics '00:00:00',600 nomirror
-            set ytics 0,20 nomirror
-            set y2tics 0,20
+            set ytics 0,30 nomirror
+            set y2tics 0,30 nomirror
             unset mxtics
             unset mytics
             set samples 50000 
@@ -673,10 +673,10 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             set datafile separator ';'
             set key width -12
             set xr [0.5:3.5]
-            set yr [0:130]
-            set y2r [0:130]
-            set ytics nomirror
-            set y2tics 0,20
+            set yr [0:120]
+            set y2r [0:120]
+            set ytics 0,30 nomirror
+            set y2tics 0,30 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
@@ -703,7 +703,7 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
             set y2r [2:26]
             set xtics '00:00:00',600 nomirror
             set ytics 0,4 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             unset xl
@@ -728,7 +728,7 @@ Figures~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:lat-c},~\ref{eval:f:e3:w1:exec
         set yr [2:26]
         set ytics 0,4 nomirror
         set y2r [2:26]
-        set y2tics 0,4
+        set y2tics 0,4 nomirror
         set boxwidth 0.3 absolute
         set style fill empty
         unset xl
@@ -767,11 +767,11 @@ Figures~\ref{eval:f:e4:w1:lat},~\ref{eval:f:e4:w1:lat-c},~\ref{eval:f:e4:w1:exec
         set xdata time
         set timefmt '%H:%M:%S'
         set xr ['0:00:00':'1:00:00']
-        set yr [0:250]
+        set yr [0:240]
         set xtics '00:00:00',600 nomirror
         set ytics 0,30 nomirror
-        set y2r [0:250]
-        set y2tics 0,30
+        set y2r [0:240]
+        set y2tics 0,30 nomirror
         set samples 50000 
         unset mxtics
         unset mytics
@@ -796,10 +796,10 @@ Figures~\ref{eval:f:e4:w1:lat},~\ref{eval:f:e4:w1:lat-c},~\ref{eval:f:e4:w1:exec
             set datafile separator ';'
             set key width -12
             set xr [0.5:3.5]
-            set yr [0:250]
+            set yr [0:240]
             set ytics 0,30 nomirror
-            set y2r [0:250]
-            set y2tics 0,30
+            set y2r [0:240]
+            set y2tics 0,30 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
@@ -826,7 +826,7 @@ Figures~\ref{eval:f:e4:w1:lat},~\ref{eval:f:e4:w1:lat-c},~\ref{eval:f:e4:w1:exec
             set y2r [2:26]
             set ytics 0,4 nomirror
             set xtics '00:00:00',600 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
@@ -875,11 +875,11 @@ Figures~\ref{eval:f:e4:w1:lat},~\ref{eval:f:e4:w1:lat-c},~\ref{eval:f:e4:w1:exec
             set xdata time
             set timefmt '%H:%M:%S'
             set xr ['0:00:00':'1:00:00']
-            set yr [0:170]
-            set y2r [0:170]
+            set yr [0:410]
+            set y2r [0:410]
             set xtics '00:00:00',600 nomirror
-            set ytics 0,20 nomirror
-            set y2tics 0,20
+            set ytics 0,50 nomirror
+            set y2tics 0,50 nomirror
             unset mxtics
             unset mytics
             set samples 50000 
@@ -904,9 +904,8 @@ Figures~\ref{eval:f:e4:w1:lat},~\ref{eval:f:e4:w1:lat-c},~\ref{eval:f:e4:w1:exec
             set xr [0.5:3.5]
             set yr [0:410]
             set y2r [0:410]
-            set ytics nomirror
-            set y2tics 0,50
-            set ytics 0,50
+            set ytics 0,50 nomirror
+            set y2tics 0,50 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
@@ -933,7 +932,7 @@ Figures~\ref{eval:f:e4:w1:lat},~\ref{eval:f:e4:w1:lat-c},~\ref{eval:f:e4:w1:exec
             set y2r [2:26]
             set xtics '00:00:00',600 nomirror
             set ytics 0,4 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             unset xl
@@ -958,7 +957,7 @@ Figures~\ref{eval:f:e4:w1:lat},~\ref{eval:f:e4:w1:lat-c},~\ref{eval:f:e4:w1:exec
         set yr [2:26]
         set ytics 0,4 nomirror
         set y2r [2:26]
-        set y2tics 0,4
+        set y2tics 0,4 nomirror
         set boxwidth 0.3 absolute
         set style fill empty
         unset xl
@@ -1006,9 +1005,9 @@ Figures~\ref{eval:f:e5:w1:lat},~\ref{eval:f:e5:w1:lat-c},~\ref{eval:f:e5:w1:exec
         set xr ['0:00:00':'1:00:00']
         set yr [0:150]
         set xtics '00:00:00',600 nomirror
-        set ytics 0,20 nomirror
+        set ytics 0,30 nomirror
         set y2r [0:150]
-        set y2tics 0,20
+        set y2tics 0,30 nomirror
         set samples 50000 
         unset mxtics
         unset mytics
@@ -1034,9 +1033,9 @@ Figures~\ref{eval:f:e5:w1:lat},~\ref{eval:f:e5:w1:lat-c},~\ref{eval:f:e5:w1:exec
             set key width -12
             set xr [0.5:3.5]
             set yr [0:150]
-            set ytics 0,20 nomirror
+            set ytics 0,30 nomirror
             set y2r [0:150]
-            set y2tics 0,20
+            set y2tics 0,30 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
@@ -1063,7 +1062,7 @@ Figures~\ref{eval:f:e5:w1:lat},~\ref{eval:f:e5:w1:lat-c},~\ref{eval:f:e5:w1:exec
             set y2r [2:26]
             set ytics 0,4 nomirror
             set xtics '00:00:00',600 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
@@ -1112,11 +1111,11 @@ Figures~\ref{eval:f:e5:w1:lat},~\ref{eval:f:e5:w1:lat-c},~\ref{eval:f:e5:w1:exec
             set xdata time
             set timefmt '%H:%M:%S'
             set xr ['0:00:00':'1:00:00']
-            set yr [0:110]
-            set y2r [0:110]
+            set yr [0:120]
+            set y2r [0:120]
             set xtics '00:00:00',600 nomirror
-            set ytics 0,20 nomirror
-            set y2tics 0,20
+            set ytics 0,30 nomirror
+            set y2tics 0,30 nomirror
             unset mxtics
             unset mytics
             set samples 50000 
@@ -1139,11 +1138,11 @@ Figures~\ref{eval:f:e5:w1:lat},~\ref{eval:f:e5:w1:lat-c},~\ref{eval:f:e5:w1:exec
             set datafile separator ';'
             set key width -12
             set xr [0.5:3.5]
-            set yr [0:110]
-            set y2r [0:110]
+            set yr [0:120]
+            set y2r [0:120]
             set ytics nomirror
-            set y2tics 0,50
-            set ytics 0,50
+            set y2tics 0,30 nomirror
+            set ytics 0,30 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
@@ -1170,7 +1169,7 @@ Figures~\ref{eval:f:e5:w1:lat},~\ref{eval:f:e5:w1:lat-c},~\ref{eval:f:e5:w1:exec
             set y2r [2:26]
             set xtics '00:00:00',600 nomirror
             set ytics 0,4 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             unset xl
@@ -1195,7 +1194,7 @@ Figures~\ref{eval:f:e5:w1:lat},~\ref{eval:f:e5:w1:lat-c},~\ref{eval:f:e5:w1:exec
         set yr [2:26]
         set ytics 0,4 nomirror
         set y2r [2:26]
-        set y2tics 0,4
+        set y2tics 0,4 nomirror
         set boxwidth 0.3 absolute
         set style fill empty
         unset xl
@@ -1235,11 +1234,11 @@ Figures~\ref{eval:f:e6:w1:lat},~\ref{eval:f:e6:w1:lat-c},~\ref{eval:f:e6:w1:exec
         set xdata time
         set timefmt '%H:%M:%S'
         set xr ['0:00:00':'1:00:00']
-        set yr [0:110]
+        set yr [0:120]
         set xtics '00:00:00',600 nomirror
-        set ytics 0,20 nomirror
-        set y2r [0:110]
-        set y2tics 0,20
+        set ytics 0,30 nomirror
+        set y2r [0:120]
+        set y2tics 0,30 nomirror
         set samples 50000 
         unset mxtics
         unset mytics
@@ -1264,10 +1263,10 @@ Figures~\ref{eval:f:e6:w1:lat},~\ref{eval:f:e6:w1:lat-c},~\ref{eval:f:e6:w1:exec
             set datafile separator ';'
             set key width -12
             set xr [0.5:3.5]
-            set yr [0:110]
-            set ytics 0,20 nomirror
-            set y2r [0:110]
-            set y2tics 0,20
+            set yr [0:120]
+            set ytics 0,30 nomirror
+            set y2r [0:120]
+            set y2tics 0,30 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
@@ -1294,7 +1293,7 @@ Figures~\ref{eval:f:e6:w1:lat},~\ref{eval:f:e6:w1:lat-c},~\ref{eval:f:e6:w1:exec
             set y2r [2:26]
             set ytics 0,4 nomirror
             set xtics '00:00:00',600 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
@@ -1343,11 +1342,11 @@ Figures~\ref{eval:f:e6:w1:lat},~\ref{eval:f:e6:w1:lat-c},~\ref{eval:f:e6:w1:exec
             set xdata time
             set timefmt '%H:%M:%S'
             set xr ['0:00:00':'1:00:00']
-            set yr [0:130]
-            set y2r [0:130]
+            set yr [0:120]
+            set y2r [0:120]
             set xtics '00:00:00',600 nomirror
-            set ytics 0,20 nomirror
-            set y2tics 0,20
+            set ytics 0,30 nomirror
+            set y2tics 0,30 nomirror
             unset mxtics
             unset mytics
             set samples 50000 
@@ -1370,11 +1369,10 @@ Figures~\ref{eval:f:e6:w1:lat},~\ref{eval:f:e6:w1:lat-c},~\ref{eval:f:e6:w1:exec
             set datafile separator ';'
             set key width -12
             set xr [0.5:3.5]
-            set yr [0:130]
-            set y2r [0:130]
-            set ytics nomirror
-            set y2tics 0,20
-            set ytics 0,20
+            set yr [0:120]
+            set y2r [0:120]
+            set ytics 0,30 nomirror
+            set y2tics 0,30 nomirror
             set boxwidth 0.3 absolute
             set style fill empty
             unset xl
@@ -1401,7 +1399,7 @@ Figures~\ref{eval:f:e6:w1:lat},~\ref{eval:f:e6:w1:lat-c},~\ref{eval:f:e6:w1:exec
             set y2r [2:26]
             set xtics '00:00:00',600 nomirror
             set ytics 0,4 nomirror
-            set y2tics 0,4
+            set y2tics 0,4 nomirror
             unset mxtics
             unset mytics
             unset xl
@@ -1426,7 +1424,7 @@ Figures~\ref{eval:f:e6:w1:lat},~\ref{eval:f:e6:w1:lat-c},~\ref{eval:f:e6:w1:exec
         set yr [2:26]
         set ytics 0,4 nomirror
         set y2r [2:26]
-        set y2tics 0,4
+        set y2tics 0,4 nomirror
         set boxwidth 0.3 absolute
         set style fill empty
         unset xl
