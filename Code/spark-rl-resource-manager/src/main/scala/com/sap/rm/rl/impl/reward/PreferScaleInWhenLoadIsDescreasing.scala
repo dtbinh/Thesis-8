@@ -1,6 +1,6 @@
 package com.sap.rm.rl.impl.reward
 
-import java.lang.Math.{min, max}
+import java.lang.Math.max
 
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.Action.Action

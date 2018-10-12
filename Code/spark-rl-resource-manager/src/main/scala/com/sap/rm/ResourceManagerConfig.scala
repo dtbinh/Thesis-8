@@ -37,6 +37,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
   final val DecisionInterval: Int = sparkConf.getTimeAsMs(DecisionIntervalKey, DecisionIntervalDefault).toInt
   final val ExecutorStrategy: String = sparkConf.get(ExecutorStrategyKey, ExecutorStrategyDefault)
   final val Seed: Long = sparkConf.getLong(SeedKey, SeedDefault)
+  final val ValueIterationLearningPhase = sparkConf.getBoolean(ValueIterationLearningPhaseKey, ValueIterationLearningPhaseDefault)
 
   require(CoresPerExecutor == CoresPerTask)
   require(ExecutorGranularity >= 0)
@@ -89,6 +90,7 @@ class ResourceManagerConfig(sparkConf: SparkConf) {
        | DecisionInterval: $DecisionInterval
        | ExecutorStrategy: $ExecutorStrategy
        | Seed: $Seed
+       | ValueIterationLearningPhase: $ValueIterationLearningPhase
        | --- Configuration ---""".stripMargin
 
   log.info(config)
@@ -129,7 +131,7 @@ object ResourceManagerConfig {
   final val NoRewardKey = "spark.streaming.dynamicAllocation.noReward"
   final val NoRewardDefault = 0
   final val IsDebugEnabledKey = "spark.streaming.dynamicAllocation.isDebugEnabled"
-  final val IsDebugEnabledDefault = true
+  final val IsDebugEnabledDefault = false
   final val InitializationModeKey = "spark.streaming.dynamicAllocation.initializationMode"
   final val InitializationModeDefault = "optimal" // zero, random
   final val ReportDurationKey = "spark.streaming.dynamicAllocation.reportDuration"
@@ -154,6 +156,8 @@ object ResourceManagerConfig {
   final val ExecutorStrategyDefault = "static" // linear
   final val SeedKey = "spark.streaming.dynamicAllocation.seed"
   final val SeedDefault = System.currentTimeMillis()
+  final val ValueIterationLearningPhaseKey = "spark.streaming.dynamicAllocation.valueIterationLearningPhase"
+  final val ValueIterationLearningPhaseDefault = true
 
   def apply(sparkConf: SparkConf): ResourceManagerConfig = new ResourceManagerConfig(sparkConf)
 }

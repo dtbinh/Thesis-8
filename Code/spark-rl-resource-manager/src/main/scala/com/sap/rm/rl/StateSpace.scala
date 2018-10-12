@@ -1,13 +1,30 @@
 package com.sap.rm.rl
 
 import Action._
+import com.sap.rm.ResourceManagerConfig.{Equal, GreaterThan, LessThan}
+
 import scala.collection.mutable.{HashMap => MutableHashMap}
 
-case class StateActionSet(var isVisited: Boolean = false, qValues: MutableHashMap[Action, Double]) {
+@SerialVersionUID(9586967L)
+case class State(latency: Int, loadIsIncreasing: Boolean) extends Serializable with Ordered[State] {
+
+  override def compare(that: State): Int = {
+    if (latency < that.latency) LessThan
+    else if (latency > that.latency) GreaterThan
+    else if (!loadIsIncreasing) LessThan
+    else if (loadIsIncreasing) GreaterThan
+    else Equal
+  }
+
+  override def toString: String = "State(Latency=%d,loadIsIncreasing=%b)".format(latency, loadIsIncreasing)
+}
+
+@SerialVersionUID(3123539L)
+case class StateActionSet(var isVisited: Boolean = false, qValues: MutableHashMap[Action, Double]) extends Serializable {
   override def toString: String = "isVisited(%b) - qValues(%s)".format(isVisited, qValues.toString())
 }
 
-@SerialVersionUID(1L)
+@SerialVersionUID(4933078L)
 class StateSpace(value: MutableHashMap[State, StateActionSet]) extends Serializable {
 
   def updateQValueForAction(state: State, action: Action, qVal: Double): Unit = {

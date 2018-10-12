@@ -160,4 +160,16 @@ object ResourceManagerLogger {
   def logUnvisitedState(state: State, qValues: Seq[(Action, Double)]): Unit = {
     log.info("{} - {} - (state,qValues) = ({},{})", UNVISITED_STATE, correlationId, state, qValues)
   }
+
+  def logLearningPhaseIsDone(): Unit = {
+    log.info("Leanring phase is done")
+  }
+
+  def logHDFSCleanup(): Unit = {
+    log.info("HDFS is cleaned up")
+  }
+
+  def logStateSpaceIsStored(): Unit = {
+    log.info("State space is stored in HDFS")
+  }
 }

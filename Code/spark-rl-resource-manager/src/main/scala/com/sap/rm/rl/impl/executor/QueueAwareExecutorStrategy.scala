@@ -1,6 +1,6 @@
 package com.sap.rm.rl.impl.executor
 
-import java.lang.Math.{ceil, max}
+import java.lang.Math.max
 
 import com.sap.rm.ResourceManagerConfig
 import com.sap.rm.rl.{ExecutorStrategy, TemporalDifferenceResourceManager}
