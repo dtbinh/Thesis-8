@@ -331,7 +331,7 @@ According to theory of time-series analysis~\cite{TSA}~\cite{Herbst:2013}, time-
 \begin{itemize}
     \item \textbf{Season} The season component captures recurring patterns that are composed of one or more frequencies, e.g. daily, weekly or monthly patterns. These dominant frequencies can be determined by using a \emph{Fast Fourier Transformation} (FFT) or by \emph{Auto-Correlation} algorithms.
     \item \textbf{Trend} The trend component can be described by a \emph{monotonically} increasing or decreasing function that can be approximated using common regression techniques.
-    \item \textbf{Noise} The noise component is an unpredictable outliers of various frequencies with different amplitudes. The noise can be absorbed to some extent by applying smoothing techniques like \emph{Weighted Moving Averages} (WMA), by using \emph{Lower Sampling Frequency} or by a \emph{Low-Pass Filter} that eliminates high frequencies.
+    \item \textbf{Noise} The noise component is unpredictable outliers of various frequencies with different amplitudes. The noise can be absorbed to some extent by applying smoothing techniques like \emph{Weighted Moving Averages} (WMA), by using \emph{Lower Sampling Frequency} or by a \emph{Low-Pass Filter} that eliminates high frequencies.
 \end{itemize}
 
 A time-series has a couple of important characteristics that reveals more information about the values in it. The following represents some of these characteristics.
@@ -350,7 +350,7 @@ A time-series has a couple of important characteristics that reveals more inform
 Reinforcement Learning is a technique that relies on direct experience from environment. The decision maker -- known as \emph{agent} -- tries to learn the best possible action for each \emph{state} of the environment. The final goal is to maximize the returned \emph{reward}. In the context of Auto-Scaling problem, the agent is the Auto-Scaler component that gets current system state (any group of performance metrics) and tries to minimize/maximize some aspect of the application (response times, throughput, etc.) by performing Scale-In, Scale-Out or No-Action.
 
 In order to formally define Reinforcement Learning environments, some basic terminology shall be defined~\cite{rlIntro}. At each time step $t$, where $t = 0,1,2,\dots$ is a sequence of discrete time steps, the agent receives a representation of the environment's state $s_t \in S$, where $S$ is the set of possible states, and based on that, selects an action, $a_t \in A(s_t)$, where $A(s_t)$ is the
-set of possible available actions in state $s_t$. One time step later, as a consequence of performing action $a_t$, the agent receives a numerical reward $r_{t+1}$ and lands in a new state $s_{t+1}$. At each time step, the agent implements a \emph{mapping} from states to probabilities of selecting each possible action. This mapping is called the agent's \emph{policy} and is denoted as $\pi_t$, where $\pi_t(s,a)$ is the probability of action $a$ at state $s$. This procedure is depicted by Figure~\ref{fig:rl}\footnote{The figure has been taken from~\textcite{rlIntro}}.
+set of possible available actions in state $s_t$. One time step later, as a consequence of performing action $a_t$, the agent receives a numerical reward $r_{t+1}$ and lands in a new state $s_{t+1}$. At each time step, the agent implements a \emph{mapping} from states to probabilities of selecting each possible action. This mapping is called the agent's \emph{policy} and is denoted as $\pi_t$, where $\pi_t(s,a)$ is the probability of taking action $a$ at state $s$ at time $t$. This procedure is depicted by Figure~\ref{fig:rl}\footnote{The figure has been taken from~\textcite{rlIntro}}.
 \begin{figure}[ht]
     \centering
     \includegraphics[clip,trim=4cm 23.5cm 4cm 2.5cm]{RL.pdf}
@@ -358,7 +358,7 @@ set of possible available actions in state $s_t$. One time step later, as a cons
     \label{fig:rl}
 \end{figure}
 
-In Reinforcement Learning environments future states can be determined only with the current state, regardless of the past history. This is known as \emph{Markov Property}, which formally states that the probability of a moving to a new state $s_{t+1}$ only depends on the current state $s_t$ and the $a$. In other words, it is \emph{independent} of all previous states and actions~\cite{rlIntro}~\cite{Lorido-Botran2014}. Equation~\ref{eq:markov} defines this property.
+In Reinforcement Learning environments future states can be determined only with the current state, regardless of the past history. This is known as \emph{Markov Property}, which formally states that the probability of a moving to a new state $s_{t+1}$ only depends on the current state $s_t$ and action $a$. In other words, it is \emph{independent} of all previous states and actions~\cite{rlIntro}~\cite{Lorido-Botran2014}. Equation~\ref{eq:markov} defines this property.
 \begin{equation}
 P(s_{t+1} = s',r_{t+1} = r | s_t,a_t) = P(s_{t+1} = s',r_{t+1} = r | s_t,a_t,r_t,s_{t-1},a_{t-1},r_{t-1},\dots,s_1,a_1,r_1,s_0,a_0)
 \label{eq:markov}
@@ -405,7 +405,7 @@ Queuing systems are modeled with \emph{Kendall}'s notation~\cite{kendall1953}. A
     \item \textbf{D} Priority order which defines in which order requests will be processed by request processors. This parameter is optional and is set to \emph{First Come First Served} (FCFS) if not specified.
 \end{itemize}
 
-Queuing theory is mostly capable of modeling stationary systems with constant parameters defined above. In case of Auto-Scaling problems, these values have to periodically recomputed, since request inter-arrival distribution, service time and number of request processors are changing constantly. These parameters can be re-calculated mostly based on two approaches. First, by applying \emph{analytic} techniques -- suitable for simple queuing systems. Second, by applying \emph{Discrete Event Simulation} (DES) techniques -- suitable for more complex models.
+Queuing theory is mostly capable of modeling stationary systems with constant parameters defined above. In case of Auto-Scaling problems, these values should be periodically recomputed, since request inter-arrival distribution, service time and number of request processors are changing constantly. These parameters can be re-calculated mostly based on two approaches. First, by applying \emph{analytic} techniques -- suitable for simple queuing systems. Second, by applying \emph{Discrete Event Simulation} (DES) techniques -- suitable for more complex models.
 
 \subsubsection{Control Theory}
 
@@ -425,11 +425,11 @@ Feedback driven control systems are further divided into multiple categories~\ci
 \begin{itemize}
     \item \textbf{Fixed Gain Controllers} The most simple type of feedback control systems. However, the configuration parameters of the controller are fixed during system runtime.
     \item \textbf{Adaptive Controller} These controllers allow to change some of the configuration parameters during runtime which makes them an applicable option for \emph{slowly-changing} environments, but not for suitable for \emph{bursty} workloads.
-    \item \textbf{Reconfiguring Controller} In contrast to Adaptive Control controllers in which only configuration parameters can be changed at runtime -- controller itself does not change -- in this model the controller itself can also be changed at runtime. With this enhancement, Reconfiguring Controllers are more resilient to bursty workloads.
+    \item \textbf{Reconfiguring Controller} In contrast to Adaptive Controllers in which only configuration parameters can be changed at runtime -- controller itself does not change -- in this model the controller itself can also be changed at runtime. With this enhancement, Reconfiguring Controllers are more resilient to bursty workloads.
     \item \textbf{Model Predictive Controller} These controllers mix some \emph{predicative} features into feedback controllers which make them even more resilient to unanticipated workloads.
 \end{itemize}
 
 \section{Conclusion}
 \label{ias:conc}
 
-In this chapter, different architectural aspects and major design considerations of Auto-Scalers have been discussed. As mentioned, it is multi-dimensional space of features and capabilities. Many of the current proposals do not map to one category, but combine divergent set of features. Section~\ref{related} compares and evaluates prior research on different systems.
+In this chapter, different architectural aspects and major design considerations of Auto-Scalers have been discussed. As mentioned, it is a multi-dimensional space of features and capabilities. Many of the current proposals do not map to one category, but combine divergent set of features. Section~\ref{related} compares and evaluates prior research on different systems.

@@ -48,10 +48,12 @@ class ValueIterationResourceManager(
       if (!ValueIterationLearningPhase) {
         // load from HDFS
         val in: DataInputStream = new DataInputStream(fs.open(stateSpacePath))
-        ss = StateSpaceUtils.loadFrom(in)
+        ss = StateSpaceUtils.loadFrom(in).orNull
         in.close()
+        logStateSpaceIsLoadedFromHDFS()
       } else {
         ss = stateSpaceOpt.getOrElse(StateSpaceInitializer.getInstance(config).initialize(StateSpace(MutableHashMap[State, StateActionSet]())))
+        logStateSpaceIsInitializedByInitializer()
       }
     }
 

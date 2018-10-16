@@ -23,6 +23,8 @@ trait StateSpaceUtils {
 
 object StateSpaceUtils {
   def writeTo(out: DataOutputStream, stateSpace: StateSpace): Unit = {
+    var i: Int = 0
+
     for ((k: State, v: StateActionSet) <- stateSpace.value.toList.sortWith(_._1 < _._1)) {
       val scaleOutReward: Double = v.qValues(ScaleOut)
       val noActionReward: Double = v.qValues(NoAction)
@@ -34,18 +36,22 @@ object StateSpaceUtils {
       out.writeDouble(scaleOutReward)
       out.writeDouble(noActionReward)
       out.writeDouble(scaleInReward)
+
+      i += 1
     }
     out.writeInt(-1000) // mark end of file
+    out.writeInt(i) // write number of records as well
   }
 
-  def loadFrom(in: DataInputStream): StateSpace = {
+  def loadFrom(in: DataInputStream): Option[StateSpace] = {
+    var i: Int = 0
     val ss = StateSpace(MutableHashMap[State, StateActionSet]())
 
     while (true) {
       val latency: Int = in.readInt()
       if (latency == -1000) {
-        println("EOF")
-        return ss
+        val numberOfRecords = in.readInt()
+        if (i == numberOfRecords) return Some(ss) else None
       }
 
       val loadIsIncreasing: Boolean = in.readBoolean()
@@ -61,8 +67,10 @@ object StateSpaceUtils {
             qValues = MutableHashMap(ScaleOut -> scaleOutReward, NoAction -> noActionReward, ScaleIn -> scaleInReward)
           )
         )
+
+      i += 1
     }
 
-    ss
+    None
   }
 }

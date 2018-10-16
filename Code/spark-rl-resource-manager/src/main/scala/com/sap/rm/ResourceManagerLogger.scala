@@ -172,4 +172,12 @@ object ResourceManagerLogger {
   def logStateSpaceIsStored(): Unit = {
     log.info("State space is stored in HDFS")
   }
+
+  def logStateSpaceIsLoadedFromHDFS(): Unit = {
+    log.info("State space is loaded from HDFS")
+  }
+
+  def logStateSpaceIsInitializedByInitializer(): Unit = {
+    log.info("State space is initialized by initializer")
+  }
 }
