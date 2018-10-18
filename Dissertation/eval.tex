@@ -1441,3 +1441,241 @@ Figures~\ref{eval:f:e6:w1:lat},~\ref{eval:f:e6:w1:lat-c},~\ref{eval:f:e6:w1:exec
 For Workload 1, 5-second discretization performs better in terms of latency albeit with more executors. For Workload 2, 10-second discretization performs better both in terms of latency and number of executors.
 
 Although 10-second discretization performs reasonably well in both workloads, we are still not sure that it is the optimal discretization. Similar to learning factor, discretization seems to be workload dependent and no generalized conclusion can be made.
+
+\clearpage
+\section{Experiment 7: Value Iteration}
+\textcite{dutreilh:hal-01122123} claimed that Value Iteration algorithm helps to initialize the state table and speedup learning process. Authors conducted an experiment which was based on a sinusoidal workload. Agent is trained in first period of rotation and then standard Q-Learning is used for next rounds. However, training based on sinusoidal workload is not so challenging. In this experiment the agent is trained using a different data set than the actual workload. State space is initialized after 5, 10 and 20 minutes of training period and then Auto-Scaler's behavior is evaluated under both workloads. During training \lstinline|decreasingOneMinusEpsilon| policy is used to help agent discover the environment. However, during the evaluation greedy policy is used. Table~\ref{eval:tab:ex7} describes the configuration parameters of this experiment.
+\begin{table}[h]
+    \includegraphics[clip,trim=2.4cm 21.18cm 4.65cm 2.5cm]{tables/ex7.pdf}
+    \centering
+    \caption{Value Iteration Configuration Parameters}
+    \label{eval:tab:ex7}
+\end{table}
+
+Figures~\ref{eval:f:e7:w1:lat},~\ref{eval:f:e7:w1:lat-c},~\ref{eval:f:e7:w1:exec} and ~\ref{eval:f:e7:w1:exec-c} illustrates latency and executor charts for Workload 1. Figures~\ref{eval:f:e7:w2:lat},~\ref{eval:f:e7:w2:lat-c},~\ref{eval:f:e7:w2:exec} and~\ref{eval:f:e7:w2:exec-c} illustrates latency and executor charts for Workload 2.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 16cm,7.5cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xdata time
+        set timefmt '%H:%M:%S'
+        set xr ['0:00:00':'1:00:00']
+        set yr [0:210]
+        set xtics '00:00:00',600 nomirror
+        set ytics 0,30 nomirror
+        set y2r [0:210]
+        set y2tics 0,30 nomirror
+        set samples 50000 
+        unset mxtics
+        unset mytics
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+        unset xl
+        set yl 'Latency (Seconds)'
+        plot 'ex/e7/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '5 Min',\
+        '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '10 Min',\
+        '' using 1:4 w l lc 'black' lw 4 smooth csplines t '20 Min'
+    \end{gnuplot}
+    \caption{Value Iteration -- Workload 1 -- Latency}
+    \label{eval:f:e7:w1:lat}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set key width -12
+            set xr [0.5:3.5]
+            set yr [0:210]
+            set ytics 0,30 nomirror
+            set y2r [0:210]
+            set y2tics 0,30 nomirror
+            set boxwidth 0.3 absolute
+            set style fill empty
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            unset xl
+            set yl 'Latency (Seconds)'
+            plot 'ex/e7/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
+        \end{gnuplot}
+        \caption{Value Iteration -- Workload 1 -- Latency}
+        \label{eval:f:e7:w1:lat-c}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [2:26]
+            set y2r [2:26]
+            set ytics 0,4 nomirror
+            set xtics '00:00:00',600 nomirror
+            set y2tics 0,4 nomirror
+            unset mxtics
+            unset mytics
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            unset xl
+            set yl 'Number of Executors'
+            plot 'ex/e7/w1/exec.csv' using 1:2 w l lc 'red' lw 4 t '5 Min',\
+            '' using 1:3 w l lc 'blue' lw 4 t '10 Min',\
+            '' using 1:4 w l lc 'black' lw 4 t '20 Min'
+        \end{gnuplot}
+        \caption{Value Iteration -- Workload 1 -- Number of Executors}
+        \label{eval:f:e7:w1:exec}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xr [0.5:3.5]
+            set yr [2:26]
+            set y2r [2:26]
+            set ytics 0,4 nomirror
+            set y2tics 0,4 nomirror
+            set boxwidth 0.3 absolute
+            set style fill empty
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            set yl 'Number of Executors'
+            plot 'ex/e7/w1/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+        \end{gnuplot}
+        \caption{Value Iteration -- Workload 1 -- Number of Executors}
+        \label{eval:f:e7:w1:exec-c}
+    \end{minipage}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [0:150]
+            set y2r [0:150]
+            set xtics '00:00:00',600 nomirror
+            set ytics 0,30 nomirror
+            set y2tics 0,30 nomirror
+            unset mxtics
+            unset mytics
+            set samples 50000 
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            set yl 'Latency (Seconds)'
+            plot 'ex/e7/w2/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t '5 Min',\
+            '' using 1:3 w l lc 'blue' lw 4 smooth csplines t '10 Min',\
+            '' using 1:4 w l lc 'black' lw 4 smooth csplines t '20 Min'
+        \end{gnuplot}
+        \caption{Value Iteration -- Workload 2 -- Latency}
+        \label{eval:f:e7:w2:lat}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set key width -12
+            set xr [0.5:3.5]
+            set yr [0:150]
+            set y2r [0:150]
+            set ytics 0,30 nomirror
+            set y2tics 0,30 nomirror
+            set boxwidth 0.3 absolute
+            set style fill empty
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0            
+            set yl 'Latency (Seconds)'
+            plot 'ex/e7/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average',\
+            30 dashtype 2 lc 'black' lw 4 t 'Target'
+        \end{gnuplot}
+        \caption{Value Iteration -- Workload 2 -- Latency}
+        \label{eval:f:e7:w2:lat-c}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 16cm,7.5cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xdata time
+            set timefmt '%H:%M:%S'
+            set xr ['0:00:00':'1:00:00']
+            set yr [2:26]
+            set y2r [2:26]
+            set xtics '00:00:00',600 nomirror
+            set ytics 0,4 nomirror
+            set y2tics 0,4 nomirror
+            unset mxtics
+            unset mytics
+            unset xl
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0     
+            set yl 'Number of Executors'
+            plot 'ex/e7/w2/exec.csv' using 1:2 w l lc 'red' lw 4 t '5 Min',\
+            '' using 1:3 w l lc 'blue' lw 4 t '10 Min',\
+            '' using 1:4 w l lc 'black' lw 4 t '20 Min'
+        \end{gnuplot}
+        \caption{Value Iteration -- Workload 2 -- Number of Executors}
+        \label{eval:f:e7:w2:exec}
+    \end{minipage}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 16cm,7.5cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xr [0.5:3.5]
+        set yr [2:26]
+        set ytics 0,4 nomirror
+        set y2r [2:26]
+        set y2tics 0,4 nomirror
+        set boxwidth 0.3 absolute
+        set style fill empty
+        unset xl
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0  
+        set yl 'Number of Executors'
+        plot 'ex/e7/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles','' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+    \end{gnuplot}
+    \caption{Value Iteration -- Workload 2 -- Number of Executors}
+    \label{eval:f:e7:w2:exec-c}
+\end{figure}
+\FloatBarrier
+\subsection{Conclusion}
+Looking at the results and combining them with the results of \textcite{dutreilh:hal-01122123} reveals a couple of interesting points.
+\begin{itemize}
+    \item If the sample data set is a good representative of actual workload, then Value Iteration is quite useful.
+    \item \emph{The more training, the better outcome} does not hold for streaming workloads. Since it is possible to introduce wrong information into state space at any time. As can be seen from this experiment, ten minute training was worse than five minute training.
+    \item Learning or training period plays a critical role.
+\end{itemize}
+The major question that arises is \emph{what is the optimal period of training?} Since the workload is changing in an unpredictable manner, finding a near optimal learning period is extremely difficult and workload dependent. No generalized conclusion can be made regarding learning period by looking at results. It may be the case that by training more, we get a worse result.
+
+\clearpage
+\section{Experiment 8: Approaching Target}
+\clearpage
+\section{Experiment 9: Overall Comparison}
