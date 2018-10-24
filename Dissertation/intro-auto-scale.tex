@@ -78,14 +78,12 @@ Figure~\ref{fig:auto-scaler-arch} illustrates generic architecture of an Auto-Sc
         \SetKwFunction{GD}{GetDecision}
         \SetKwFunction{GFD}{GetFinalDecision}
         \SetKwFunction{RIA}{RequestInfrastructureAPI}
-        \SetKwFunction{error}{LogError}
         \SetKwFunction{factory}{InstantiateTechnique}
         
         \SetKwArray{impls}{implementations}
         \SetKwData{impl}{impl}
         \SetKwArray{dec}{decisions}
         \SetKwData{finaldec}{finalDecision}
-        \SetKwData{reply}{reply}
         \SetKwData{currentValue}{currentValue}
         
         \tcp{different implementations of techniques}
@@ -99,29 +97,19 @@ Figure~\ref{fig:auto-scaler-arch} illustrates generic architecture of an Auto-Sc
         \For{$i \gets 0$ \KwTo $n$}{
             \impls{i} $\gets$ \factory{i}
         }
-        \BlankLine
         \Repeat{\textup{Auto-Scaler is running}} {
             \tcp{load monitoring data from metrics engine}
             \currentValue $\gets$ \GCMFME{} \;
-            \BlankLine
             \tcp{initialize decisions}
             \dec $\gets$ [] \;
             \For{$i \gets 0$ \KwTo $n$}{
                 \impl $\gets$ \impls{i} \;
                 \dec{i} $\gets$ \GD{\impl, \currentValue}
             }
-            \BlankLine
             \tcp{calculate final decision based on some weight or ordering mechanism}
             \finaldec $\gets$ \GFD{\dec, \currentValue} \;
-            \BlankLine
             \tcp{request infrstructure API to adjust resources}
-            \reply $\gets$ \RIA{\finaldec}\;
-            \BlankLine
-            \tcp{in case infrastructure reject request, warn developers}
-            \If{\reply = ReplyStatus.REJECT}{
-                \tcp{issue a warning}
-                \error{"request can not be fulfilled"}
-            }
+            \RIA{\finaldec}\;
         }
         \caption{General Work-Flow of an Auto-Scaler}
         \label{a:as-workflow}
@@ -131,7 +119,7 @@ Figure~\ref{fig:auto-scaler-arch} illustrates generic architecture of an Auto-Sc
 \section{Actions}
 \label{ias:actions}
 In case Auto-Scaler decides to take an action, it notifies Infrastructure via an API regarding its decision. Note that Infrastructure either commits the action \emph{synchronously} when the request is made by the Auto-Scaler or schedules the action\emph{asynchronously} for future. This thesis, assumes three possible actions. Table~\ref{tab:actions-sum} summarizes feasible actions for an Auto-Scaler.
-\begin{table*}[h!]
+\begin{table*}[!htbp]
     \begin{tabular}{ll}
         \toprule
         \textbf{Action} & \textbf{Description}\\
@@ -208,40 +196,41 @@ The generic architecture which is described in Section~\ref{ias:arch} does not i
     \label{tab:exec-mode}
 \end{table*}
 \clearpage
-\begin{description}[leftmargin=0pt]
-    \item[Global Controller] In this architecture, Auto-Scaler runs and controls the application as a \emph{central} or \emph{master} component. One or multiple \emph{backup} or \emph{slave} controllers might also accompany master node. In case master controller fails, one of the backup controllers kicks in and takes over the responsibility. In this model, it's the responsibility of master node to make decisions and execute actions. To detect failure of master controller, well established \emph{cluster coordination} utilities like Apache Zookeeper~\cite{zk} or CoreOS Etcd~\cite{etcd} exist. Figure~\ref{fig:auto-scaler-master-backup} depicts a variation of original Auto-Scaler architecture that performs under master-slave model coordinated by a Zookeeper ensemble.
-    \begin{figure}[hb]
-        \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-master-backup.pdf}
-        \centering
-        \caption{Architecture of Master-Slave or Global Controller}
-        \label{fig:auto-scaler-master-backup}
-    \end{figure}
-    \clearpage
-    \item[Distributed Without Coordination] In this architecture, typically Auto-Scaler runs alongside the application instances and each Auto-Scaler instance only \emph{controls} the \emph{local} application. The major difference against global controller is that, in this model each Auto-Scaler makes decision on its own without any form of coordination with other Auto-Scalers. It's usually the most scalable solution when size of the cluster grows. However, since each Auto-Scaler instance only controls the local application, it might lead to sub-optimal decisions because local controllers lack global view of the cluster. Figure~\ref{fig:auto-scaler-dist-wo-coord} illustrates this architecture.
-    \begin{figure}[hb]
-        \includegraphics[clip, trim=3cm 12.2cm 2.5cm 2.5cm]{auto-scaler-full-dist.pdf}
-        \centering
-        \caption{Architecture of Distributed Non-Coordinated Controller}
-        \label{fig:auto-scaler-dist-wo-coord}
-    \end{figure}
-    \clearpage
-    \item[Distributed Coordinated] This architecture is similar to previous model. However the difference is that, Auto-Scaler components coordinate with each other over a communication channel to gather more information. The amount of communicated information heavily depends on underlying algorithm. In some scenarios only neighbor nodes are contacted. In other cases, all nodes might communicate with each other in order to achieve consensus. Figure~\ref{fig:auto-scaler-dist-coord} depicts this architecture.
-    \begin{figure}[hb]
-        \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-dist-coord.pdf}
-        \centering
-        \caption{Architecture of Distributed Coordinated Controller}
-        \label{fig:auto-scaler-dist-coord}
-    \end{figure}
-    \clearpage
-    \item[Hierarchical Controllers] This architecture is the mixture of previous models. It's a combination of \emph{Global Controller} and \emph{Distributed Coordinated} model. Local Auto-Scalers communicate with a global controller in order to perform necessary actions. Local Auto-Scalers might also communicate with each other. Additionally, one or more backup controller might also accompany global controller. Furthermore, there might be no limit on who actually performs the actions. Each Auto-Scaler -- whether it is operating in local or global model -- might perform actions independent of the others. Figure~\ref{fig:auto-scaler-hierar} illustrates this architecture.
-    \begin{figure}[hb]
-        \includegraphics[clip,trim=3cm 4.2cm 2.5cm 2.8cm,scale=0.8]{auto-scaler-hierarchy.pdf}
-        \centering
-        \caption{Architecture of Hierarchical Controllers}
-        \label{fig:auto-scaler-hierar}
-    \end{figure}
-\end{description}
-
+\subsubsection{Global Controller}
+In this architecture, Auto-Scaler runs and controls the application as a \emph{central} or \emph{master} component. One or multiple \emph{backup} or \emph{slave} controllers might also accompany master node. In case master controller fails, one of the backup controllers kicks in and takes over the responsibility. In this model, it's the responsibility of master node to make decisions and execute actions. To detect failure of master controller, well established \emph{cluster coordination} utilities like Apache Zookeeper~\cite{zk} or CoreOS Etcd~\cite{etcd} exist. Figure~\ref{fig:auto-scaler-master-backup} depicts a variation of original Auto-Scaler architecture that performs under master-slave model coordinated by a Zookeeper ensemble.
+\begin{figure}[!htbp]
+    \includegraphics[clip,trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-master-backup.pdf}
+    \centering
+    \caption{Architecture of Master-Slave or Global Controller}
+    \label{fig:auto-scaler-master-backup}
+\end{figure}
+\clearpage
+\subsubsection{Distributed Without Coordination}
+In this architecture, typically Auto-Scaler runs alongside the application instances and each Auto-Scaler instance only \emph{controls} the \emph{local} application. The major difference against global controller is that, in this model each Auto-Scaler makes decision on its own without any form of coordination with other Auto-Scalers. Note that, since each Auto-Scaler instance only controls the local application independent of other application instances, it might lead to sub-optimal decisions because local controllers lack global view of the cluster. Figure~\ref{fig:auto-scaler-dist-wo-coord} illustrates this architecture.
+\begin{figure}[!htbp]
+    \includegraphics[clip,trim=3cm 12.2cm 2.5cm 2.5cm]{auto-scaler-full-dist.pdf}
+    \centering
+    \caption{Architecture of Distributed Non-Coordinated Controller}
+    \label{fig:auto-scaler-dist-wo-coord}
+\end{figure}
+\clearpage
+\subsubsection{Distributed Coordinated}
+This architecture is similar to previous model. However the difference is that, Auto-Scaler components coordinate with each other over a communication channel to gather more information. The amount of communicated information heavily depends on underlying algorithm. In some scenarios only neighbor nodes are contacted. In other cases, all nodes might communicate with each other in order to achieve consensus. Figure~\ref{fig:auto-scaler-dist-coord} depicts this architecture.
+\begin{figure}[!htbp]
+    \includegraphics[clip, trim=3cm 9cm 2.5cm 2.5cm]{auto-scaler-dist-coord.pdf}
+    \centering
+    \caption{Architecture of Distributed Coordinated Controller}
+    \label{fig:auto-scaler-dist-coord}
+\end{figure}
+\clearpage
+\subsubsection{Hierarchical Controllers}
+This architecture is the mixture of previous models. It's a combination of \emph{Global Controller} and \emph{Distributed Coordinated} model. Local Auto-Scalers communicate with a global controller in order to perform necessary actions. Local Auto-Scalers might also communicate with each other. Additionally, one or more backup controller might also accompany global controller. Furthermore, there might be no limit on who actually performs the actions. Each Auto-Scaler -- whether it is operating in local or global model -- might perform actions independent of the others. Figure~\ref{fig:auto-scaler-hierar} illustrates this architecture.
+\begin{figure}[!htbp]
+    \includegraphics[clip,trim=3cm 4.2cm 2.5cm 2.8cm,scale=0.8]{auto-scaler-hierarchy.pdf}
+    \centering
+    \caption{Architecture of Hierarchical Controllers}
+    \label{fig:auto-scaler-hierar}
+\end{figure}
 \clearpage
 \subsection{Algorithm Family}
 \label{ias:alg-fam}
@@ -255,12 +244,10 @@ From algorithmic point of view, Auto-Scalers can be classified into 5 different 
     \item \textbf{Control Theory}
 \end{itemize}
 In this section, each category is explained to some extent.
-
-\begin{description}[leftmargin=0pt]
-\item[Threshold-Based Policies] According to Section~\ref{ias:react-proact}, threshold-based approaches follow a purely  reactive approach. It lacks any form of future workload prediction. Threshold-based techniques usually involve a set of constraints which monitors performance data gathered from Metrics Engine. In its naive form, each rule defines an \emph{upper} and/or \emph{lower} bound plus two time periods that define how long that specific metric was above the upper threshold or bellow the lower threshold.
+\subsubsection{Threshold-Based Policies} According to Section~\ref{ias:react-proact}, threshold-based approaches follow a purely  reactive approach. It lacks any form of future workload prediction. Threshold-based techniques usually involve a set of constraints which monitors performance data gathered from Metrics Engine. In its naive form, each rule defines an \emph{upper} and/or \emph{lower} bound plus two time periods that define how long that specific metric was above the upper threshold or bellow the lower threshold.
 
 Algorithm~\ref{a:threshold-based} better describes this approach in a pseudocode. Refer to Section~\ref{related} to review list of proposed solutions.
-\begin{algorithm}[h]
+\begin{algorithm}[!htbp]
     \DontPrintSemicolon
     
     \SetKwFunction{LFC}{LoadFromConfig}
@@ -308,7 +295,7 @@ Algorithm~\ref{a:threshold-based} better describes this approach in a pseudocode
     \caption{General Work-Flow of Threshold-Based Techniques}
     \label{a:threshold-based}
 \end{algorithm}
-\item[Time-Series Analysis] In contrast to threshold-based techniques, time-series analysis approaches are purely proactive or predictive approaches. A \emph{time-series} is a collection of data points sampled and ordered iteratively at uniform time  intervals~\cite{Lorido-Botran2014}. Time-series analysis typically requires to store a history of data points. Hence, storage and computation requirements are more intensive than threshold-based approaches. Refer to Section~\ref{related} for evaluation of prior works in time-series. According to theory of time-series analysis~\cite{TSA}~\cite{Herbst:2013}, time-series can be decomposed into multiple sub components.
+\subsubsection{Time-Series Analysis} In contrast to threshold-based techniques, time-series analysis approaches are purely proactive or predictive approaches. A \emph{time-series} is a collection of data points sampled and ordered iteratively at uniform time  intervals~\cite{Lorido-Botran2014}. Time-series analysis typically requires to store a history of data points. Hence, storage and computation requirements are more intensive than threshold-based approaches. Refer to Section~\ref{related} for evaluation of prior works in time-series. According to theory of time-series analysis~\cite{TSA}~\cite{Herbst:2013}, time-series can be decomposed into multiple sub components.
 \begin{itemize}
     \item \textbf{Season} The season component captures recurring patterns that are composed of one or more frequencies, e.g. daily, weekly or monthly patterns. These dominant frequencies can be determined by using a \emph{Fast Fourier Transformation} (FFT) or by \emph{Auto-Correlation} algorithms.
     \item \textbf{Trend} The trend component can be described by a \emph{monotonically} increasing or decreasing function that can be approximated using common regression techniques.
@@ -323,16 +310,11 @@ A time-series has a couple of important characteristics that reveals more inform
     \item \textbf{Mean, Median, Standard Deviation and Quartiles} These values are important indicators for the distribution of values -- how values are spread -- in time series.
     \item \textbf{Frequency} The frequency of a time series represents the number of values that form a period of interest. This value is an important input as it defines the starting point to find seasonal patterns.
 \end{itemize}
-\item[Reinforcement Learning] Reinforcement Learning is a technique that relies on direct experience from environment. The decision maker -- known as \emph{agent} -- tries to learn the best possible action for each \emph{state} of the environment. The final goal is to maximize the returned \emph{reward}. In the context of Auto-Scaling problem, the agent is the Auto-Scaler component that gets current system state (any group of performance metrics) and tries to minimize/maximize some aspect of the application (response times, throughput, etc.) by performing Scale-In, Scale-Out or No-Action.
+\subsubsection{Reinforcement Learning}
+Reinforcement Learning is a technique that relies on direct experience from environment. The decision maker -- known as \emph{agent} -- tries to learn the best possible action for each \emph{state} of the environment. The final goal is to maximize the returned \emph{reward}. In the context of Auto-Scaling problem, the agent is the Auto-Scaler component that gets current system state (any group of performance metrics) and tries to minimize/maximize some aspect of the application (response times, throughput, etc.) by performing Scale-In, Scale-Out or No-Action.
 
 In order to formally define Reinforcement Learning environments, some basic terminology~\cite{rlIntro} shall be defined. At each time step $t$, where $t = 0,1,2,\dots$ is a sequence of discrete time steps, the agent receives a representation of the environment's state $s_t \in S$, where $S$ is the set of possible states, and based on that, selects an action, $a_t \in A(s_t)$, where $A(s_t)$ is the
-set of possible available actions in state $s_t$. One time step later, as a consequence of performing action $a_t$, the agent receives a numerical reward $r_{t+1}$ and lands in a new state $s_{t+1}$. At each time step, the agent implements a \emph{mapping} from states to probabilities of selecting each possible action. This mapping is called the agent's \emph{policy} and is denoted as $\pi_t$, where $\pi_t(s,a)$ is the probability of taking action $a$ at state $s$ at time $t$. 
-
-In Reinforcement Learning environments future states can be determined only with the current state, regardless of the past history. This is known as \emph{Markov Property}, which formally states that the probability of a moving to a new state $s_{t+1}$ only depends on the current state $s_t$ and action $a$. In other words, it is \emph{independent} of all previous states and actions~\cite{rlIntro}~\cite{Lorido-Botran2014}. Equation~\ref{eq:markov} defines this property and Figure~\ref{fig:rl} depicts this procedure.
-\begin{equation}
-P(s_{t+1} = s',r_{t+1} = r | s_t,a_t) = P(s_{t+1} = s',r_{t+1} = r | s_t,a_t,r_t,s_{t-1},a_{t-1},r_{t-1},\dots,s_1,a_1,r_1,s_0,a_0)
-\label{eq:markov}
-\end{equation}
+set of possible available actions in state $s_t$. One time step later, as a consequence of performing action $a_t$, the agent receives a numerical reward $r_{t+1}$ and lands in a new state $s_{t+1}$. At each time step, the agent implements a \emph{mapping} from states to probabilities of selecting each possible action. This mapping is called the agent's \emph{policy} and is denoted as $\pi_t$, where $\pi_t(s,a)$ is the probability of taking action $a$ at state $s$ at time $t$. Figure~\ref{fig:rl} depicts this procedure.
 \begin{figure}[!htbp]
     \centering
     \includegraphics[clip,trim=4cm 23.5cm 4cm 2.5cm]{RL.pdf}
@@ -340,6 +322,12 @@ P(s_{t+1} = s',r_{t+1} = r | s_t,a_t) = P(s_{t+1} = s',r_{t+1} = r | s_t,a_t,r_t
     \label{fig:rl}
 \end{figure}
 \footnotetext{The figure has been taken from~\textcite{rlIntro}}
+
+In Reinforcement Learning environments future states can be determined only with the current state, regardless of the past history. This is known as \emph{Markov Property}, which formally states that the probability of a moving to a new state $s_{t+1}$ only depends on the current state $s_t$ and action $a$. In other words, it is \emph{independent} of all previous states and actions~\cite{rlIntro}~\cite{Lorido-Botran2014}. Equation~\ref{eq:markov} defines this property.
+\begin{equation}
+P(s_{t+1} = s',r_{t+1} = r | s_t,a_t) = P(s_{t+1} = s',r_{t+1} = r | s_t,a_t,r_t,s_{t-1},a_{t-1},r_{t-1},\dots,s_1,a_1,r_1,s_0,a_0)
+\label{eq:markov}
+\end{equation}
 
 A stochastic process that satisfies the Markov property is called a \emph{Markov Decision Process} (MDP). It is typically represented as a 5-tuple consisting of \emph{states}, \emph{actions}, \emph{transitions probabilities}, \emph{reward} and \emph{policy} function.
 \begin{itemize}
@@ -361,7 +349,8 @@ Last but not least, under policy $\pi$, \emph{value-state} function $V^\pi(s)$ d
 V^\pi(s) = E_\pi(R_t|s_t=s)=E_\pi\bigg(\sum_{0}^{\infty}\gamma^k r_{t+k+1}|s_t=s\bigg)
 \label{eq:value-state}
 \end{equation}
-\item[Queuing Theory] Queuing theory has been thoroughly used in the context of packet processing to estimate the average wait time until a packet could be routed. The same principle can be applied in the context of Auto-Scaling problem. Clients send requests at a \emph{Mean Arrival Rate} denoted as $\lambda$. Requests are enqueued until they are processed with at a \emph{Mean Service Rate} denoted as $\mu$. Figure~\ref{fig:queue} portrays two architecture of queuing systems. Furthermore, multi-tiered applications are modeled as multiple queues attached \emph{serially} or in \emph{parallel}, depending on the architecture of the application.
+\subsubsection{Queuing Theory}
+Queuing theory has been thoroughly used in the context of packet processing to estimate the average wait time until a packet could be routed. The same principle can be applied in the context of Auto-Scaling problem. Clients send requests at a \emph{Mean Arrival Rate} denoted as $\lambda$. Requests are enqueued until they are processed with at a \emph{Mean Service Rate} denoted as $\mu$. Figure~\ref{fig:queue} portrays two architecture of queuing systems. Furthermore, multi-tiered applications are modeled as multiple queues attached \emph{serially} or in \emph{parallel}, depending on the architecture of the application.
 \begin{figure}[!htbp]
     \centering
     \includegraphics[clip, trim=2cm 25cm 3cm 1cm]{queue.pdf}
@@ -381,7 +370,8 @@ Queuing systems are modeled with \emph{Kendall}'s notation~\cite{kendall1953}. A
 \end{itemize}
 
 Queuing theory is mostly capable of modeling stationary systems with constant parameters defined above. In case of Auto-Scaling problems, these values should be periodically recomputed, since request inter-arrival distribution, service time and number of request processors are changing constantly. These parameters can be re-calculated mostly based on two approaches. First, by applying \emph{analytic} techniques -- suitable for simple queuing systems. Second, by applying \emph{Discrete Event Simulation} (DES) techniques -- suitable for more complex models.
-\item[Control Theory] Control Theory is categorized as mixture of reactive and proactive systems and decomposed intro three major categories.
+\subsubsection{Control Theory}
+Control Theory is categorized as mixture of reactive and proactive systems and decomposed intro three major categories.
 \begin{itemize}
     \item \textbf{Open Loop Systems} These systems do not consider any feedback returned by underlying systems. They only consider current state of the system in order to make decision. The output of the system is not considered to check whether it is in stable and desired state.
     \item \textbf{Feedback Systems} These system monitor the output of the system in order to check whether it is complying to defined business conditions. These systems are mainly reactive systems. Figure~\ref{fig:feedback} depicts these controllers.
@@ -401,8 +391,6 @@ Feedback driven control systems are further divided into multiple categories~\ci
     \item \textbf{Reconfiguring Controller} In contrast to Adaptive Controllers in which only configuration parameters can be changed at runtime -- controller itself does not change -- in this model the controller itself can also be changed at runtime. With this enhancement, Reconfiguring Controllers are more resilient to bursty workloads.
     \item \textbf{Model Predictive Controller} These controllers mix some \emph{predicative} features into feedback controllers which make them even more resilient to unanticipated workloads.
 \end{itemize}
-\end{description}
-
 \section{Conclusion}
 \label{ias:conc}
 

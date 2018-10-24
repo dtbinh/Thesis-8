@@ -1897,3 +1897,107 @@ Figures~\ref{eval:f:e8:w1:lat},~\ref{eval:f:e8:w1:lat-c},~\ref{eval:f:e8:w1:exec
 Looking at results, the more we get close to 10-second target latency, the more it gets challenging for Auto-Scaler. However, there is one common behavior in both workloads. The key factor to reduce latency is to apply \emph{early} Scale-Out. This can be confirmed by Figure~\ref{eval:f:e8:w1:exec} and Figure~\ref{eval:f:e8:w2:exec}. However, as explained in Section~\ref{intro-auto-scale}, Reinforcement Learning agent has to visit a state to take an appropriate action which may be too late when the peak workload is observed. This is one of the cases where proactive -- predictive -- approaches are more useful.
 \clearpage
 \section{Experiment 9: Overall Comparison}
+So far we have experimented the behavior of Auto-Scaler under different configurations. However, target latency has been set to 30 seconds in all experiments. In this experiment, we will set other target values to evaluate whether Q-Learning approach is able to hit multiple targets. Table~\ref{eval:tab:ex8} describes the configuration parameters of this experiment. Note that different sliding windows are used for Workload 1 and Workload 2. Three minute history window performs better for Workload 1, so this option is adopted. Additionally, based on previous experiments, setting target value to more than 30 seconds makes it too easy for Auto-Scaler. Thus, those cases are not tested. 
+\begin{table}[h]
+    \includegraphics[clip,trim=2.4cm 21.18cm 5.1cm 2.5cm]{tables/ex8.pdf}
+    \centering
+    \caption{Approaching Target Configuration Parameters}
+    \label{eval:tab:ex9}
+\end{table}
+
+Figures~\ref{eval:f:e9:w1:lat-c} and ~\ref{eval:f:e9:w1:exec-c} illustrates latency and executor charts for Workload 1. Figures~\ref{eval:f:e9:w2:lat-c} and~\ref{eval:f:e9:w2:exec-c} illustrates latency and executor charts for Workload 2.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+    set terminal epslatex size 17cm,9cm
+    set key outside center top horizontal
+    set datafile separator ';'
+    set xr [0.5:7.5]
+    set yr [0:420]
+    set ytics 0,30 nomirror
+    set y2r [0:420]
+    set y2tics 0,30 nomirror
+    set boxwidth 0.4 absolute
+    set style fill empty
+    set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+    set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+    unset xl
+    set yl 'Latency (Seconds)'
+    plot 'ex/final/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+    '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average'
+    \end{gnuplot}
+    \caption{Overall Comparison -- Workload 1 -- Latency}
+    \label{eval:f:e9:w1:lat-c}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 17cm,9cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xr [0.5:7.5]
+        set yr [2:26]
+        set y2r [2:26]
+        set ytics 0,4 nomirror
+        set y2tics 0,4 nomirror
+        set boxwidth 0.4 absolute
+        set style fill empty
+        unset xl
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+        set yl 'Number of Executors'
+        plot 'ex/final/w1/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+        '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+    \end{gnuplot}
+    \caption{Overall Comparison -- Workload 1 -- Number of Executors}
+    \label{eval:f:e9:w1:exec-c}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 17cm,9cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xr [0.5:7.5]
+        set yr [0:390]
+        set ytics 0,30 nomirror
+        set y2r [0:390]
+        set y2tics 0,30 nomirror
+        set boxwidth 0.4 absolute
+        set style fill empty
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+        unset xl
+        set yl 'Latency (Seconds)'
+        plot 'ex/final/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+        '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average'
+    \end{gnuplot}
+    \caption{Overall Comparison -- Workload 2 -- Latency}
+    \label{eval:f:e9:w2:lat-c}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+        set terminal epslatex size 17cm,9cm
+        set key outside center top horizontal
+        set datafile separator ';'
+        set xr [0.5:7.5]
+        set yr [2:26]
+        set y2r [2:26]
+        set ytics 0,4 nomirror
+        set y2tics 0,4 nomirror
+        set boxwidth 0.4 absolute
+        set style fill empty
+        unset xl
+        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+        set yl 'Number of Executors'
+        plot 'ex/final/w2/exec-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+        '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average' 
+    \end{gnuplot}
+    \caption{Overall Comparison -- Workload 2 -- Number of Executors}
+    \label{eval:f:e9:w2:exec-c}
+\end{figure}
+\FloatBarrier
+\subsection{Conclusion}

@@ -1,13 +1,13 @@
 \chapter{Apache Spark and Spark Streaming}
 \label{spark}
-Apache Spark~\cite{spark} is a general purpose data processing framework that supports wide range of applications from \emph{batch} processing, \emph{stream} processing, \emph{graph} processing to \emph{machine learning}, etc. In this chapter the architecture of Apache Spark and Spark Streaming -- as one of its sub projects -- will be explored and discussed. Throughout the chapter, minor examples will also be presented to further simplify the concepts. This chapter is organized as follows. Section~\ref{sp:basics} explains the basic concepts of Apache Spark. Then, section~\ref{sp:rdd} explains \emph{Resilient Distributed Datasets} (RDDs) which is the most integral component of the Apache Spark. Section~\ref{sp:dstream} explains \emph{Discretized Streams} (DStreams) as the fundamental building block for data stream processing applications. Finally, section~\ref{sp:conc} concludes this chapter.
+Apache Spark~\cite{spark} is a general purpose data processing framework that supports wide range of applications from \emph{batch} processing, \emph{stream} processing, \emph{graph} processing to \emph{machine learning}, etc. In this chapter the architecture of Apache Spark and Spark Streaming -- as one of its sub projects -- will be explored and discussed. Throughout the chapter, minor examples will also be presented to further simplify the concepts. This chapter is organized as follows. Section~\ref{sp:basics} explains the basic concepts of Apache Spark. Then, Section~\ref{sp:rdd} explains \emph{Resilient Distributed Datasets} (RDDs) which is the most integral component of the Apache Spark. Section~\ref{sp:dstream} explains \emph{Discretized Streams} (DStreams) as the fundamental building block for data stream processing applications. Finally, Section~\ref{sp:conc} concludes this chapter.
 
 \section{Basic Concepts}
 \label{sp:basics}
 
 Map-Reduce~\cite{Dean:2004} and its derivative projects have been widely used by \emph{data-oriented} applications to process and crunch huge datasets over last the decade. In traditional Map-Reduce environments, developers typically create \emph{acyclic} data flow graphs to process input data. However, as confirmed by \textcite{Zaharia:2010}, there are two categories of applications that are not well suited for this architecture.
 \begin{itemize}
-    \item \textbf{Iterative Jobs} Many machine learning applications process the same input \emph{iteratively}. In traditional model, each iteration should be defined as a separate MapReduce job. While this is feasible, but for each job, input data has to be loaded from disk which leads to serious performance issues.
+    \item \textbf{Iterative Jobs} Many machine learning applications process the same input \emph{iteratively}. In traditional model, each iteration should be defined as a separate MapReduce job. After an iteration is finished, the produced output is saved to a distributed file system and then next iteration is started by feeding in the output of last iteration. While this is feasible, but for each job, input data has to be loaded from disk which leads to serious performance issues.
     \item \textbf{Interactive Analysis} MapReduce derivative projects like Hive~\cite{hive} and Pig~\cite{pig} have been extensively used to run SQL queries on top of massive datasets. Whenever a user submits different queries over the same dataset, the ideal solution would be to load all datasets into memory once and then execute different queries on top of it. However, with traditional model of execution each query shall be defined as a separate job which reads input data from disk.
 \end{itemize}
 Apache spark has been designed from ground up to resolve these issues. It provides a large stack of tools to facilitate processing large datasets. Figure~\ref{fig:spark-eco} depicts tools provided by Spark.
@@ -28,14 +28,15 @@ Any Spark application consists of multiple components at runtime. The following 
     \item[Worker Processes] A collection of worker processes known as \emph{executors} that run on cluster nodes. Executors run user defined code. During the runtime of the application each worker consume any number of input records, processes it based on user defined code and emits any number of output records. Similar to driver process, liveness of the worker processes shall by monitored. However, the role of worker processes are not as critical as driver process, even though they may fail for any reason. Workers have access to load/store data files from/to distributed file system or local memory of the machine. During lifetime of the application, status of the workers will be reported to driver process.
     \item[User Defined Code] Provided by user and caries the main logic of the application.
 \end{description}
-Figure~\ref{fig:spark-runtime}\footnote{The figure has been partially taken from~\textcite{Zaharia:2012}} depicts coarse grained architecture of a Spark application and table~\ref{tab:spark-runtime} summarizes these components.
-\begin{figure}[h]
+Figure~\ref{fig:spark-runtime} depicts coarse grained architecture of a Spark application and Table~\ref{tab:spark-runtime} summarizes these components.
+\begin{figure}[!htbp]
     \centering
     \includegraphics[clip,trim=3cm 16.8cm 2.5cm 2.5cm]{spark-high.pdf}
-    \caption{Architecture of Spark Runtime}
+    \caption[Architecture of Spark Runtime]{Architecture of Spark Runtime\footnotemark}
     \label{fig:spark-runtime}
 \end{figure}
-\begin{table*}[ht]
+\footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
+\begin{table*}[!htbp]
     \begin{tabularx}{\textwidth}{lX}
         \toprule
         \textbf{Component} & \textbf{Description}\\
@@ -54,16 +55,17 @@ Figure~\ref{fig:spark-runtime}\footnote{The figure has been partially taken from
 \subsection{Spark Cluster Manager}
 \label{sp:cluster}
 
-Section~\ref{sp:run} described the coarse grained architecture of Spark. However, from a more fine grained point of view, there is missing component known as \emph{Cluster Manager}. Cluster Manager controls the \emph{assignment} of executors to cluster nodes. It monitors liveness of executors during lifetime of the Spark application. \emph{Spark Session} is the entry point for all Spark applications and has the responsibility to communicate with Cluster Manager to distribute tasks and collect task progress reports from executors. It also distributes user defined code on Worker nodes. Figure~\ref{fig:spark-cluster}\footnote{The figure has been partially taken from~\textcite{spark-guide}} illustrates the role of Cluster Manager in Spark.
-\begin{figure}[h]
+Section~\ref{sp:run} described the coarse grained architecture of Spark. However, from a more fine grained point of view, there is missing component known as \emph{Cluster Manager}. Cluster Manager controls the \emph{assignment} of executors to cluster nodes. It monitors liveness of executors during lifetime of the Spark application. \emph{Spark Session} is the entry point for all Spark applications and has the responsibility to communicate with Cluster Manager to distribute tasks and collect task progress reports from executors. It also distributes user defined code on Worker nodes. Figure~\ref{fig:spark-cluster} illustrates the role of Cluster Manager in Spark.
+\begin{figure}[!htbp]
     \centering
     \includegraphics[clip,trim=2.4cm 19cm 3.5cm 2cm]{spark-cluster.pdf}
-    \caption[Architecture of Spark Cluster Manager]{Architecture of Spark Cluster Manager}
+    \caption[Architecture of Spark Cluster Manager]{Architecture of Spark Cluster Manager\footnotemark}
     \label{fig:spark-cluster}
 \end{figure}
+\footnotetext{The figure has been partially taken from~\textcite{spark-guide}}
 
 Note that, the term \emph{executor} is a conceptual term and implementation details may differ among different resource managers. Spark supports multiple Cluster Manager implementations. The following describes the most prominent implementations. It shall be noted that this list is a growing over time due to Spark's pluggable resource manager architecture. Table~\ref{tab:spark-cluster} summarizes available Cluster Manager architectures.
-\begin{table*}[h]
+\begin{table*}[!htp]
     \begin{tabularx}{\textwidth}{lX}
         \toprule
         \textbf{Cluster Manager} & \textbf{Description}\\
@@ -78,47 +80,52 @@ Note that, the term \emph{executor} is a conceptual term and implementation deta
     \label{tab:spark-cluster}
 \end{table*}
 \begin{description}[leftmargin=0pt]
-    \item [Apache YARN] It is referred as \emph{Yet Another Resource Negotiator}~\cite{Vavilapalli:2013} and is the default resource manager for modern Hadoop workloads. It has a master-slave architecture and consists of a single global \emph{Resource Manager} -- most probably accompanied by a backup as well --  and several \emph{Node Managers} that run on each worker node. The concept of executor is implemented as \emph{containers} in YARN. Each container can hold a specific amount of node's processing power (CPU, RAM, Network, etc.). In YARN, any application is modeled with two components. First, \emph{Application Master} that maintains the necessary information to run the application -- Spark driver process in this case and second, several \emph{Workers} that run the user defined code. Both Application Master and Workers are executed in the context of YARN containers. 
+    \item [Apache YARN~\cite{Vavilapalli:2013}] It is referred as \emph{Yet Another Resource Negotiator} and is the default resource manager for modern Hadoop workloads. It has a master-slave architecture and consists of a single global \emph{Resource Manager} -- most probably accompanied by a backup as well --  and several \emph{Node Managers} that run on each worker node. The concept of executor is implemented as \emph{containers} in YARN. Each container can hold a specific amount of node's processing power (CPU, RAM, Network, etc.). In YARN, any application is modeled with two components. First, \emph{Application Master} that maintains the necessary information to run the application -- Spark driver process in this case and second, several \emph{Workers} that run the user defined code. Both Application Master and Workers are executed in the context of YARN containers. 
     
     Fault-tolerance is provided at multiple levels. First, several backup nodes monitor the master resource manager via Zookeeper. In case master resource manager fails, one of the backup masters takes over the responsibility. Second, Applications Master reports its status to the global resource manager. In case, application master fails, the global resource manager launches a new Application Master on another node. Third, Workers provide different progress reports to Application Master and Node Managers. In case any Worker container fails, a new container will be allocated and the old one will be killed by the local Node Manager.
-    \item [Apache Mesos] It is another dominant cluster scheduler for Spark~\cite{Hindman:2011}. It is a master-slave resource manager. A global resource manager -- known as \emph{Mesos Master} -- has cluster level view. On each node runs a single \emph{Mesos Slave} process. Mesos has a pluggable architecture for different class of application schedulers. That is, a single cluster can run a mixture of Spark, MPI, etc. jobs with different priority for each application type. Each \emph{Framework Scheduler} handles corresponding jobs. For example, Spark scheduler, maintains multiple driver processes or MPI scheduler maintains multiple MPI applications. Free resources on each Mesos Slave are represented as empty \emph{slots} -- very much like containers in YARN -- and are allocated to one of the currently running jobs.
+    \item [Apache Mesos~\cite{Hindman:2011}] It is another dominant cluster scheduler for Spark. It is a master-slave resource manager. A global resource manager -- known as \emph{Mesos Master} -- has cluster level view. On each node runs a single \emph{Mesos Slave} process. Mesos has a pluggable architecture for different class of application schedulers. That is, a single cluster can run a mixture of Spark, MPI, etc. jobs with different priority for each application type. Each \emph{Framework Scheduler} handles corresponding jobs. For example, Spark scheduler, maintains multiple driver processes or MPI scheduler maintains multiple MPI applications. Free resources on each Mesos Slave are represented as empty \emph{slots} -- very much like containers in YARN -- and are allocated to one of the currently running jobs.
     
     Fault-tolerance is provided by a similar hierarchical approach like YARN. Mesos Master is monitored by several backups through Zookeeper. Mesos Slaves as well as Framework Schedulers are in turn monitored by Mesos Master. Each job is further monitored by corresponding Framework Scheduler. And finally, executors are monitored by Mesos Slaves. 
     \item [Spark Standalone] It is the default resource manager for Spark and will be used throughout this thesis. It also follows the master-slave model. \emph{Spark Master} is the global cluster level resource manager. On each cluster node runs a \emph{Spark Slave} process. Spark Slaves are responsible to run and monitor worker executors. It is possible to set default number of CPU cores and available memory for each executor through configuration, either \emph{statically} which is applied to all jobs or at \emph{submission} time for a specific job.
     
-     Fault-tolerance is achieved by several measures. Figure~\ref{fig:spark-full}\footnote{The figure has been partially taken from~\textcite{spark-guide}} depicts fault-tolerance architecture of Spark. Similar to YARN and Mesos, a multi-level failure detection approach is exploited. Multiple backup nodes monitor the Spark Master via Zookeeper~(Case~1). Spark Slaves and Drivers are monitored by Spark Master (Case 2). Progress of each executor -- whether the assigned task is done or not -- is monitored by Driver (Case 3). Initial input and final output of the jobs are stored in a distributed replicated file system like HDFS. In case any executor fails to store its final output in DFS, it will be relaunched by Spark on another node (Case 4). Intermediate results are stored locally without any fault-tolerance in mind. However, \emph{checkpoints} -- stored on DFS -- can be used in this case to recover from executor failures (Case 4). Refer to section~\ref{sp:rdd} for more information on checkpointing process. Liveness of each executor is further monitored by corresponding local Spark Slave process (Case 5)
-     \begin{figure}[ht]
-         \centering
-         \includegraphics[clip,trim=4cm 13cm 4cm 2.2cm]{spark-full.pdf}
-         \caption{Architecture of Spark Fault-Tolerance}
-         \label{fig:spark-full}
-     \end{figure}
+     Fault-tolerance is achieved by several measures. Figure~\ref{fig:spark-full} depicts fault-tolerance architecture of Spark. Similar to YARN and Mesos, a multi-level failure detection approach is exploited. Multiple backup nodes monitor the Spark Master via Zookeeper and in case of master failure, one of backups will take over~(Case~1). Spark Slaves and Driver processes are monitored by Spark Master (Case 2). Progress of each executor -- whether the assigned task is done or not -- is monitored by its corresponding Driver process~(Case~3). Initial input and final output of Spark jobs are stored in a distributed file system like HDFS~(Case~4). In case any executor fails to store its final output in DFS, it will be relaunched by Spark Master on another node. Intermediate results are stored locally without any fault-tolerance in mind. However, \emph{checkpoints} which is stored on distributed file system can be used in this case to recover from executor failures~(Case~4). Refer to Section~\ref{sp:rdd} for more information on checkpointing process. Liveness of each executor -- whether it is running or not -- is monitored by corresponding local Spark Slave process~(Case~5)
 \end{description}
+\afterpage{
+    \begin{figure}[!h]
+        \centering
+        \includegraphics[clip,trim=4cm 13cm 4cm 2.2cm]{spark-full.pdf}
+        \caption[Architecture of Spark Fault-Tolerance]{Architecture of Spark Fault-Tolerance\footnotemark}
+        \label{fig:spark-full}
+    \end{figure}
+    \footnotetext{The figure has been partially taken from~\textcite{spark-guide}}
+}
 
 \section{Resilient Distributed Datasets}
 \label{sp:rdd}
-
 \emph{Resilient Distributed Dataset} (RDD)~\cite{Zaharia:2012} is the basic building block of Spark's data processing pipeline. It is inspired by the same concepts behind \emph{shared memory} and enables \emph{iterative algorithms} and \emph{interactive analytics} to perform common operations directly on memory. RDDs are fault-tolerant and parallel data structures to let intermediate results of a Spark application to be stored in memory during multiple iterations. Existing distributed shared memory abstractions for cluster computing provide \emph{fine-grained} interface -- typically key/value -- to modify state. Unfortunately, with this approach the only way to provide fault-tolerance is the \emph{log shipping} approach that is already offered by distributed database systems.
 
-Whereas, RDDs offer \emph{coarse-grained} interface based on \emph{immutable transformations}. Each transformation (\lstinline$map$, \lstinline$filter$, \lstinline$foreach$, \lstinline$groupByKey$, etc.) applies same application logic to all records that it contains. A dataset's \emph{lineage graph} is the \emph{chain}~-- \emph{sequence} -- of multiple transformations that produced the aforementioned dataset. With this approach only the transformation itself needs to be logged and shipped to other nodes to provide fault-tolerance. Since RDDs are already immutable, recomputing the lineage on other node is a trivial task. The RDD abstraction is useful in data intensive processing applications, since same operation is applied to many records. Table~\ref{tab:rdd-vs-dsm}\footnote{The table has been taken from~\textcite{Zaharia:2012}} summarizes the differences between RRDs and common distributed shared memory technologies.
-\begin{table*}[h]
-    \begin{tabular}{lll}
-        \toprule
-        \textbf{Dimension} & \textbf{RDD} & \textbf{Distributed Shared Memory}\\
-        \midrule
-        Reads & Per record or per input file & Per key/value \\
-        Writes & Coarse grained & Per key/value \\
-        Consistency & Easy (Immutable RDDs) & Application dependent \\
-        Fault-Tolerance & Lineage recomputation & Application dependent \\
-        Straggler Mitigation & Parallel backup tasks & Application dependent \\
-        Operator Placement & Based on data locality & Application dependent \\
-        Behavior if not enough memory is available & Controlled serialization to disk & OS managed swapping\\
-        \bottomrule
-    \end{tabular}
-    \centering
-    \caption{High-Level Comparison of RDDs and Distributed Shared Memory Systems}
-    \label{tab:rdd-vs-dsm}
-\end{table*}
+Whereas, RDDs offer \emph{coarse-grained} interface based on \emph{immutable transformations}. Each transformation (\lstinline$map$, \lstinline$filter$, \lstinline$foreach$, \lstinline$groupByKey$, etc.) applies same application logic to all records that it contains. A dataset's \emph{lineage graph} is the \emph{chain}~-- \emph{sequence} -- of multiple transformations that produced the aforementioned dataset. With this approach only the transformation itself needs to be logged and shipped to other nodes to provide fault-tolerance. Since RDDs are already immutable, recomputing the lineage on other node is a trivial task. The RDD abstraction is useful in data intensive processing applications, since same operation is applied to many records. Table~\ref{tab:rdd-vs-dsm} summarizes the differences between RRDs and common distributed shared memory technologies.
+\afterpage{
+    \begin{table}[!h]
+        \begin{tabular}{lll}
+            \toprule
+            \textbf{Dimension} & \textbf{RDD} & \textbf{Distributed Shared Memory}\\
+            \midrule
+            Reads & Per record or per input file & Per key/value \\
+            Writes & Coarse grained & Per key/value \\
+            Consistency & Easy (Immutable RDDs) & Application dependent \\
+            Fault-Tolerance & Lineage recomputation & Application dependent \\
+            Straggler Mitigation & Parallel backup tasks & Application dependent \\
+            Operator Placement & Based on data locality & Application dependent \\
+            Behavior if not enough memory is available & Controlled serialization to disk & OS managed swapping\\
+            \bottomrule
+        \end{tabular}
+        \centering
+        \caption[High-Level Comparison of RDDs and Distributed Shared Memory Systems]{High-Level Comparison of RDDs and Distributed Shared Memory Systems\footnotemark}
+        \label{tab:rdd-vs-dsm}
+    \end{table}
+    \footnotetext{The table has been taken from~\textcite{Zaharia:2012}}
+}
 
 An RDD is a \emph{read-only}, \emph{partitioned} collection of records~\cite{Zaharia:2012}. RDDs can only be created through deterministic transformations from either \emph{stable stoage} or \emph{other RRDs}.
 \begin{itemize}
@@ -132,9 +139,8 @@ An RDD has enough information about how it was derived from other RDDs. This mea
     \item \textbf{Partitioning}. Some transformations like \lstinline$groupByKey$ or \lstinline$join$ partition the original RDD into multiple secondary partitions. RDDs allow application developers to perform partitioning -- hash, range or any custom partitioning strategy -- such that relevant records are \emph{co-partitioned} on same machine. This is particularly useful for \emph{operator placement} optimizations.
 \end{itemize}
 
-In order to simplify the concept of lineage graph, listing~\ref{l:sp:log-error}\footnotemark and figure~\ref{fig:spark-lineage-sample}\footnotemark[\value{footnote}] illustrate a simple log processing pipeline and its corresponding generated lineage graph.
-\footnotetext{The figure and sample code has been partially taken from~\textcite{Zaharia:2012}}
-\begin{lstlisting}[float=h, caption={Parsing Errors in Log Files From HDFS},label={l:sp:log-error},captionpos=b,morekeywords={val}]
+In order to simplify the concept of lineage graph, Listing~\ref{l:sp:log-error} and Figure~\ref{fig:spark-lineage-sample} illustrate a simple log processing pipeline and its corresponding generated lineage graph.
+\begin{lstlisting}[float=!htbp, caption={Parsing Errors in Log Files From HDFS},label={l:sp:log-error},captionpos=b,morekeywords={val}]
 val lines = spark.textFile("hdfs://...")
 val errors = lines.filter(_.startsWith("ERROR"))
 errors.persist()
@@ -151,14 +157,15 @@ val slowQueries = mysqlErrors.filter(_.contains("SLOW QUERY"))
                                                          .map(_.split(',')(3))
                                                          .collect()
 \end{lstlisting}
-\begin{figure}[p]
-    \centering
-    \includegraphics[clip,trim=4.5cm 8.9cm 2.2cm 2.2cm]{spark-lineage-sample.pdf}
-    \caption{RDD Transformations and Corresponding Lineage Graph}
-    \label{fig:spark-lineage-sample}
-\end{figure}
-
-\clearpage
+\afterpage{
+    \begin{figure}[!htbp]
+        \centering
+        \includegraphics[clip,trim=4.5cm 8.9cm 2.2cm 2.2cm,scale=0.8]{spark-lineage-sample.pdf}
+        \caption[RDD Transformations and Corresponding Lineage Graph]{RDD Transformations and Corresponding Lineage Graph\footnotemark}
+        \label{fig:spark-lineage-sample}
+    \end{figure}
+    \footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
+}
 \subsection{RDD Transformations and Dependencies}
 \label{sp:depend}
 
@@ -171,20 +178,23 @@ As mentioned, RDDs are the result of \emph{lazy} transformations derived from on
 
 In a lineage graph, RDDs are derived from one another. This makes each RDD depend on one or several RDDs. There are two types of dependencies among RDDs.
 \begin{itemize}
-    \item \textbf{Narrow}. When one partition of the parent RDD is used by at most one partition of the child RDD, then the dependency is considered as narrow. For example \lstinline$map$, \lstinline$filter$, \lstinline$union$ and joins with \emph{co-partitioned} inputs create narrow dependencies. Narrow dependencies allow to process RDDs without triggering shuffling process -- a phenomenon known as \emph{pipelined execution}. Additionally, failure recovery is easier in case of narrow dependencies because only lost parent RDDs need to be recomputed. Figure~\ref{fig:sp:narrow-dep}\footnotemark depicts narrow dependencies.
-    \item \textbf{Wide}. When one partition of the parent RDD is used by more than one partition of the child RDD, then the dependency is considered as wide. For example, \lstinline$groupByKey$ and joins with inputs \emph{not co-partitioned} create wide dependencies. Wide dependencies trigger the shuffling process. In contrast to narrow dependencies, recovering from node failures are less efficient since a failed node might cause loss of some partitions from all ancestors which requires full recomputation~\cite{Zaharia:2012}. Figure~\ref{fig:sp:wide-dep}\footnotemark[\value{footnote}] depicts wide dependencies.
-    \begin{figure}[p]
-        \centering
-        \includegraphics[clip,trim=4cm 11.5cm 3.1cm 2.5cm]{narrow-dep.pdf}
-        \caption{RDD Narrow Dependencies}
-        \label{fig:sp:narrow-dep}
-        \includegraphics[clip,trim=2cm 19.5cm 3.5cm 4cm]{wide-dep.pdf}
-        \caption{RDD Wide Dependencies}
-        \label{fig:sp:wide-dep}
-    \end{figure}
+    \item \textbf{Narrow}. When one partition of the parent RDD is used by at most one partition of the child RDD, then the dependency is considered as narrow. For example \lstinline$map$, \lstinline$filter$, \lstinline$union$ and joins with \emph{co-partitioned} inputs create narrow dependencies. Narrow dependencies allow to process RDDs without triggering shuffling process -- a phenomenon known as \emph{pipelined execution}. Additionally, failure recovery is easier in case of narrow dependencies because only lost parent RDDs need to be recomputed. Figure~\ref{fig:sp:narrow-dep} depicts narrow dependencies.
+    \item \textbf{Wide}. When one partition of the parent RDD is used by more than one partition of the child RDD, then the dependency is considered as wide. For example, \lstinline$groupByKey$ and joins with inputs \emph{not co-partitioned} create wide dependencies. Wide dependencies trigger the shuffling process. In contrast to narrow dependencies, recovering from node failures are less efficient since a failed node might cause loss of some partitions from all ancestors which requires full recomputation~\cite{Zaharia:2012}. Figure~\ref{fig:sp:wide-dep} depicts wide dependencies.
 \end{itemize}
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[clip,trim=4cm 11.5cm 3.1cm 2.5cm]{narrow-dep.pdf}
+    \caption[RDD Narrow Dependencies]{RDD Narrow Dependencies\footnotemark}
+    \label{fig:sp:narrow-dep}
+\end{figure}
 \footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
-
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[clip,trim=2cm 19.5cm 3.5cm 4cm]{wide-dep.pdf}
+    \caption[RDD Wide Dependencies]{RDD Wide Dependencies\footnotemark}
+    \label{fig:sp:wide-dep}
+\end{figure}
+\footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
 \subsection{Fault-Tolerance with Checkpointing}
 \label{sp:fault}
 
@@ -192,9 +202,7 @@ The idea of the lineage graph and recomputable transformations significantly sim
 
 In order to provide full control to application developers, Spark exposes checkpointing behavior though its API -- via \lstinline$REPLICATE$ flag in \lstinline$persist()$ function -- and leaves the decision up to developers. There are some scenarios where automatic checkpointing without intervention of developers may seem a feasible choice. Because job scheduler is completely aware of the size all RDDs and naturally it should be able to implement more effective checkpointing strategy compared to developers. However, this feature is not currently available in Spark.
 
-With checkpointing in-place, providing fault-tolerance becomes a fairly straightforward process. Note that, RDDs are immutable set of records. This feature makes it easy to flush them in a background process, since there is no \emph{concurrency} and \emph{consistency} concerns involved. Noteworthy, there is an additional fault-tolerance mechanism known as \emph{WAL-based fault-tolerance} for streaming pipelines. This topic is further discussed in section~\ref{sp:dstream}.
-
-\clearpage
+With checkpointing in-place, providing fault-tolerance becomes a fairly straightforward process. Note that, RDDs are immutable set of records. This feature makes it easy to flush them in a background process, since there is no \emph{concurrency} and \emph{consistency} concerns involved. Noteworthy, there is an additional fault-tolerance mechanism known as \emph{WAL-based fault-tolerance} for streaming pipelines. This topic is further discussed in Section~\ref{sp:dstream}.
 \subsection{RDDs and Spark Job Stages}
 \label{sp:stage}
 
@@ -214,8 +222,6 @@ Figure~\ref{fig:sp:logical} shows a sample job with logical operators and Figure
     \caption{Spark Job Stages at Runtime}
     \label{fig:sp:dag}
 \end{figure}
-
-\clearpage
 \section{Discretized Streams}
 \label{sp:dstream}
 
@@ -225,21 +231,20 @@ Many modern big data applications process data in real-time as they enter the pr
 \label{sp:continues-model}
 
 Although the concept of stream processing is nothing new and there has been many proposals and implementations like Apache Storm~\cite{Storm} and Apache Flink~\cite{flink}, but most of these systems are based on a processing model known as \emph{Continuous Operator Processing Model}. In this model streaming computations are divided into a set of \emph{long-lived stateful} operators that process messages in a loop:
-\begin{enumerate}
+\begin{enumerate}[nosep]
     \item \label{sp:step-1}Get one or more messages from previous operators.
     \item Apply the computation -- business logic -- on newly received messages. Query the internal state if required.
     \item Update internal state if necessary.
     \item Produce any number of messages as the result of computation. These messages will be sent to next operators down the pipeline.
     \item Go back to Step~\ref{sp:step-1}
 \end{enumerate}
-
 While continuous processing model minimizes latency, the stateful architecture of operators and nondeterminism that comes from record interleaving on the network, makes it hard to provide fault tolerance efficiently. In particular, recovering from a \emph{failed} or slow node -- \emph{stragglers} -- is challenging. The are usually two standard approaches to overcome these issues.
 \begin{description}[leftmargin=0pt]
     \item[Replication] In replication model which is borrowed from database systems, there are two copies of processing graphs. Produced messages are sent as duplicates to down stream operators. However, just replicating messages is not sufficient. A \emph{consensus protocol} should exist in-place to ensure that both operator replicas see incoming messages in the same order that is sent by upstream operators. Even though replication is a costly operation but it recovers from failures very fast, since both replicas are processing message online in synchronized steps.
     \item[Upstream Backup] The basic idea behind this model~\cite{Hwang:2005} is to checkpoint the internal state every once in a while to a stable shared storage. In case an operator -- or node -- fails, a backup operator takes over and reloads the last successfully written checkpoint. Then backup operator rebuilds the state by replying new messages and reproducing lost messages as necessary. Although this model is more efficient in terms of replication costs, but suffers from high fail-over time. Backup node should replay newly published messages from the last checkpoint and apply them to the internal state. Depending on checkpointing interval, this might be a time consuming operation.
 \end{description}
 Besides the fault-tolerance costs of this model, dealing with straggler nodes are even more challenging. Replication model provides no solution at all, since two replicas are processing messages synchronously. The only way to resolve this issue in Upstream Backup model is to fail -- kill -- the slow operator and let the backup operator takes over the responsibility which will undergo slow recovery process. Figure~\ref{fig:sp:cont-op} depicts these two approaches with additional synchronization and replication messages involved.
-\begin{figure}[ht]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[clip,trim=2.5cm 20cm 6.7cm 2.2cm]{cont-op.pdf}
     \caption{Continuous Operator Processing Model}
@@ -256,31 +261,24 @@ Besides the fault-tolerance costs of this model, dealing with straggler nodes ar
     \item Unified processing model for batch and stream processing.
 \end{itemize}
 
-As a consequence of storing operator intermediate state as RDDs, a streaming computation can be modeled as series of \emph{deterministic batch computations} on small intervals -- known as micro-batch. Messages received in each batch interval is stored reliably across the cluster to form an input dataset for that interval. Once the time interval completes, this dataset is processed just like traditional batch processing using \lstinline$map$, \lstinline$filter$, \lstinline$groupByKey$, etc. Formally, a D-Stream is a sequence of \emph{immutable}, \emph{partitioned} datasets (RDDs) that can be acted on by deterministic transformations~\cite{Zaharia:2013}. These  transformations produce new D-Streams, and may create intermediate state represented as RDDs. Figure~\ref{fig:sp:dstream-high} shows high-level D-Stream computation model.
-\begin{figure}[hb]
-    \centering
-    \includegraphics[clip,trim=2.1cm 23cm 2cm 2.6cm]{dstream-high.pdf}
-    \caption{D-Stream High Level Processing Model}
-    \label{fig:sp:dstream-high}
-\end{figure}
+As a consequence of storing operator intermediate state as RDDs, a streaming computation can be modeled as series of \emph{deterministic batch computations} on small intervals -- known as micro-batch. Messages received in each batch interval is stored reliably across the cluster to form an input dataset for that interval. Once the time interval completes, this dataset is processed just like traditional batch processing using \lstinline$map$, \lstinline$filter$, \lstinline$groupByKey$, etc. Formally, a D-Stream is a sequence of \emph{immutable}, \emph{partitioned} datasets (RDDs) that can be acted on by deterministic transformations~\cite{Zaharia:2013}. These  transformations produce new D-Streams, and may create intermediate state represented as RDDs.
 
-In order to clarify D-Stream API, listing~\ref{l:sp:dstream-api}\footnotemark shows a simple streaming word count example. It creates a \lstinline$pageViews$ D-Stream by
+In order to clarify D-Stream API, listing~\ref{l:sp:dstream-api} shows a simple streaming word count example. It creates a \lstinline$pageViews$ D-Stream by
 reading event stream over TCP, and groups them into 1-second batch intervals. Then, it transforms the event stream to a new D-Stream of \lstinline$(URL,1)$ pairs called
-\lstinline$ones$. Finally, it performs a running count with a \emph{stateful} \lstinline$runningReduce$ operator. Figure~\ref{fig:sp:dstream-api}\footnotemark[\value{footnote}] depicts the corresponding lineage graph and how the streams are divided into batch intervals. Note that smaller rectangles illustrates RDD partitions.
+\lstinline$ones$. Finally, it performs a running count with a \emph{stateful} \lstinline$runningReduce$ operator. Figure~\ref{fig:sp:dstream-api} depicts the corresponding lineage graph and how the streams are divided into batch intervals. Note that smaller rectangles illustrates RDD partitions.
 \begin{lstlisting}[float=h, caption={Streaming Word Count using D-Stream API},label={l:sp:dstream-api},captionpos=b,morekeywords={val}]
 val pageViews = readStream("tcp://...", "1s")
 val ones           = pageViews.map(event => (event.url, 1))
 val counts       = ones.runningReduce((a, b) => a + b)
 \end{lstlisting}
-\begin{figure}[h]
+\begin{figure}[!htbp]
     \centering
-    \includegraphics[clip,trim=2.5cm 11cm 3cm 4cm]{dstream-example.pdf}
-    \caption{Streaming Word Count Using D-Stream API}
+    \includegraphics[clip,trim=2.5cm 14cm 3.2cm 4cm,scale=0.7]{dstream-example.pdf}
+    \caption[Streaming Word Count Using D-Stream API]{Streaming Word Count Using D-Stream API\footnotemark}
     \label{fig:sp:dstream-api}
 \end{figure}
-\footnotetext{The code and figure has been partially taken from~\textcite{Zaharia:2013}}
+\footnotetext{The figure has been partially taken from~\textcite{Zaharia:2013}}
 
-\clearpage
 \subsection{Fault-Tolerant Message Consumption}
 Since RDDs provide the basic building block of Spark Streaming, achieving fault-tolerance in streaming applications is a straightforward process. In case of any node failure, failed RDD partitions can be reproduced easily by evaluating lineage graph and determining which transformations need to be recomputed. Furthermore, for stateful transformations, Spark already provides checkpointing. However, there is one case that needs more attention.
 
