@@ -1,6 +1,6 @@
 \chapter{Evaluation}
 \label{eval}
-In this chapter the two implemented techniques will be evaluated under three read world workloads. In order to show the effect of each configuration parameter, multiple experiments have been designed and deployed. Table~\ref{des:tab:config} defines the configuration space. First, characteristics of workload will be discussed in Section~\ref{eval:workload}. Thereafter, there is separate section for each experiment. Finally, Section~\ref{eval:conc} concludes this chapter.
+In this chapter the two implemented techniques will be evaluated under three read world workloads. In order to show the effect of each configuration parameter, multiple experiments have been designed and deployed. Table~\ref{des:tab:config} defines the configuration space. First, characteristics of workload will be discussed in Section~\ref{eval:workload}. Thereafter, there is separate section for each experiment.
 
 \section{Workload Characteristic}
 \label{eval:workload}
@@ -38,12 +38,8 @@ As an example, consider these two batches:
     \item \label{eval:wl-ex1} A batch of 500 records belonging to 500 hundred devices -- one record for each device -- which leads to 500 sort operations. Bare in mind that, it is \emph{not} 500 hundred sort operation on a 1-element list. Each record is accumulated with previous records of the sliding window and then sorted.
     \item \label{eval:wl-ex2} A batch of 2000 records belonging to 5 devices -- 400 hundred records for each device -- which leads to 5 sort operations.
 \end{enumerate}
-Case~\ref{eval:wl-ex1} is much more CPU intensive than case~\ref{eval:wl-ex2}.
-
-In all experiments \emph{batch size} is set to 10 seconds. The cluster uses 24 executors with minimum of 4 executors that should be respected by Auto-Scaler. All experiments start with minimum number of executors -- 4 in this case -- and run for \emph{one} hour. In case any training is required to run the experiment, training data set is separated from the original workload dataset.
-
-In order to make each workload CPU intensive enough, window size is changed for each workload. Table~\ref{eval:tab:history} defines the history window size for each workload.
-\begin{table*}[h]
+Case~\ref{eval:wl-ex1} is much more CPU intensive than case~\ref{eval:wl-ex2}. In order to make each workload CPU intensive enough, window size is changed for each workload. Table~\ref{eval:tab:history} defines the history window size for each workload.
+\begin{table}[h]
     \begin{tabular}{lc}
         \toprule
         \textbf{Workload} & \textbf{Window Size = $n$ }\\
@@ -55,7 +51,9 @@ In order to make each workload CPU intensive enough, window size is changed for 
     \centering
     \caption{Workload Window Size}
     \label{eval:tab:history}
-\end{table*}
+\end{table}
+
+In all experiments \emph{batch size} is set to 10 seconds. The cluster uses 24 executors with minimum of 4 executors that should be respected by Auto-Scaler. All experiments start with minimum number of executors -- 4 in this case -- and run for \emph{one} hour. In case any training is required to run the experiment, training data set is separated from the original workload dataset. In all experiments -- except the last one -- four charts are illustrated. Two charts for latency and two charts for number of executors. Candlestick charts depicts minimum, 10 percentile, average, 90 percentile and maximum values. Furthermore, all experiments were run \emph{two} times and the average of them is included in charts.
 
 \clearpage
 \section{Experiment 1: Executor Strategy}
@@ -1897,43 +1895,77 @@ Figures~\ref{eval:f:e8:w1:lat},~\ref{eval:f:e8:w1:lat-c},~\ref{eval:f:e8:w1:exec
 Looking at results, the more we get close to 10-second target latency, the more it gets challenging for Auto-Scaler. However, there is one common behavior in both workloads. The key factor to reduce latency is to apply \emph{early} Scale-Out. This can be confirmed by Figure~\ref{eval:f:e8:w1:exec} and Figure~\ref{eval:f:e8:w2:exec}. However, as explained in Section~\ref{intro-auto-scale}, Reinforcement Learning agent has to visit a state to take an appropriate action which may be too late when the peak workload is observed. This is one of the cases where proactive -- predictive -- approaches are more useful.
 \clearpage
 \section{Experiment 9: Overall Comparison}
-So far we have experimented the behavior of Auto-Scaler under different configurations. However, target latency has been set to 30 seconds in all experiments. In this experiment, we will set other target values to evaluate whether Q-Learning approach is able to hit multiple targets. Table~\ref{eval:tab:ex8} describes the configuration parameters of this experiment. Note that different sliding windows are used for Workload 1 and Workload 2. Three minute history window performs better for Workload 1, so this option is adopted. Additionally, based on previous experiments, setting target value to more than 30 seconds makes it too easy for Auto-Scaler. Thus, those cases are not tested. 
+In this experiment implemented Q-Learning technique is compared to bare bone Spark with fixed number of executors and Spark Streaming's default dynamic resource manager. Furthermore, Online Parameter Optimization~\cite{Heinze:2015} which is implemented for Spark Streaming by~\textcite{Michal:2017} is also included. Table~\ref{eval:tab:ex9} describes the configuration parameters of this experiment.
 \begin{table}[h]
-    \includegraphics[clip,trim=2.4cm 21.18cm 5.1cm 2.5cm]{tables/ex8.pdf}
+    \includegraphics[clip,trim=2.4cm 17.9cm 6.1cm 2.5cm]{tables/ex9.pdf}
     \centering
-    \caption{Approaching Target Configuration Parameters}
+    \caption{Overall Comparison Configuration Parameters}
     \label{eval:tab:ex9}
 \end{table}
 
-Figures~\ref{eval:f:e9:w1:lat-c} and ~\ref{eval:f:e9:w1:exec-c} illustrates latency and executor charts for Workload 1. Figures~\ref{eval:f:e9:w2:lat-c} and~\ref{eval:f:e9:w2:exec-c} illustrates latency and executor charts for Workload 2.
+Note that, Spark Dynamic Resource Manager uses Equation~\ref{eval:e9:formula} to calculate a \emph{Ratio} value and then compares it to Scale-Up and Scale-Down ratio values obtained from configuration. In order to influence the behavior of this resource manager, batch duration should be changed. To make it fair, in all experiments the batch size is set to 10 seconds.
+\begin{equation}
+\text{Ratio} = \frac{\text{Average Latency of History Window}}{\text{Batch Size}}
+\label{eval:e9:formula}
+\end{equation}
+
+For Q-Learning approach, two of the best cases from previous experiments were obtained. Also note that seven cases are evaluated in this experiment which makes it difficult to comprehend the detailed latency charts. Thus, they are removed. Figures~\ref{eval:f:e9:w1:lat-c} and~\ref{eval:f:e9:w2:lat-c} illustrate latency charts for both workloads. Figures~\ref{eval:f:e9:w1:exec-c} and~\ref{eval:f:e9:w2:exec-c} illustrates executor charts for both workloads.
 
 \begin{figure}[!htbp]
     \centering
-    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-    set terminal epslatex size 17cm,9cm
-    set key outside center top horizontal
-    set datafile separator ';'
-    set xr [0.5:7.5]
-    set yr [0:420]
-    set ytics 0,30 nomirror
-    set y2r [0:420]
-    set y2tics 0,30 nomirror
-    set boxwidth 0.4 absolute
-    set style fill empty
-    set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
-    set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
-    unset xl
-    set yl 'Latency (Seconds)'
-    plot 'ex/final/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
-    '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average'
-    \end{gnuplot}
-    \caption{Overall Comparison -- Workload 1 -- Latency}
-    \label{eval:f:e9:w1:lat-c}
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 17cm,11cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xr [0.5:7.5]
+            set yr [0:420]
+            set ytics 0,30 nomirror
+            set y2r [0:420]
+            set y2tics 0,30 nomirror
+            set boxwidth 0.4 absolute
+            set style fill empty
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            unset xl
+            set yl 'Latency (Seconds)'
+            plot 'ex/final/w1/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average'
+        \end{gnuplot}
+        \caption{Overall Comparison -- Workload 1 -- Latency}
+        \label{eval:f:e9:w1:lat-c}
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
+        \centering
+        \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
+            set terminal epslatex size 17cm,11cm
+            set key outside center top horizontal
+            set datafile separator ';'
+            set xr [0.5:7.5]
+            set yr [0:390]
+            set ytics 0,30 nomirror
+            set y2r [0:390]
+            set y2tics 0,30 nomirror
+            set boxwidth 0.4 absolute
+            set style fill empty
+            set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
+            set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
+            unset xl
+            set yl 'Latency (Seconds)'
+            plot 'ex/final/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
+            '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average'
+        \end{gnuplot}
+        \caption{Overall Comparison -- Workload 2 -- Latency}
+        \label{eval:f:e9:w2:lat-c}
+    \end{minipage}
 \end{figure}
-\begin{figure}[!htbp]
+\begin{figure}[!h]
+    \centering
+    \begin{minipage}[h]{\linewidth}
     \centering
     \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-        set terminal epslatex size 17cm,9cm
+        set terminal epslatex size 16cm,7.5cm
         set key outside center top horizontal
         set datafile separator ';'
         set xr [0.5:7.5]
@@ -1952,34 +1984,11 @@ Figures~\ref{eval:f:e9:w1:lat-c} and ~\ref{eval:f:e9:w1:exec-c} illustrates late
     \end{gnuplot}
     \caption{Overall Comparison -- Workload 1 -- Number of Executors}
     \label{eval:f:e9:w1:exec-c}
-\end{figure}
-\begin{figure}[!htbp]
+    \end{minipage}\hfil
+    \begin{minipage}[h]{\linewidth}
     \centering
     \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-        set terminal epslatex size 17cm,9cm
-        set key outside center top horizontal
-        set datafile separator ';'
-        set xr [0.5:7.5]
-        set yr [0:390]
-        set ytics 0,30 nomirror
-        set y2r [0:390]
-        set y2tics 0,30 nomirror
-        set boxwidth 0.4 absolute
-        set style fill empty
-        set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
-        set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
-        unset xl
-        set yl 'Latency (Seconds)'
-        plot 'ex/final/w2/latency-c.csv' using 1:2:3:4:5:xticlabels(7) with candlesticks lc 'black' lw 4 t 'Min/Max/Percentiles',\
-        '' using 1:6:6:6:6 with linespoints pt 5 lc 'black' lw 4 t 'Average'
-    \end{gnuplot}
-    \caption{Overall Comparison -- Workload 2 -- Latency}
-    \label{eval:f:e9:w2:lat-c}
-\end{figure}
-\begin{figure}[!htbp]
-    \centering
-    \begin{gnuplot}[terminal=epslatex, terminaloptions=color colortext]
-        set terminal epslatex size 17cm,9cm
+        set terminal epslatex size 16cm,7.5cm
         set key outside center top horizontal
         set datafile separator ';'
         set xr [0.5:7.5]
@@ -1998,6 +2007,7 @@ Figures~\ref{eval:f:e9:w1:lat-c} and ~\ref{eval:f:e9:w1:exec-c} illustrates late
     \end{gnuplot}
     \caption{Overall Comparison -- Workload 2 -- Number of Executors}
     \label{eval:f:e9:w2:exec-c}
+    \end{minipage}
 \end{figure}
-\FloatBarrier
 \subsection{Conclusion}
+As can be seen, from 8 to 12 executors the latency drops significantly. It can be concluded that to hit target latency -- which is 30 seconds in this case -- optimal number of executors is between 8 to 12. Note that, 12 executors is slightly better than 24 executors. This could be the result of extra network communication involved in case of 24 executors. Spark and OPO achieve better latency than Q-Learning approach but with much more executors.

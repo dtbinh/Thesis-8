@@ -183,21 +183,22 @@ In a lineage graph, RDDs are derived from one another. This makes each RDD depen
 \end{itemize}
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[clip,trim=4cm 11.5cm 3.1cm 2.5cm]{narrow-dep.pdf}
-    \caption[RDD Narrow Dependencies]{RDD Narrow Dependencies\footnotemark}
-    \label{fig:sp:narrow-dep}
-\end{figure}
-\footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
-\begin{figure}[!htbp]
-    \centering
-    \includegraphics[clip,trim=2cm 19.5cm 3.5cm 4cm]{wide-dep.pdf}
-    \caption[RDD Wide Dependencies]{RDD Wide Dependencies\footnotemark}
-    \label{fig:sp:wide-dep}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[clip,trim=1.5cm 19.5cm 1.1cm 0.5cm,scale=0.9]{narrow-dep.pdf}
+        \caption[RDD Narrow Dependencies]{RDD Narrow Dependencies\footnotemark}
+        \label{fig:sp:narrow-dep}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[clip,trim=2cm 19.5cm 3.5cm 4cm,scale=0.9]{wide-dep.pdf}
+        \caption[RDD Wide Dependencies]{RDD Wide Dependencies\footnotemark[\value{footnote}]}
+        \label{fig:sp:wide-dep}
+    \end{subfigure}
 \end{figure}
 \footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
 \subsection{Fault-Tolerance with Checkpointing}
 \label{sp:fault}
-
 The idea of the lineage graph and recomputable transformations significantly simplifies fault-recovery. However, in long chains recomputing failed RDDs can be a very time/process intensive operation. Hence, in some cases it is useful to checkpoint some RDDs to stable storage -- like shared file system. In general checkpointing is useful for applications with deep lineage graphs containing wide dependencies, since a node failure in parent RDDs leads to full recomputation in child RDDs. If the lineage graph is small or most dependencies are narrow, checkpointing tends to be less useful. 
 
 In order to provide full control to application developers, Spark exposes checkpointing behavior though its API -- via \lstinline$REPLICATE$ flag in \lstinline$persist()$ function -- and leaves the decision up to developers. There are some scenarios where automatic checkpointing without intervention of developers may seem a feasible choice. Because job scheduler is completely aware of the size all RDDs and naturally it should be able to implement more effective checkpointing strategy compared to developers. However, this feature is not currently available in Spark.
@@ -213,25 +214,28 @@ Spark's Job scheduler is similar to Dryad~\cite{Isard:2007}. However, it takes R
     \item \textbf{Launching Tasks}. In this step, Spark launches \emph{tasks} which is going to be run by executors. Each task processes one or multiple partitions of RDDs. Depending on the location of RDDs, tasks will be launched on machines with data-locality awareness to reduce network transmission. In case a task fails, it can be run as long as parent stages are still available. If one or more parent stages become unavailable, missing partitions from parent stages shall be recomputed according to lineage graph.
 \end{itemize}
 Figure~\ref{fig:sp:logical} shows a sample job with logical operators and Figure~\ref{fig:sp:dag} depicts its corresponding DAG with two stages at runtime.
-\begin{figure}[h!]
+\begin{figure}[!htbp]
     \centering
-    \includegraphics[clip,trim=2.3cm 23.5cm 1.7cm 2.5cm,scale=0.97]{stage-logical.pdf}
+    \includegraphics[clip,trim=2.3cm 23.5cm 1.7cm 2.5cm]{stage-logical.pdf}
     \caption{Spark Job with Logical Operators}
     \label{fig:sp:logical}
-    \includegraphics[clip,trim=2.3cm 11.4cm 1.7cm 10cm,scale=0.97]{stage-dag.pdf}
+\end{figure}
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[clip,trim=2.3cm 11.4cm 1.7cm 10cm]{stage-dag.pdf}
     \caption{Spark Job Stages at Runtime}
     \label{fig:sp:dag}
 \end{figure}
+
 \section{Discretized Streams}
 \label{sp:dstream}
-
 Many modern big data applications process data in real-time as they enter the processing pipeline. Online machine learning, fraud detection, spam detection, etc. are just few examples of applications that require near real time processing of data. In order to process incoming records in near real-time, new generation of data processing frameworks has been emerged which is known as \emph{stream processing systems}. Apache Storm~\cite{Storm} is an example of stream processing systems. Although these systems provide stream processing pipelines, but they also come with a couple of deficiencies. First, Section~\ref{sp:continues-model} explores the architecture of traditional stream processing systems and its problems. Then, Section~\ref{sp:dstream-model} describes the new stream processing model known as \emph{Discretized Streams} (D-Streams)~\cite{Zaharia:2013} that is built on top of RDDs in order to resolve the problems of traditional model.
 
 \subsection{Continuous Operator Processing Model}
 \label{sp:continues-model}
 
 Although the concept of stream processing is nothing new and there has been many proposals and implementations like Apache Storm~\cite{Storm} and Apache Flink~\cite{flink}, but most of these systems are based on a processing model known as \emph{Continuous Operator Processing Model}. In this model streaming computations are divided into a set of \emph{long-lived stateful} operators that process messages in a loop:
-\begin{enumerate}[nosep]
+\begin{enumerate}
     \item \label{sp:step-1}Get one or more messages from previous operators.
     \item Apply the computation -- business logic -- on newly received messages. Query the internal state if required.
     \item Update internal state if necessary.
@@ -247,19 +251,15 @@ Besides the fault-tolerance costs of this model, dealing with straggler nodes ar
 \begin{figure}[!htbp]
     \centering
     \includegraphics[clip,trim=2.5cm 20cm 6.7cm 2.2cm]{cont-op.pdf}
-    \caption{Continuous Operator Processing Model}
+    \caption[Continuous Operator Processing Model]{Continuous Operator Processing Model\footnotemark}
     \label{fig:sp:cont-op}
 \end{figure}
+\footnotetext{The figure has been partially taken from~\textcite{spark-guide}}
 
 \subsection{D-Stream Processing Model}
 \label{sp:dstream-model}
 
-\emph{Discretized Streams} (D-Streams)~\cite{Zaharia:2013} is a novel technique to overcome the issues the Continuous Operator Processing Model. The basic idea behind D-Streams is to separate the computation from its state and keep the state as RDDs. This separation provides the following benefits.
-\begin{itemize}
-    \item Computation of messages becomes a set of \emph{stateless} and \emph{deterministic} tasks operating on RDDs.
-    \item RDDs already provide resiliency through in-memory replication and lineage recomputation. There is no need for further mechanisms to provide fault-tolerance.
-    \item Unified processing model for batch and stream processing.
-\end{itemize}
+\emph{Discretized Streams} (D-Streams)~\cite{Zaharia:2013} is a novel technique to overcome the issues the Continuous Operator Processing Model. The basic idea behind D-Streams is to separate the computation from its state and keep the state as RDDs. This separation provides the following benefits. First, computation of messages becomes a set of \emph{stateless} and \emph{deterministic} tasks operating on RDDs. Second, RDDs already provide resiliency through replication and lineage recomputation. There is no need for further mechanisms to provide fault-tolerance. Third, it provides unified processing model for batch and stream processing workloads.
 
 As a consequence of storing operator intermediate state as RDDs, a streaming computation can be modeled as series of \emph{deterministic batch computations} on small intervals -- known as micro-batch. Messages received in each batch interval is stored reliably across the cluster to form an input dataset for that interval. Once the time interval completes, this dataset is processed just like traditional batch processing using \lstinline$map$, \lstinline$filter$, \lstinline$groupByKey$, etc. Formally, a D-Stream is a sequence of \emph{immutable}, \emph{partitioned} datasets (RDDs) that can be acted on by deterministic transformations~\cite{Zaharia:2013}. These  transformations produce new D-Streams, and may create intermediate state represented as RDDs.
 
@@ -273,7 +273,7 @@ val counts       = ones.runningReduce((a, b) => a + b)
 \end{lstlisting}
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[clip,trim=2.5cm 14cm 3.2cm 4cm,scale=0.7]{dstream-example.pdf}
+    \includegraphics[clip,trim=2.5cm 14cm 3.2cm 4cm,scale=0.8]{dstream-example.pdf}
     \caption[Streaming Word Count Using D-Stream API]{Streaming Word Count Using D-Stream API\footnotemark}
     \label{fig:sp:dstream-api}
 \end{figure}
