@@ -20,30 +20,28 @@ Apache spark has been designed from ground up to resolve these issues. It provid
 
 \subsection{Spark Runtime Architecture}
 \label{sp:run}
-
-Any Spark application consists of multiple components at runtime. The following lists the relevant components from a high level point of view.
-\begin{description}[leftmargin=0pt]
-    \item[Driver Process] It is the core component of every Spark application. It is a single process and runs on one of the nodes in the cluster. It maintains all the critical information such as user's program, input files, output files and data flow of the application. The driver process should run during the runtime the of the application. In case driver process fails, the whole application is considered as \emph{dead} and should be restarted by any \emph{fault-tolerance} mechanism available in the cluster.
-    \item[Distributed File System] It provides a shared file system accessible by any node in the cluster. There is no limitation on type of the file system but typically \emph{Hadoop Distributed File System} (HDFS)~\cite{hadoop} is used.
-    \item[Worker Processes] A collection of worker processes known as \emph{executors} that run on cluster nodes. Executors run user defined code. During the runtime of the application each worker consume any number of input records, processes it based on user defined code and emits any number of output records. Similar to driver process, liveness of the worker processes shall by monitored. However, the role of worker processes are not as critical as driver process, even though they may fail for any reason. Workers have access to load/store data files from/to distributed file system or local memory of the machine. During lifetime of the application, status of the workers will be reported to driver process.
-    \item[User Defined Code] Provided by user and caries the main logic of the application.
-\end{description}
-Figure~\ref{fig:spark-runtime} depicts coarse grained architecture of a Spark application and Table~\ref{tab:spark-runtime} summarizes these components.
-\begin{figure}[!htbp]
+Any Spark application consists of multiple components at runtime. The following lists the relevant components from a high level point of view. Figure~\ref{fig:spark-runtime} depicts coarse grained architecture of a Spark application and Table~\ref{tab:spark-runtime} summarizes these components.
+\begin{figure}[H]
     \centering
-    \includegraphics[clip,trim=3cm 16.8cm 2.5cm 2.5cm]{spark-high.pdf}
+    \includegraphics[clip,trim=3cm 16.8cm 2.5cm 2.5cm,scale=0.7]{spark-high.pdf}
     \caption[Architecture of Spark Runtime]{Architecture of Spark Runtime\footnotemark}
     \label{fig:spark-runtime}
 \end{figure}
 \footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
+\begin{description}[leftmargin=0pt]
+    \item[Driver Process] It is the core component of every Spark application. It is a single process and runs on one of the nodes in the cluster. It maintains all the critical information such as user's program, location of input and output files plus data flow of the application. The driver process should run during the runtime the of the application. In case driver process fails, the whole application is considered as \emph{dead}.
+    \item[Distributed File System] It provides a shared file system accessible by any node in the cluster. There is no limitation on type of the file system but typically \emph{Hadoop Distributed File System} (HDFS)~\cite{hadoop} is used.
+    \item[Worker Processes] A collection of worker processes known as \emph{executors} that run on cluster nodes. Executors run user defined code. During the runtime of the application each worker consume any number of input records, processes it based on user defined code and emits any number of output records. Similar to driver process, liveness of the worker processes shall by monitored. However, the role of worker processes are not as critical as driver process, even though they may fail for any reason. Workers have access to load/store data files from/to distributed file system or local memory of the machine. During lifetime of the application, status of the workers will be reported to driver process.
+    \item[User Defined Code] Provided by user and caries the main logic of the application.
+\end{description}
 \begin{table*}[!htbp]
     \begin{tabularx}{\textwidth}{lX}
         \toprule
         \textbf{Component} & \textbf{Description}\\
         \midrule
-        Driver & Maintains all relevant information -- including user defined code -- to process input data and produce output.\\
+        Driver & Maintains all relevant information to process input data and produce output.\\
         Distributed File System & Provides shared file system accessible by all nodes in cluster.\\
-        Worker Process & Workforce of the cluster. Gets necessary information from driver and executes user defined code.\\
+        Worker Process & Gets necessary information from driver and executes user defined code.\\
         User Defined Code & Caries the main application logic.\\
         \bottomrule
     \end{tabularx}
@@ -56,83 +54,58 @@ Figure~\ref{fig:spark-runtime} depicts coarse grained architecture of a Spark ap
 \label{sp:cluster}
 
 Section~\ref{sp:run} described the coarse grained architecture of Spark. However, from a more fine grained point of view, there is missing component known as \emph{Cluster Manager}. Cluster Manager controls the \emph{assignment} of executors to cluster nodes. It monitors liveness of executors during lifetime of the Spark application. \emph{Spark Session} is the entry point for all Spark applications and has the responsibility to communicate with Cluster Manager to distribute tasks and collect task progress reports from executors. It also distributes user defined code on Worker nodes. Figure~\ref{fig:spark-cluster} illustrates the role of Cluster Manager in Spark.
-\begin{figure}[!htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[clip,trim=2.4cm 19cm 3.5cm 2cm]{spark-cluster.pdf}
+    \includegraphics[clip,trim=2.4cm 19cm 3.5cm 2cm,scale=0.7]{spark-cluster.pdf}
     \caption[Architecture of Spark Cluster Manager]{Architecture of Spark Cluster Manager\footnotemark}
     \label{fig:spark-cluster}
 \end{figure}
 \footnotetext{The figure has been partially taken from~\textcite{spark-guide}}
 
-Note that, the term \emph{executor} is a conceptual term and implementation details may differ among different resource managers. Spark supports multiple Cluster Manager implementations. The following describes the most prominent implementations. It shall be noted that this list is a growing over time due to Spark's pluggable resource manager architecture. Table~\ref{tab:spark-cluster} summarizes available Cluster Manager architectures.
-\begin{table*}[!htp]
-    \begin{tabularx}{\textwidth}{lX}
-        \toprule
-        \textbf{Cluster Manager} & \textbf{Description}\\
-        \midrule
-        Apache YARN & Hierarchical failure detection. Global Resource Manager monitors local Node Managers and Application Masters. Backup Resource Managers monitor global Resource Manager. Node Managers monitor local containers.\\
-        Apache Mesos & Hierarchical failure detection. Mesos Master monitors Mesos Slaves and Framework Schedulers. Backup masters monitor Mesos Master. Mesos Slaves monitor local workers.\\
-        Spark Standalone & Spark Master monitors Driver program and Spark Slaves. Backup master monitor Spark Master. Spark Slaves monitor local executors.\\
-        \bottomrule
-    \end{tabularx}
-    \centering
-    \caption{Summary of Spark Cluster Managers}
-    \label{tab:spark-cluster}
-\end{table*}
+Note that, the term \emph{executor} is a conceptual term and implementation details may differ among different resource managers. Spark supports multiple Cluster Manager implementations. The following describes the most prominent implementations. It shall be noted that this list is a growing over time due to Spark's pluggable resource manager architecture.
 \begin{description}[leftmargin=0pt]
-    \item [Apache YARN~\cite{Vavilapalli:2013}] It is referred as \emph{Yet Another Resource Negotiator} and is the default resource manager for modern Hadoop workloads. It has a master-slave architecture and consists of a single global \emph{Resource Manager} -- most probably accompanied by a backup as well --  and several \emph{Node Managers} that run on each worker node. The concept of executor is implemented as \emph{containers} in YARN. Each container can hold a specific amount of node's processing power (CPU, RAM, Network, etc.). In YARN, any application is modeled with two components. First, \emph{Application Master} that maintains the necessary information to run the application -- Spark driver process in this case and second, several \emph{Workers} that run the user defined code. Both Application Master and Workers are executed in the context of YARN containers. 
-    
-    Fault-tolerance is provided at multiple levels. First, several backup nodes monitor the master resource manager via Zookeeper. In case master resource manager fails, one of the backup masters takes over the responsibility. Second, Applications Master reports its status to the global resource manager. In case, application master fails, the global resource manager launches a new Application Master on another node. Third, Workers provide different progress reports to Application Master and Node Managers. In case any Worker container fails, a new container will be allocated and the old one will be killed by the local Node Manager.
-    \item [Apache Mesos~\cite{Hindman:2011}] It is another dominant cluster scheduler for Spark. It is a master-slave resource manager. A global resource manager -- known as \emph{Mesos Master} -- has cluster level view. On each node runs a single \emph{Mesos Slave} process. Mesos has a pluggable architecture for different class of application schedulers. That is, a single cluster can run a mixture of Spark, MPI, etc. jobs with different priority for each application type. Each \emph{Framework Scheduler} handles corresponding jobs. For example, Spark scheduler, maintains multiple driver processes or MPI scheduler maintains multiple MPI applications. Free resources on each Mesos Slave are represented as empty \emph{slots} -- very much like containers in YARN -- and are allocated to one of the currently running jobs.
-    
-    Fault-tolerance is provided by a similar hierarchical approach like YARN. Mesos Master is monitored by several backups through Zookeeper. Mesos Slaves as well as Framework Schedulers are in turn monitored by Mesos Master. Each job is further monitored by corresponding Framework Scheduler. And finally, executors are monitored by Mesos Slaves. 
-    \item [Spark Standalone] It is the default resource manager for Spark and will be used throughout this thesis. It also follows the master-slave model. \emph{Spark Master} is the global cluster level resource manager. On each cluster node runs a \emph{Spark Slave} process. Spark Slaves are responsible to run and monitor worker executors. It is possible to set default number of CPU cores and available memory for each executor through configuration, either \emph{statically} which is applied to all jobs or at \emph{submission} time for a specific job.
-    
-     Fault-tolerance is achieved by several measures. Figure~\ref{fig:spark-full} depicts fault-tolerance architecture of Spark. Similar to YARN and Mesos, a multi-level failure detection approach is exploited. Multiple backup nodes monitor the Spark Master via Zookeeper and in case of master failure, one of backups will take over~(Case~1). Spark Slaves and Driver processes are monitored by Spark Master (Case 2). Progress of each executor -- whether the assigned task is done or not -- is monitored by its corresponding Driver process~(Case~3). Initial input and final output of Spark jobs are stored in a distributed file system like HDFS~(Case~4). In case any executor fails to store its final output in DFS, it will be relaunched by Spark Master on another node. Intermediate results are stored locally without any fault-tolerance in mind. However, \emph{checkpoints} which is stored on distributed file system can be used in this case to recover from executor failures~(Case~4). Refer to Section~\ref{sp:rdd} for more information on checkpointing process. Liveness of each executor -- whether it is running or not -- is monitored by corresponding local Spark Slave process~(Case~5)
-\end{description}
-\afterpage{
-    \begin{figure}[!h]
+    \item [Apache YARN~\cite{Vavilapalli:2013}] It is referred as \emph{Yet Another Resource Negotiator} and is the default resource manager for modern Hadoop workloads. It has a master-slave architecture and consists of a single global \emph{Resource Manager} -- most probably accompanied by a backup as well --  and several \emph{Node Managers} that run on each worker node. The concept of executor is implemented as \emph{containers} in YARN. Each container can hold a specific amount of node's processing power (CPU, RAM, Network, etc.). In YARN, any application is modeled with two components. First, \emph{Application Master} that maintains the necessary information to run the application -- Spark driver process in this case and second, several \emph{Workers} that run the user defined code. Both Application Master and Workers are executed in the context of YARN containers. Fault-tolerance is provided at multiple levels. First, several backup nodes monitor the master resource manager via Zookeeper. In case master resource manager fails, one of the backup masters takes over the responsibility. Second, Applications Master reports its status to the global resource manager. In case, application master fails, the global resource manager launches a new Application Master on another node. Third, Workers provide different progress reports to Application Master and Node Managers. In case any Worker container fails, a new container will be allocated and the old one will be killed by the local Node Manager.
+    \item [Apache Mesos~\cite{Hindman:2011}] It is another dominant cluster scheduler for Spark. It is a master-slave resource manager. A global resource manager -- known as \emph{Mesos Master} -- has cluster level view. On each node runs a single \emph{Mesos Slave} process. Mesos has a pluggable architecture for different class of application schedulers. That is, a single cluster can run a mixture of Spark, MPI, etc. jobs with different priority for each application type. Each \emph{Framework Scheduler} handles corresponding jobs. For example, Spark scheduler, maintains multiple driver processes or MPI scheduler maintains multiple MPI applications. Free resources on each Mesos Slave are represented as empty \emph{slots} -- very much like containers in YARN -- and are allocated to one of the currently running jobs. Fault-tolerance is provided by a similar hierarchical approach like YARN. Mesos Master is monitored by several backups through Zookeeper. Mesos Slaves as well as Framework Schedulers are in turn monitored by Mesos Master. Each job is further monitored by corresponding Framework Scheduler. And finally, executors are monitored by Mesos Slaves. 
+    \item [Spark Standalone] It is the default resource manager for Spark and will be used throughout this thesis. It also follows the master-slave model. \emph{Spark Master} is the global cluster level resource manager. On each cluster node runs a \emph{Spark Slave} process. Spark Slaves are responsible to run and monitor worker executors. It is possible to set default number of CPU cores and available memory for each executor through configuration, either \emph{statically} which is applied to all jobs or at \emph{submission} time for a specific job. Fault-tolerance is achieved by several measures. Figure~\ref{fig:spark-full} depicts fault-tolerance architecture of Spark. Similar to YARN and Mesos, a multi-level failure detection approach is exploited. Multiple backup nodes monitor the Spark Master via Zookeeper and in case of master failure, one of backups will take over~(Case~1). Spark Slaves and Driver processes are monitored by Spark Master (Case 2). Progress of each executor -- whether the assigned task is done or not -- is monitored by its corresponding Driver process~(Case~3). Initial input and final output of Spark jobs are stored in a distributed file system like HDFS~(Case~4). In case any executor fails to store its final output in DFS, it will be relaunched by Spark Master on another node. Intermediate results are stored locally without any fault-tolerance in mind. However, \emph{checkpoints} which is stored on distributed file system can be used in this case to recover from executor failures~(Case~4). Refer to Section~\ref{sp:rdd} for more information on checkpointing process. Liveness of each executor -- whether it is running or not -- is monitored by corresponding local Spark Slave process~(Case~5)
+    \begin{figure}[H]
         \centering
-        \includegraphics[clip,trim=4cm 13cm 4cm 2.2cm]{spark-full.pdf}
+        \includegraphics[clip,trim=4cm 13.6cm 4cm 2.9cm,scale=0.9]{spark-full.pdf}
         \caption[Architecture of Spark Fault-Tolerance]{Architecture of Spark Fault-Tolerance\footnotemark}
         \label{fig:spark-full}
     \end{figure}
     \footnotetext{The figure has been partially taken from~\textcite{spark-guide}}
-}
+\end{description}
 
 \section{Resilient Distributed Datasets}
 \label{sp:rdd}
 \emph{Resilient Distributed Dataset} (RDD)~\cite{Zaharia:2012} is the basic building block of Spark's data processing pipeline. It is inspired by the same concepts behind \emph{shared memory} and enables \emph{iterative algorithms} and \emph{interactive analytics} to perform common operations directly on memory. RDDs are fault-tolerant and parallel data structures to let intermediate results of a Spark application to be stored in memory during multiple iterations. Existing distributed shared memory abstractions for cluster computing provide \emph{fine-grained} interface -- typically key/value -- to modify state. Unfortunately, with this approach the only way to provide fault-tolerance is the \emph{log shipping} approach that is already offered by distributed database systems.
 
 Whereas, RDDs offer \emph{coarse-grained} interface based on \emph{immutable transformations}. Each transformation (\lstinline$map$, \lstinline$filter$, \lstinline$foreach$, \lstinline$groupByKey$, etc.) applies same application logic to all records that it contains. A dataset's \emph{lineage graph} is the \emph{chain}~-- \emph{sequence} -- of multiple transformations that produced the aforementioned dataset. With this approach only the transformation itself needs to be logged and shipped to other nodes to provide fault-tolerance. Since RDDs are already immutable, recomputing the lineage on other node is a trivial task. The RDD abstraction is useful in data intensive processing applications, since same operation is applied to many records. Table~\ref{tab:rdd-vs-dsm} summarizes the differences between RRDs and common distributed shared memory technologies.
-\afterpage{
-    \begin{table}[!h]
-        \begin{tabular}{lll}
-            \toprule
-            \textbf{Dimension} & \textbf{RDD} & \textbf{Distributed Shared Memory}\\
-            \midrule
-            Reads & Per record or per input file & Per key/value \\
-            Writes & Coarse grained & Per key/value \\
-            Consistency & Easy (Immutable RDDs) & Application dependent \\
-            Fault-Tolerance & Lineage recomputation & Application dependent \\
-            Straggler Mitigation & Parallel backup tasks & Application dependent \\
-            Operator Placement & Based on data locality & Application dependent \\
-            Behavior if not enough memory is available & Controlled serialization to disk & OS managed swapping\\
-            \bottomrule
-        \end{tabular}
-        \centering
-        \caption[High-Level Comparison of RDDs and Distributed Shared Memory Systems]{High-Level Comparison of RDDs and Distributed Shared Memory Systems\footnotemark}
-        \label{tab:rdd-vs-dsm}
-    \end{table}
-    \footnotetext{The table has been taken from~\textcite{Zaharia:2012}}
-}
+\begin{table}[!h]
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{Dimension} & \textbf{RDD} & \textbf{Distributed Shared Memory}\\
+        \midrule
+        Reads & Per record or per input file & Per key/value \\
+        Writes & Coarse grained & Per key/value \\
+        Consistency & Easy (Immutable RDDs) & Application dependent \\
+        Fault-Tolerance & Lineage recomputation & Application dependent \\
+        Straggler Mitigation & Parallel backup tasks & Application dependent \\
+        Operator Placement & Based on data locality & Application dependent \\
+        Behavior if not enough memory is available & Controlled serialization to disk & OS managed swapping\\
+        \bottomrule
+    \end{tabular}
+    \centering
+    \caption[High-Level Comparison of RDDs and Distributed Shared Memory Systems]{High-Level Comparison of RDDs and Distributed Shared Memory Systems\footnotemark}
+    \label{tab:rdd-vs-dsm}
+\end{table}
+\footnotetext{The table has been taken from~\textcite{Zaharia:2012}}
 
 An RDD is a \emph{read-only}, \emph{partitioned} collection of records~\cite{Zaharia:2012}. RDDs can only be created through deterministic transformations from either \emph{stable stoage} or \emph{other RRDs}.
 \begin{itemize}
     \item \textbf{Stable storage}. In this case dataset is typically stored on a shared file system like HDFS and accessible from all nodes of the cluster.
     \item \textbf{Other RDDs}. In this case subsequent RDDs \emph{depend} on each other forming the lineage graph.
 \end{itemize}
-
 An RDD has enough information about how it was derived from other RDDs. This means it doesn't have to be materialized in every step of the pipeline. In other words, an RDD cannot reference another RDD that it cannot reconstruct after a failure. Additionally, users are able to control \emph{persistency} and \emph{partitioning} of RDDs.
 \begin{itemize}
     \item \textbf{Persistency}. Users can define which RDDs will be reused in next steps of the pipeline. They choose a storage strategy -- in-memory or disk-based -- to persist RDDs.
@@ -181,22 +154,22 @@ In a lineage graph, RDDs are derived from one another. This makes each RDD depen
     \item \textbf{Narrow}. When one partition of the parent RDD is used by at most one partition of the child RDD, then the dependency is considered as narrow. For example \lstinline$map$, \lstinline$filter$, \lstinline$union$ and joins with \emph{co-partitioned} inputs create narrow dependencies. Narrow dependencies allow to process RDDs without triggering shuffling process -- a phenomenon known as \emph{pipelined execution}. Additionally, failure recovery is easier in case of narrow dependencies because only lost parent RDDs need to be recomputed. Figure~\ref{fig:sp:narrow-dep} depicts narrow dependencies.
     \item \textbf{Wide}. When one partition of the parent RDD is used by more than one partition of the child RDD, then the dependency is considered as wide. For example, \lstinline$groupByKey$ and joins with inputs \emph{not co-partitioned} create wide dependencies. Wide dependencies trigger the shuffling process. In contrast to narrow dependencies, recovering from node failures are less efficient since a failed node might cause loss of some partitions from all ancestors which requires full recomputation~\cite{Zaharia:2012}. Figure~\ref{fig:sp:wide-dep} depicts wide dependencies.
 \end{itemize}
-\begin{figure}[!htbp]
+\begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{\linewidth}
-        \centering
-        \includegraphics[clip,trim=1.5cm 19.5cm 1.1cm 0.5cm,scale=0.9]{narrow-dep.pdf}
-        \caption[RDD Narrow Dependencies]{RDD Narrow Dependencies\footnotemark}
-        \label{fig:sp:narrow-dep}
-    \end{subfigure}
-    \begin{subfigure}[b]{\linewidth}
-        \centering
-        \includegraphics[clip,trim=2cm 19.5cm 3.5cm 4cm,scale=0.9]{wide-dep.pdf}
-        \caption[RDD Wide Dependencies]{RDD Wide Dependencies\footnotemark[\value{footnote}]}
-        \label{fig:sp:wide-dep}
-    \end{subfigure}
+    \includegraphics[clip,trim=1.5cm 19.5cm 1.1cm 0.5cm,scale=0.8]{narrow-dep.pdf}
+    \caption[RDD Narrow Dependencies]{RDD Narrow Dependencies\footnotemark}
+    \label{fig:sp:narrow-dep}
 \end{figure}
 \footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
+\afterpage{
+    \begin{figure}[H]
+    \centering
+    \includegraphics[clip,trim=2cm 19.5cm 3.5cm 4cm,scale=0.8]{wide-dep.pdf}
+    \caption[RDD Wide Dependencies]{RDD Wide Dependencies\footnotemark}
+    \label{fig:sp:wide-dep}
+    \end{figure}
+    \footnotetext{The figure has been partially taken from~\textcite{Zaharia:2012}}
+}
 \subsection{Fault-Tolerance with Checkpointing}
 \label{sp:fault}
 The idea of the lineage graph and recomputable transformations significantly simplifies fault-recovery. However, in long chains recomputing failed RDDs can be a very time/process intensive operation. Hence, in some cases it is useful to checkpoint some RDDs to stable storage -- like shared file system. In general checkpointing is useful for applications with deep lineage graphs containing wide dependencies, since a node failure in parent RDDs leads to full recomputation in child RDDs. If the lineage graph is small or most dependencies are narrow, checkpointing tends to be less useful. 
@@ -216,15 +189,18 @@ Spark's Job scheduler is similar to Dryad~\cite{Isard:2007}. However, it takes R
 Figure~\ref{fig:sp:logical} shows a sample job with logical operators and Figure~\ref{fig:sp:dag} depicts its corresponding DAG with two stages at runtime.
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[clip,trim=2.3cm 23.5cm 1.7cm 2.5cm]{stage-logical.pdf}
-    \caption{Spark Job with Logical Operators}
-    \label{fig:sp:logical}
-\end{figure}
-\begin{figure}[!htbp]
-    \centering
-    \includegraphics[clip,trim=2.3cm 11.4cm 1.7cm 10cm]{stage-dag.pdf}
-    \caption{Spark Job Stages at Runtime}
-    \label{fig:sp:dag}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[clip,trim=2.3cm 23.5cm 1.7cm 2.5cm,scale=0.8]{stage-logical.pdf}
+        \caption{Spark Job with Logical Operators}
+        \label{fig:sp:logical}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[clip,trim=2.3cm 11.4cm 1.7cm 10cm,scale=0.8]{stage-dag.pdf}
+        \caption{Spark Job Stages at Runtime}
+        \label{fig:sp:dag}
+    \end{subfigure}
 \end{figure}
 
 \section{Discretized Streams}
