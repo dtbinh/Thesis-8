@@ -18,12 +18,11 @@ As discussed in Section~\ref{ias:alg-fam}, Auto-Scalers can be categorized into 
         \item \textcite{Enda:2012} proposed a parallel architecture to Reinforcement Learning without any global controller involved. Nodes (RL agents) have two tables. Local table is trained by each node separately. Global table contains values learned by other nodes. When an agent learns anything new, it broadcasts it to other nodes. From theoretical point of view, this solution might seem feasible, since parallel learning speeds up initialization process. However, Spark has a single global controller. Applying this technique to Spark requires heavy modification to \lstinline$spark-core$ package. 
         \item \textcite{Heinze:2014} implemented Reinforcement Learning in the context of FUGU~\cite{Grandl:2014:MPC}. Each node, maintains its own Q-Table and imposes local policy without coordinating with other nodes. Although this architecture is not applicable for Spark, but its core idea -- \emph{Temporal Difference}~\cite{rlIntro} algorithm-- is applicable. Thus, this thesis implemented this proposal by adopting it to Spark architecture. Refer to Section~\ref{des:temp} for theoretical background and Section~\ref{des:proj} for implementation detail.
         \item \textcite{CARDELLINI2018171} proposed a two level hierarchical architecture for resource management in Apache Storm~\cite{Storm}. Local controller applies local policy on each node and coordinates with the global controller for confirmation of its actions. Although, this architecture seems to be a promising approach, however it has been implemented by modifying Storm's internal components. As mentioned above, this is in conflict with thesis's requirements.
-        \item \textcite{dutreilh:hal-01122123} proposed a model-based Reinforcement Learning approach for resource management which is based on a global controller. In order to overcome the slow convergence of model-free learning, authors proposed to estimate environment dynamics based on collected samples at runtime. Then it switches to \emph{Value Iteration}~\cite{rlIntro} algorithm instead of \emph{Temporal Difference}. This approach has also been partially adopted by this thesis. Refer to Section~\ref{des:val} for theoretical background and Section~\ref{des:proj} for implementation detail.
+        \item \textcite{dutreilh:hal-01122123} proposed a model-based Reinforcement Learning approach for resource management which is based on a global controller. In order to overcome the slow convergence of model-free learning, authors proposed to estimate environment dynamics based on collected samples at runtime. Then it switches to \emph{Value Iteration}~\cite{rlIntro} algorithm instead of \emph{Temporal Difference}. This approach has also been partially adopted by this thesis. Refer to Section~\ref{des:val} for theoretical background and Section~\ref{des:proj} for implementation details.
     \end{itemize}
     \item[Control Theory] Techniques based on Control Theory are also promising for elastic data streaming. Because it monitors input and output of the application, it can respond to workload changes very fast and adapt the system if necessary. Thus it is perfectly capable of handling dynamic environments. The comparison between Reinforcement Learning and Control Theory techniques is left for future work.
 \end{description}
-As mentioned, two techniques -- \emph{Temporal Difference} and \emph{Value Iteration} -- will be implemented in this thesis. In next two sections, theoretical foundation of these algorithms will be laid out. Noteworthy to mention, these sections are heavily inspired by~\textcite{rlIntro}. Furthermore, Section~\ref{related} discusses more techniques and the reasoning why they have been rejected by this thesis.
-\clearpage
+As mentioned, two techniques -- \emph{Temporal Difference} and \emph{Value Iteration} -- will be implemented in this thesis. In next two sections, theoretical foundation of these algorithms will be laid out. For an extensive introduction of Reinforcement Learning refer to~\textcite{rlIntro}. Furthermore, Section~\ref{related} discusses more techniques and the reasoning why they have been rejected by this thesis.
 \subsection{Temporal Difference}
 \label{des:temp}
 Section~\ref{ias:alg-fam} explains the basics of Reinforcement Learning. Temporal Difference (TD) learning is one of the foundational algorithms of Reinforcement Learning. It can learn from applying experience without having prior knowledge about environment's dynamics. This property is potentially useful for data stream processing systems in which the incoming workload is changing without any particular pattern.
@@ -50,35 +49,32 @@ V(S_t) \longleftarrow (1-\alpha)V(S_t) + \alpha\big[R_{t+1} + \gamma\,V(S_{t+1})
 	\end{equation}
 \end{itemize}
 
-Since expected future reward is defined per action, Equation~\ref{des:eq:std} changes slightly and becomes as Equation~\ref{des:eq:qtd}. This update is applied after every transition from a nonterminal state $S_t$. In case $S_{t+1}$ is terminal, then $Q(S_{t+1},\,A_{t+1})$ is set to zero. As a consequence, each experiment can be defined with a quadruple of (State, Action, Reward, State$'$) or $(S_{t},\,A_{t},\,R_{t+1},\,S_{t+1})$. This method is known as \emph{Sarsa} algorithm and named \emph{Q-Learning} because of the Q-Table used in the equation. Algorithm~\ref{des:a:ql}\footnote{The pseudocode has been taken from~\textcite{rlIntro}} describes this procedure.
+Since expected future reward is defined per action, Equation~\ref{des:eq:std} changes slightly and becomes as Equation~\ref{des:eq:qtd}. This update is applied after every transition from a nonterminal state $S_t$. In case $S_{t+1}$ is terminal, then $Q(S_{t+1},\,A_{t+1})$ is set to zero. As a consequence, each experiment can be defined with a quadruple of (State, Action, Reward, State$'$) or $(S_{t},\,A_{t},\,R_{t+1},\,S_{t+1})$. This method is known as \emph{Sarsa} algorithm and named \emph{Q-Learning} because of the Q-Table used in the equation. Algorithm~\ref{des:a:ql} describes this procedure.
 \begin{equation}
 Q(S_t,\,A_t) \longleftarrow (1-\alpha)Q(S_t,\,A_t) + \alpha\big[R_{t+1} + \gamma\,Q(S_{t+1},\,A_{t+1})\big]
 \label{des:eq:qtd}
 \end{equation}
-\begin{algorithm}[t]
+\begin{algorithm}[H]
 	\DontPrintSemicolon
-	
 	Algorithm parameters: $\alpha \in (0,1]$, $\gamma \in (0,1)$\;
 	Initialize $Q(s,\,a)$ for all $s \in \{S - terminal\}$, $a \in A(s)$ arbitrarily and $Q(terminal,a) = 0$\;
-	\BlankLine
 	\Repeat{\text{End of episode or $S$ is terminal}} {
 		Take action $A$ based on policy $\pi$ derived from $Q$ table\;
 		Observe reward $R$ and land in state $S'$\;
 		Choose $A'$ from $S'$ using the same policy $\pi$\;
 		$Q(S,\,A) \gets (1-\alpha)\;Q(S,\,A) + \alpha\;\big[R + \gamma\;Q(S',\,A')\big]$\;
-		$S \gets S'$\;
-		$A \gets A'$\;
+		$S \gets S'$ and $A \gets A'$\;
 	}
-	\caption{Q-Learning Work-Flow}
+	\caption[Q-Learning Work-Flow]{Q-Learning Work-Flow\footnotemark}
 	\label{des:a:ql}
 \end{algorithm}
+\footnotetext{The pseudocode has been taken from~\textcite{rlIntro}}
 
 An agent takes action based on a policy function~$\pi$ which in turn is derived -- partially or completely -- from the Q-Table. However, it shall be noted that in the beginning of episode the Q-Table is initialized to zero. In such situations, it takes very long time for agent to discover new states which is particularly harmful for data stream processing systems. This problem is usually solved by introducing small degree of randomness. The policy function decides randomly with a small probability~$\epsilon$ and in any other case~($1-\epsilon$), it behaves based on Q-Table. Other solutions do exist to solve state discovery problem. For example, Q-Table can be initialized with a random value or based on some \emph{heuristic} function that is partially derived from domain knowledge. 
 
 Furthermore, if two or more actions have equal expected reward, then policy function has to decide on one of them by breaking the tie. There are different strategies to solve this issue. Choosing a random action is one of them. However, in some domains this might be dangerous or harmful. Rather than choosing randomly, a simple heuristic inspired by domain knowledge can be helpful too.
 \subsection{Value Iteration}
 \label{des:val}
-
 As mentioned in last section, in streaming workloads the common belief is that the workload is not predictable. In other words, reward values of each action and probability of landing in a specific state after taking an action -- environment dynamics -- is unknown. However for the sake of discussion, let us assume environment dynamics is \emph{known}. In such situations, Reinforcement Learning can be solved using \emph{Dynamic Programming} techniques. In this section, the problem will be solved for environments with known dynamics. Then, some of the core ideas will be applied to adopt the solution for environments with unknown dynamics.
 
 Finding an optimal policy function, when environments dynamics is known can be \emph{recursively} solved by applying dynamic programming. As mentioned previously, the agent is trying to maximize expected reward by taking optimal actions. Here expected reward is defined with $\mathbb E$ and $\underset{a}{\text{max}}$ selects maximum value based on specified action.
@@ -116,10 +112,9 @@ Given these statistics, estimators $\overline{P}$, $\overline{R}$ are calculated
 \end{aligned}
 \end{equation}
 
-After estimating $p$, $r$, Algorithm~\ref{des:a:vi}\footnote{The pseudocode has been taken from~\textcite{rlIntro}} can be used to produce optimal policy. Not the difference between \textbf{max} and \textbf{argmax} functions. The former returns the \emph{maximum value} and the later returns the \emph{action that has the maximum value}. Value Iteration that described in Algorithm~\ref{des:a:vi} can be used independent of Temporal Difference. However, in this thesis it is used to get a useful initialized Q-Table. Thus, when sample collection period is over and Q-Table is initialized, normal Q-Learning approach is used thereafter. The reason is that in Value Iteration, after sampling period, Q-Table is never updated again. However, by combining Value Iteration -- for initializing Q-Table -- and Q-Learning, Q-Table is also updated at runtime which improves decision accuracy.
+After estimating $p$, $r$, Algorithm~\ref{des:a:vi} can be used to produce optimal policy. Not the difference between \textbf{max} and \textbf{argmax} functions. The former returns the \emph{maximum value} and the later returns the \emph{action that has the maximum value}. Value Iteration that described in Algorithm~\ref{des:a:vi} can be used independent of Temporal Difference. However, in this thesis it is used to get a useful initialized Q-Table. Thus, when sample collection period is over and Q-Table is initialized, normal Q-Learning approach is used thereafter. The reason is that in Value Iteration, after sampling period, Q-Table is never updated again. However, by combining Value Iteration -- for initializing Q-Table -- and Q-Learning, Q-Table is also updated at runtime which improves decision accuracy.
 \begin{algorithm}[h]
 	\DontPrintSemicolon
-	
 	A small threshold $\theta > 0$ determining accuracy of estimation\;
 	Initialize $V(s)$ for all $s \in \{S - terminal\}$ arbitrarily and $V(terminal) = 0$\;
 	\BlankLine
@@ -134,11 +129,10 @@ After estimating $p$, $r$, Algorithm~\ref{des:a:vi}\footnote{The pseudocode has 
 		Output policy $\pi \approx \pi^*$, such that\;
 		$\pi(s) = \text{argmax}_a\;\sum_{s',r} p(s',r\,|\,s,a)\;\Big[r + \gamma\:V(s')\Big]$
 	}
-	\caption{Value Iteration for Estimating $\pi \approx \pi^*$}
+	\caption[Value Iteration for Estimating $\pi \approx \pi^*$]{Value Iteration for Estimating $\pi \approx \pi^*$\footnotemark}
 	\label{des:a:vi}
 \end{algorithm}
-
-\clearpage
+\footnote{The pseudocode has been taken from~\textcite{rlIntro}}
 \section{Design}
 \label{des:proj}
 
@@ -147,81 +141,74 @@ In this section technical design and structure of the thesis will be explained a
 \subsection{State Space}
 \label{des:state-space}
 
-State space defines -- models -- the environment where the agent is living. Usually, it is combination of environment's properties. The following is list of sample state spaces that could be defined for different applications.
-\begin{description}[leftmargin=0pt]
-    \item[Web Applications] For a typical web application, a sample state space could be defined as a tuple of
-    \begin{center}
-        [Number of web servers, Total workload defined as requests per second, Average round trip delay of requests]
-    \end{center}
-    \item[Virtualization Server] For a Hypervisor, a sample state space can be defined as a tuple of
-    \begin{center}
-        [Number of running virtual machines, Total CPU utilization, Total used RAM]
-    \end{center}
-    \item[Stream Processing] For a data stream processing system, a sample state space can be defined as a tuple of
-    \begin{center}
-        [Number of worker nodes, Total workload defined as messages per second, Average latency of messages]
-    \end{center}
-\end{description}
-As state space contains more precise information, it gets bigger and bigger. Thus, in most systems it is \emph{discretized} to some degree to reduce its size. State space reduction has a couple of benefits.
-\begin{itemize}
-    \item \textbf{Change Observation}. For example, in most systems a 1\% increase/decrease in CPU utilization is not considered as a noticeable change but 5\% is.
-    \item \textbf{Absorbing Sudden Bursts}. In some applications, there might be a sudden change in one aspect of the system for a slightly short time. For example 20\% increase in CPU utilization for 5 seconds may not be considered as sustained workload increase.
-    \item \textbf{Preventing Zig-Zag Decisions}. If state space is discretized to fine-grained states, it might lead to consecutive contradictory decisions -- A phenomena known as \emph{Zig-Zag} decisions. For example, Auto-Scaler may decide to perform a scale-in action in one step and scale-out action in next step. A reasonable way to prevent this never ending loop is to discretize the state space into coarse-grained states.
-\end{itemize}
-However, it shall be noted that \emph{over discretizing} the state space may have negative impacts on target system. Section~\ref{eval} contains an experiment to evaluate discretization impact.
+State space defines -- models -- the environment where the agent is living. Usually, it is combination of environment's properties. As an example, For a typical web application, a sample state space could be defined as a tuple of [Number of web servers, Total workload defined as requests per second, Average round trip delay of requests]. For a Hypervisor, a sample state space can be defined as a tuple of [Number of running virtual machines, Total CPU utilization, Total used RAM]. For a data stream processing system, a sample state space can be defined as a tuple of [Number of worker nodes, Total workload defined as messages per second, Average latency of messages].
 
-In this thesis, a combination of latency and direction of workload is incorporated in to state space.
+As state space contains more precise information, it gets bigger and bigger. Thus, in most systems it is \emph{discretized} to some degree to reduce its size. State space reduction has a couple of benefits.
+\begin{description}[leftmargin=0pt]
+    \item[Change Observation] For example, in most systems a 1\% increase/decrease in CPU utilization is not considered as a noticeable change but 5\% is.
+    \item[Absorbing Sudden Bursts] In some applications, there might be a sudden change in one aspect of the system for a slightly short time. For example 20\% increase in CPU utilization for 5 seconds may not be considered as sustained workload increase.
+    \item[Preventing Zig-Zag Decisions] If state space is discretized to fine-grained states, it might lead to consecutive contradictory decisions -- A phenomena known as \emph{Zig-Zag} decisions. For example, Auto-Scaler may decide to perform a scale-in action in one step and scale-out action in next step. A reasonable way to prevent this never ending loop is to discretize the state space into coarse-grained states.
+\end{description}
+However, it shall be noted that \emph{over discretizing} the state space may have negative impacts on target system. Section~\ref{eval} contains an experiment to evaluate discretization impact. In this thesis, a combination of latency and direction of workload is incorporated in to state space.
 \begin{description}[leftmargin=0pt]
     \item[Latency] Each micro-batch is associated with two latencies. First, \emph{Processing Latency} -- time that takes to process a single micro-batch from start to end. second, \emph{Scheduling Latency} -- time that each micro-batch stays in a queue \emph{waiting} to be processed. In this project, total latency (processing latency + scheduling latency) is stored as an average value calculated over a window of time.
     \item[Workload Direction] It is reasonable to consider average number of messages that are being processed in state space. However, in order to reduce state space only its \emph{direction} is stored. That is, instead of storing a pure number as average number of messages processed per window of time, only a boolean value indicating that incoming messages are increased to decreased -- compared to last window -- is stored.
 \end{description}
 
 As mentioned in Section~\ref{intro-auto-scale} each state is associated with three actions -- No-Action, Scale-In and Scale-Out. Each action has corresponding reward -- Q-Value-- attached to it. Figure~\ref{des:l:state-space} depicts this relationship.
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
-    \begin{tikzpicture}[show background grid]
-    \begin{class}[text width=10cm]{StateSpace}{7,0}
-        \attribute{- stateToActionSet: HashMap<State, HashMap<Action, Double>{}>}
-        \operation{+ addState(s: State)}
-        \operation{+ size()}
-        \operation{+ updateQValueForAction(s: State, a: Action, qValue: Double)}
-    \end{class}
-    \begin{class}{State}{12,-5}
-        \attribute{+ latency: Integer}
-        \attribute{+ isLoadIncreasing: Boolean}
-    \end{class}
-    \begin{interface}{Action}{4,-5}
-        \operation[0]{+ toString()}
-    \end{interface}
-    \begin{class}[text width=3cm]{NoAction}{0,-8}
-        \implement{Action}
-        \operation{+ toString()}
-    \end{class}
-    \begin{class}[text width=3cm]{ScaleIn}{4,-8}
-        \implement{Action}
-        \operation{+ toString()}
-    \end{class}
-    \begin{class}[text width=3cm]{ScaleOut}{8,-8}
-        \implement{Action}
-        \operation{+ toString()}
-    \end{class}
-    
-    \aggregation{StateSpace}{}{}{State}
-    \aggregation{StateSpace}{}{}{Action}
-    
-    \path (StateSpace) -- (State) node[midway,sloped,above]{states}
-    node[midway,sloped,below] {1..*};
-    \path (StateSpace) -- (Action) node[midway,sloped,above]{actionSet}
-    node[midway,sloped,below] {1..*};
-    \end{tikzpicture}
+    \resizebox {0.8\textwidth} {!} {
+        \begin{tikzpicture}[show background grid]
+        \begin{class}[text width=10cm]{StateSpace}{7,0}
+            \attribute{- stateToActionSet: HashMap<State, HashMap<Action, Double>{}>}
+            \operation{+ addState(s: State)}
+            \operation{+ size()}
+            \operation{+ updateQValueForAction(s: State, a: Action, qValue: Double)}
+            \end{class}
+            \begin{class}{State}{12,-5}
+            \attribute{+ latency: Integer}
+            \attribute{+ isLoadIncreasing: Boolean}
+            \end{class}
+            \begin{interface}{Action}{4,-5}
+            \operation[0]{+ toString()}
+            \end{interface}
+            \begin{class}[text width=3cm]{NoAction}{0,-8}
+            \implement{Action}
+            \operation{+ toString()}
+            \end{class}
+            \begin{class}[text width=3cm]{ScaleIn}{4,-8}
+            \implement{Action}
+            \operation{+ toString()}
+            \end{class}
+            \begin{class}[text width=3cm]{ScaleOut}{8,-8}
+            \implement{Action}
+            \operation{+ toString()}
+            \end{class}
+            
+            \aggregation{StateSpace}{}{}{State}
+            \aggregation{StateSpace}{}{}{Action}
+            
+            \path (StateSpace) -- (State) node[midway,sloped,above]{states}
+            node[midway,sloped,below] {1..*};
+            \path (StateSpace) -- (Action) node[midway,sloped,above]{actionSet}
+            node[midway,sloped,below] {1..*};
+        \end{tikzpicture}
+    }
     \caption{State Space Class Diagram}
     \label{des:l:state-space}
 \end{figure}
 
 \subsection{State Space Initialization}
 \label{des:state-init}
-
-A typical workload either looks like the ones depicted by Figure~\ref{fig:workload}, or they can be built by combining multiple graphs in Figure~\ref{fig:workload}. However they have one thing in common. It rises from a base state, goes to a peak and then returns back. Without loosing generality and with a sufficiently large sliding window, workload-to-latency graph can be modeled as Figure~\ref{des:f:ss-region}. This graph is divided into four regions. As workload increases, latency is approaching target latency (Region~1). In case the workload keeps increasing, the agent goes beyond the target latency which leads to violating SLOs (Region~2). Assuming the agent takes some reasonable action, latency starts to decrease (Region~3). Finally, at some point it will drop below the target latency line (Region~4).
+A typical workload either looks like the ones depicted by Figure~\ref{fig:workload}, or they can be built by combining multiple graphs in Figure~\ref{fig:workload}. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[clip, trim=2.7cm 17.5cm 3cm 3.7cm]{workload-type.pdf}
+    \caption{Workload Categories}
+    \label{fig:workload}
+\end{figure}
+However they have one thing in common. It rises from a base state, goes to a peak and then returns back. Without loosing generality and with a sufficiently large sliding window, workload-to-latency graph can be modeled as Figure~\ref{des:f:ss-region}. This graph is divided into four regions. As workload increases, latency is approaching target latency (Region~1). In case the workload keeps increasing, the agent goes beyond the target latency which leads to violating SLOs (Region~2). Assuming the agent takes some reasonable action, latency starts to decrease (Region~3). Finally, at some point it will drop below the target latency line (Region~4).
 \begin{figure}[th]
     \begin{tikzpicture}
     \begin{axis}[
@@ -246,16 +233,9 @@ A typical workload either looks like the ones depicted by Figure~\ref{fig:worklo
     \caption{Different Regions of a Typical Workload}
     \label{des:f:ss-region}
 \end{figure}
-\begin{figure}[th]
-    \centering
-    \includegraphics[clip, trim=3cm 5cm 3cm 2cm]{workload-type.pdf}
-    \caption{Workload Categories}
-    \label{fig:workload}
-\end{figure}
 
-\clearpage
 Typically when the agent starts, its Q-Table is empty -- initialized with zero. Over time, as the agent takes actions and discovers its environment, it updates its Q-Table. Since Q-Table is initialized with zero, the agent usually takes some random actions from time to time with a small probability. This helps to discover the environment. In some applications, this behavior is sufficient. However, in fast changing environments like streaming systems this process takes very long time to converge. Thus developers usually try to initialize Q-Table beforehand to speedup the learning process. In this thesis, three different initializers have been implemented. Figure~\ref{des:f:ss-init} illustrates class diagram of state space initializers.
-\begin{description}[leftmargin=0pt]
+\begin{description}[leftmargin=0pt,nolistsep]
 \item[Zero Initializer] This is the default implementation which initializes all the Q-Values -- reward values -- to zero.
 \item[Random Initializer] This initializer assigns a random value between (-1,1) to Q-Values.
 \item[Optimized Initializer] This initializer uses a \emph{heuristic} to initialize the Q-Table. Typically in most systems, there is a well defined set of SLOs defined by users that should be respected by Auto-Scaling system. This initializer exploits a normalization function defined in Equation~\ref{des:eq:normal}.  For each region, Q-Table is initialized with different values.
@@ -264,38 +244,39 @@ n = \frac{\text{current latency}}{\text{target latency}}
 \label{des:eq:normal}
 \end{equation}
 \end{description}
-\begin{figure}[hb]
+\begin{figure}[H]
     \centering
-    \begin{tikzpicture}[show background grid]
-    \begin{interface}{StateSpaceInitializer}{5,0}
-        \operation{+ getInstance()}
-        \operation[0]{+ initialize(ss: StateSpace)}
-    \end{interface}
-    \begin{class}[text width=5cm]{ZeroStateSpaceInitializer}{0,-4}
-        \implement{StateSpaceInitializer}
-        \operation{+ initialize(ss: StateSpace)}
-    \end{class}
-    \begin{class}[text width=5cm]{RandomStateSpaceInitializer}{5,-6}
-        \implement{StateSpaceInitializer}
-        \operation{+ initialize(ss: StateSpace)}
-    \end{class}
-    \begin{class}[text width=5cm]{OptimizedStateSpaceInitializer}{10,-4}
-        \implement{StateSpaceInitializer}
-        \operation{+ initialize(ss: StateSpace)}
-    \end{class}
-    \end{tikzpicture}
+    \resizebox{0.8\textwidth}{!} {
+        \begin{tikzpicture}[show background grid]
+            \begin{interface}{StateSpaceInitializer}{5,0}
+            \operation{+ getInstance()}
+            \operation[0]{+ initialize(ss: StateSpace)}
+            \end{interface}
+            \begin{class}[text width=5cm]{ZeroStateSpaceInitializer}{0,-4}
+            \implement{StateSpaceInitializer}
+            \operation{+ initialize(ss: StateSpace)}
+            \end{class}
+            \begin{class}[text width=5cm]{RandomStateSpaceInitializer}{5,-6}
+            \implement{StateSpaceInitializer}
+            \operation{+ initialize(ss: StateSpace)}
+            \end{class}
+            \begin{class}[text width=5cm]{OptimizedStateSpaceInitializer}{10,-4}
+            \implement{StateSpaceInitializer}
+            \operation{+ initialize(ss: StateSpace)}
+            \end{class}
+        \end{tikzpicture}
+    }
     \caption{State Space Initializer}
     \label{des:f:ss-init}
 \end{figure}
 
 The following describes the method that optimized initializer applies to four regions defined in previous section. Table~\ref{des:tab:rules} summarizes each region and describes preferred action in each region.
-\begin{description}[leftmargin=0pt]
+\begin{description}[leftmargin=0pt,nolistsep]
     \item[Region 1] In this region, latency is increasing as workload is increasing. So it is reasonable to give more reward to Scale-Out as the agent approaches target latency line. This is called \emph{Early Scale-Out} action which helps to add worker tasks in order to prevent violating SLOs. Thus the reward for each action is initialized as Equation~\ref{des:eq:r1}. In this region, Scale-Out and No-Action rewards are positive but less than one.
     \begin{equation}
     \text{Scale-Out}=\frac{\text{current latency}}{\text{target latency}} \qquad \text{No-Action}=1-\frac{\text{current latency}}{\text{target latency}} \qquad \text{Scale-In}=0
     \label{des:eq:r1}
     \end{equation}
-    \clearpage
     \item[Region 2] In this region, the agent has fall behind and latency has been increased up to the point that it is more than target latency. At this point Scale-Out is still the preferred action. It is reasonable to initialize Scale-In with a negative reward to prevent the agent from taking unjustifiable action.
     Reward for each action is initialized as Equation~\ref{des:eq:r2}. In this region, Scale-Out reward is larger than one but No-Action reward is less than one.
     \begin{equation}
@@ -363,6 +344,31 @@ Three different policies have been implemented in this thesis. Figure~\ref{des:f
     \item[One Minus Epsilon Policy] This policy wrap any other policy and adds some degree of randomness to it. That is, with a probability of $\epsilon$ it returns a random action and with a probability of $1-\epsilon$ it hands over the process to underlying policy. Underlying policy is not necessarily an optimal -- greedy -- policy.
     \item[Decreasing One Minus Epsilon Policy] This policy is similar to previous policy. The different is that randomness~($\epsilon$) is decreasing over time until it reaches zero after which it unconditionally hands over to underlying policy.
 \end{description}
+\begin{figure}[H]
+    \centering
+    \resizebox{0.8\textwidth}{!}{
+        \begin{tikzpicture}[show background grid]
+            \begin{interface}{Policy}{4,0}
+            \operation[0]{+ nextAction(currentState: State)}
+            \end{interface}
+            \begin{class}[text width=6cm]{GreedyPolicy}{0,-2.5}
+            \implement{Policy}
+            \operation{+ nextAction(currentState: State)}
+            \end{class}
+            \begin{class}[text width=6cm]{OneMinusEpsilonPolicy}{8,-2.5}
+            \implement{Policy}
+            \attribute{- underlyingPolicy: Policy}
+            \operation{+ nextAction(currentState: State)}
+            \end{class}
+            \begin{class}[text width=6cm]{DecreasingOneMinusEpsilonPolicy}{8,-5}
+            \inherit{OneMinusEpsilonPolicy}
+            \operation{+ nextAction(currentState: State)}
+            \end{class}
+        \end{tikzpicture}
+    }
+    \caption{Policy Functions}
+    \label{des:f:policy}
+\end{figure}
 \begin{table*}[h]
     \begin{tabular}{ll}
         \toprule
@@ -377,44 +383,16 @@ Three different policies have been implemented in this thesis. Figure~\ref{des:f
     \caption{Summary of Policy Functions}
     \label{des:tab:policy}
 \end{table*}
-\begin{figure}[h]
-    \centering
-    \begin{tikzpicture}[show background grid]
-    \begin{interface}{Policy}{4,0}
-    \operation[0]{+ nextAction(currentState: State)}
-    \end{interface}
-    \begin{class}[text width=6cm]{GreedyPolicy}{0,-2.5}
-    \implement{Policy}
-    \operation{+ nextAction(currentState: State)}
-    \end{class}
-    \begin{class}[text width=6cm]{OneMinusEpsilonPolicy}{8,-2.5}
-    \implement{Policy}
-    \attribute{- underlyingPolicy: Policy}
-    \operation{+ nextAction(currentState: State)}
-    \end{class}
-    \begin{class}[text width=6cm]{DecreasingOneMinusEpsilonPolicy}{8,-5}
-    \inherit{OneMinusEpsilonPolicy}
-    \operation{+ nextAction(currentState: State)}
-    \end{class}
-    \end{tikzpicture}
-    \caption{Policy Functions}
-    \label{des:f:policy}
-\end{figure}
 
 \subsection{Reward Function}
 
-Reward function is used as a mechanism to return environment's feedback to agent. Reward is usually abstracted as floating point number. Depending on how a \emph{good action} is defined, the agent might get a negative or positive reward. In this thesis two reward functions are implemented. Both reward functions are based on the same behavior as state space initializers~\ref{des:state-init}. Specifically, rewards are assigned based on general rules.
+Reward function is used as a mechanism to return environment's feedback to agent. Reward is usually abstracted as floating point number. Depending on how a \emph{good action} is defined, the agent might get a negative or positive reward. Both reward functions are based on the same behavior as state space initializers~\ref{des:state-init}. Specifically, rewards are assigned based on general rules.
 \begin{enumerate}
     \item \label{des:rules:1} If the taken action didn't improve the latency -- compared to last state, generally negative reward should be returned. There are exceptions to this rule.
     \item If latency and workload are increasing simultaneously, then rule~\ref{des:rules:1} does not apply. Thus, Scale-Out gets positive reward.
     \item If the agent is at region 3 -- refer to Figure~\ref{des:f:ss-region}, then No-Action gets positive reward to help the agent stabilize.
+    \item When the agent is in region 4, reward function prioritizes Scale-In. That is, when latency and workload are decreasing, No-Action gets negative reward to encourage the agent apply Scale-In action. We call this \textbf{Prefer Scale-In When Load is Decreasing} reward function in the rest of thesis.
 \end{enumerate}
-Two reward functions have similar behavior in region 1, 2 and 3. The difference comes down to region 4.
-\begin{description}[leftmargin=0pt]
-    \item[Prefer Scale-In When Load is Decreasing] This reward function gives priority to Scale-In, when the agent is in region 4. That is, when latency and workload are decreasing, No-Action gets negative reward to encourage the agent apply Scale-In action.
-    \item[Prefer No-Action When Load is Decreasing] In case workload is too variable -- increasing/decreasing without any kind particular pattern, then it is better to avoid Scale-In action in region 4. This reward function, prefers No-Action in region~4. It shall be noted that this strategy will lead to more tasks/executors to use. But in some workloads it is the safer option. 
-\end{description}
-
 \subsection{Executor Strategy}
 Deciding when to add/remove resources is one problem -- which is solved by policy function -- and deciding \emph{how many} resources to add/remove is another problem. The strategy heavily depends on workload's characteristics. As a consequence multiple strategies have been implemented in this thesis. Figure~\ref{des:f:exec} depict the class diagram and Table~\ref{des:tab:exec} summarizes them.
 \begin{description}[leftmargin=0pt]
@@ -422,42 +400,44 @@ Deciding when to add/remove resources is one problem -- which is solved by polic
     \item[Linear Strategy] This strategy adds or removes executors, with a linear coefficient. The ration behind this strategy is that, if multiple consecutive Scale-Out decision is taken, then most probably the workload has been increased considerably. Thus, at each step the number of added executors are increased by a fixed factor. As an example, if in case of consecutive Scale-Out actions, this strategy adds 1, 2, 4, 6, 8, \dots executors at each step. Additionally, if a Scale-In occurs between consecutive Scale-Out actions, then the coefficient factor is reset to one. The same also applies when consecutive Scale-In actions occur. 
     \item[Queue Aware Strategy] As mentioned in Section~\ref{des:state-init}, all micro-batches are associated with scheduling latency. This strategy builds a queue of batches that are waiting to be processed. Addition of executors depends upon the length of waiting queue. Thus, if cluster is struggling to process batches and many of them are queued in waiting queue, then this strategy adds more executors in one decision -- the precise number depends on queue length. However, removing executors is done with caution. That is, removing executors is done using static strategy with a fixed number. The result is exponentially increasing - statically decreasing strategy.
 \end{description}
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
-    \begin{tikzpicture}[show background grid]
-    \begin{interface}[text width=9cm]{ExecutorStrategy}{5,0}
-    \operation[0]{+ howManyExecutorsToAdd(totalExecutors: Integer)}
-    \operation[0]{+ howManyExecutorsToRemove(totalExecutors: Integer)}
-    \end{interface}
-    \begin{class}[text width=9cm]{StaticExecutorStrategy}{0,-4}
-    \implement{ExecutorStrategy}
-    \operation{+ howManyExecutorsToAdd(totalExecutors: Integer)}
-    \operation{+ howManyExecutorsToRemove(totalExecutors: Integer)}
-    \end{class}
-    \begin{class}[text width=9cm]{LinearExecutorStrategy}{4,-10}
-    \implement{ExecutorStrategy}
-    \operation{+ howManyExecutorsToAdd(totalExecutors: Integer)}
-    \operation{+ howManyExecutorsToRemove(totalExecutors: Integer)}
-    \end{class}
-    \begin{class}[text width=9cm]{QueueAwareExecutorStrategy}{7,-7}
-    \implement{ExecutorStrategy}
-    \operation{+ howManyExecutorsToAdd(totalExecutors: Integer)}
-    \operation{+ howManyExecutorsToRemove(totalExecutors: Integer)}
-    \end{class}
-    \end{tikzpicture}
+    \resizebox{0.8\textwidth}{!}{
+        \begin{tikzpicture}[show background grid]
+        \begin{interface}[text width=9cm]{ExecutorStrategy}{5,0}
+        \operation[0]{+ howManyExecutorsToAdd(totalExecutors: Integer)}
+        \operation[0]{+ howManyExecutorsToRemove(totalExecutors: Integer)}
+        \end{interface}
+        \begin{class}[text width=9cm]{StaticExecutorStrategy}{0,-3}
+        \implement{ExecutorStrategy}
+        \operation{+ howManyExecutorsToAdd(totalExecutors: Integer)}
+        \operation{+ howManyExecutorsToRemove(totalExecutors: Integer)}
+        \end{class}
+        \begin{class}[text width=9cm]{LinearExecutorStrategy}{4,-8}
+        \implement{ExecutorStrategy}
+        \operation{+ howManyExecutorsToAdd(totalExecutors: Integer)}
+        \operation{+ howManyExecutorsToRemove(totalExecutors: Integer)}
+        \end{class}
+        \begin{class}[text width=9cm]{QueueAwareExecutorStrategy}{7,-5.5}
+        \implement{ExecutorStrategy}
+        \operation{+ howManyExecutorsToAdd(totalExecutors: Integer)}
+        \operation{+ howManyExecutorsToRemove(totalExecutors: Integer)}
+        \end{class}
+        \end{tikzpicture}
+    }
     \caption{Executor Strategies}
     \label{des:f:exec}
 \end{figure}
 \begin{table*}[h]
-    \begin{tabularx}{\textwidth}{lX}
+    \begin{tabular}{ll}
         \toprule
         \textbf{Executor Strategy} & \textbf{Behavior}\\
         \midrule
         Static & Add or remove at a fixed rate.\\
-        Linear & Add or remove with a fixed coefficient for same consecutive actions. Reset the coefficient when action changes. \\
+        Linear & Add or remove with a fixed coefficient for same consecutive actions.\\
         Queue Aware & Add based on waiting queue length. Remove statically at a fixed rate. \\
         \bottomrule
-    \end{tabularx}
+    \end{tabular}
     \centering
     \caption{Summary of Executor Strategies}
     \label{des:tab:exec}
@@ -465,7 +445,6 @@ Deciding when to add/remove resources is one problem -- which is solved by polic
 
 \section{Configuration}
 \label{des:conf}
-
 In this section configuration parameters that are being utilized by the project will be explained. As mentioned in Section~\ref{prob-def}, the proposed solution should be highly configurable. Table~\ref{des:tab:config} lists all the configuration parameters and describes them briefly. Note that all the parameters should be prefixed with \lstinline|spark.streaming.dynamicAllocation|.
 \begin{table*}[h]
     \begin{tabularx}{\textwidth}{lX}
@@ -499,8 +478,6 @@ In this section configuration parameters that are being utilized by the project 
     \label{des:tab:config}
 \end{table*}
 
-\newpage
 \section{Conclusion}
 \label{des:conc}
-
 In this chapter design and structure of this thesis has been explored. Since Reinforcement Learning approaches are capable of adapting to ever changing streaming workloads, two techniques, namely Temporal Difference and Value Iteration, have been selected and implemented. State space have been designed to contain enough information of the environment and at the same time be small enough. Multiple state space initializers have been designed to show the initialization effect on learning process. Furthermore, in order to make the implementation highly flexible against different environments, multiple policy, reward and executor strategies have been implemented. Section~\ref{eval} evaluates the effect of changing these parameters. 
