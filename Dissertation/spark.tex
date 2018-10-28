@@ -10,7 +10,7 @@ Map-Reduce~\cite{Dean:2004} and its derivative projects have been widely used by
     \item \textbf{Iterative Jobs} Many machine learning applications process the same input \emph{iteratively}. In traditional model, each iteration should be defined as a separate MapReduce job. After an iteration is finished, the produced output is saved to a distributed file system and then next iteration is started by feeding in the output of last iteration. While this is feasible, but for each job, input data has to be loaded from disk which leads to serious performance issues.
     \item \textbf{Interactive Analysis} MapReduce derivative projects like Hive~\cite{hive} and Pig~\cite{pig} have been extensively used to run SQL queries on top of massive datasets. Whenever a user submits different queries over the same dataset, the ideal solution would be to load all datasets into memory once and then execute different queries on top of it. However, with traditional model of execution each query shall be defined as a separate job which reads input data from disk.
 \end{itemize}
-Apache spark has been designed from ground up to resolve these issues. It provides a large stack of tools to facilitate processing large datasets. Figure~\ref{fig:spark-eco} depicts tools provided by Spark.
+Apache Spark has been designed from ground up to resolve these issues. It provides a large stack of tools to facilitate processing large datasets. Figure~\ref{fig:spark-eco} depicts tools provided by Spark.
 \begin{figure}[h]
     \centering
     \includegraphics[clip,trim=5cm 21.1cm 8.7cm 3.4cm]{spark-eco.pdf}
@@ -31,8 +31,8 @@ Any Spark application consists of multiple components at runtime. The following 
 \begin{description}[leftmargin=0pt]
     \item[Driver Process] It is the core component of every Spark application. It is a single process and runs on one of the nodes in the cluster. It maintains all the critical information such as user's program, location of input and output files plus data flow of the application. The driver process should run during the runtime the of the application. In case driver process fails, the whole application is considered as \emph{dead}.
     \item[Distributed File System] It provides a shared file system accessible by any node in the cluster. There is no limitation on type of the file system but typically \emph{Hadoop Distributed File System} (HDFS)~\cite{hadoop} is used.
-    \item[Worker Processes] A collection of worker processes known as \emph{executors} that run on cluster nodes. Executors run user defined code. During the runtime of the application each worker consume any number of input records, processes it based on user defined code and emits any number of output records. Similar to driver process, liveness of the worker processes shall by monitored. However, the role of worker processes are not as critical as driver process, even though they may fail for any reason. Workers have access to load/store data files from/to distributed file system or local memory of the machine. During lifetime of the application, status of the workers will be reported to driver process.
-    \item[User Defined Code] Provided by user and caries the main logic of the application.
+    \item[Worker Processes] A collection of worker processes known as \emph{executors} that run on cluster nodes. Executors run user-defined code. During the runtime of the application each worker consume any number of input records, processes it based on user-defined code and emits any number of output records. Similar to driver process, liveness of the worker processes shall by monitored. However, the role of worker processes are not as critical as driver process, even though they may fail for any reason. Workers have access to load/store data files from/to distributed file system or local memory of the machine. During lifetime of the application, status of the workers will be reported to driver process.
+    \item[User-Defined Code] Provided by user and caries the main logic of the application.
 \end{description}
 \begin{table*}[!htbp]
     \begin{tabularx}{\textwidth}{lX}
@@ -42,7 +42,7 @@ Any Spark application consists of multiple components at runtime. The following 
         Driver & Maintains all relevant information to process input data and produce output.\\
         Distributed File System & Provides shared file system accessible by all nodes in cluster.\\
         Worker Process & Gets necessary information from driver and executes user defined code.\\
-        User Defined Code & Caries the main application logic.\\
+        User-Defined Code & Caries the main application logic.\\
         \bottomrule
     \end{tabularx}
     \centering
@@ -101,7 +101,7 @@ Whereas, RDDs offer \emph{coarse-grained} interface based on \emph{immutable tra
 \end{table}
 \footnotetext{The table has been taken from~\textcite{Zaharia:2012}}
 
-An RDD is a \emph{read-only}, \emph{partitioned} collection of records~\cite{Zaharia:2012}. RDDs can only be created through deterministic transformations from either \emph{stable stoage} or \emph{other RRDs}.
+An RDD is a \emph{read-only}, \emph{partitioned} collection of records~\cite{Zaharia:2012}. RDDs can only be created through deterministic transformations from either \emph{stable storage} or \emph{other RRDs}.
 \begin{itemize}
     \item \textbf{Stable storage}. In this case dataset is typically stored on a shared file system like HDFS and accessible from all nodes of the cluster.
     \item \textbf{Other RDDs}. In this case subsequent RDDs \emph{depend} on each other forming the lineage graph.
@@ -179,8 +179,7 @@ In order to provide full control to application developers, Spark exposes checkp
 With checkpointing in-place, providing fault-tolerance becomes a fairly straightforward process. Note that, RDDs are immutable set of records. This feature makes it easy to flush them in a background process, since there is no \emph{concurrency} and \emph{consistency} concerns involved. Noteworthy, there is an additional fault-tolerance mechanism known as \emph{WAL-based fault-tolerance} for streaming pipelines. This topic is further discussed in Section~\ref{sp:dstream}.
 \subsection{RDDs and Spark Job Stages}
 \label{sp:stage}
-
-Spark's Job scheduler is similar to Dryad~\cite{Isard:2007}. However, it takes RDD locations into account as well, since some partitions of RDDs are cached into memory or persisted to stable storage. When a job is submitted, Spark's job scheduler does the following.
+Spark's Job scheduler takes RDD locations into account to take any decisions, since some partitions of RDDs are cached into memory or persisted to stable storage. When a job is submitted, Spark's job scheduler does the following.
 \begin{itemize}
     \item \textbf{Calculating Lineage Graph}. In this step, Spark calculates the lineage graph of RDDs with corresponding transformations and dependencies.
     \item \textbf{Defining Stages}. In this step Spark defines the stages required to run the job. From developer's point of view a job is a sequence of RDDs. However, at runtime a job is modeled as \emph{Direct Acyclic Graph} (DAG) of stages. A \emph{stage} is basically the longest possible chain of RDD transformations with shuffling operations in the boundaries. Additionally, different partitions of RDDs in their corresponding stages will also be computed. 
@@ -239,7 +238,7 @@ Besides the fault-tolerance costs of this model, dealing with straggler nodes ar
 
 As a consequence of storing operator intermediate state as RDDs, a streaming computation can be modeled as series of \emph{deterministic batch computations} on small intervals -- known as micro-batch. Messages received in each batch interval is stored reliably across the cluster to form an input dataset for that interval. Once the time interval completes, this dataset is processed just like traditional batch processing using \lstinline$map$, \lstinline$filter$, \lstinline$groupByKey$, etc. Formally, a D-Stream is a sequence of \emph{immutable}, \emph{partitioned} datasets (RDDs) that can be acted on by deterministic transformations~\cite{Zaharia:2013}. These  transformations produce new D-Streams, and may create intermediate state represented as RDDs.
 
-In order to clarify D-Stream API, listing~\ref{l:sp:dstream-api} shows a simple streaming word count example. It creates a \lstinline$pageViews$ D-Stream by
+In order to clarify D-Stream API, Listing~\ref{l:sp:dstream-api} shows a simple streaming word count example. It creates a \lstinline$pageViews$ D-Stream by
 reading event stream over TCP, and groups them into 1-second batch intervals. Then, it transforms the event stream to a new D-Stream of \lstinline$(URL,1)$ pairs called
 \lstinline$ones$. Finally, it performs a running count with a \emph{stateful} \lstinline$runningReduce$ operator. Figure~\ref{fig:sp:dstream-api} depicts the corresponding lineage graph and how the streams are divided into batch intervals. Note that smaller rectangles illustrates RDD partitions.
 \begin{lstlisting}[float=h, caption={Streaming Word Count using D-Stream API},label={l:sp:dstream-api},captionpos=b,morekeywords={val}]

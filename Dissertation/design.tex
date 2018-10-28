@@ -2,7 +2,7 @@
 \label{design}
 In this chapter design and project structure of implemented techniques will be introduced and discussed. Two techniques have been selected to be implemented. This chapter is organized as follows. Section~\ref{des:choose} explains selected techniques and the reasoning behind it. In this section, selected techniques are explained at theoretical level. Section~\ref{des:proj} describes the structure of the implementation for Spark Streaming in detail. Section~\ref{des:conf} describes the configuration parameters required to launch the implementation. Finally, Section~\ref{des:conc} concludes this chapter.
 
-\section{Choosing Auto-Scaling Techniques}
+\section{Selection of Implemented Auto-Scaling Techniques}
 \label{des:choose}
 
 As discussed in Section~\ref{ias:alg-fam}, Auto-Scalers can be categorized into 5 groups.
@@ -22,7 +22,7 @@ As discussed in Section~\ref{ias:alg-fam}, Auto-Scalers can be categorized into 
     \end{itemize}
     \item[Control Theory] Techniques based on Control Theory are also promising for elastic data streaming. Because it monitors input and output of the application, it can respond to workload changes very fast and adapt the system if necessary. Thus it is perfectly capable of handling dynamic environments. The comparison between Reinforcement Learning and Control Theory techniques is left for future work.
 \end{description}
-As mentioned, two techniques -- \emph{Temporal Difference} and \emph{Value Iteration} -- will be implemented in this thesis. In next two sections, theoretical foundation of these algorithms will be laid out. For an extensive introduction of Reinforcement Learning refer to~\textcite{rlIntro}. Furthermore, Section~\ref{related} discusses more techniques and the reasoning why they have been rejected by this thesis.
+As mentioned, two techniques -- \emph{Temporal Difference} and \emph{Value Iteration} -- will be implemented in this thesis. In next two sections, theoretical foundation of these algorithms will be laid out. For an extensive introduction of Reinforcement Learning refer to~\textcite{rlIntro}. Furthermore, Section~\ref{related} discusses more techniques and the reasoning why they have not been considered by this thesis.
 \subsection{Temporal Difference}
 \label{des:temp}
 Section~\ref{ias:alg-fam} explains the basics of Reinforcement Learning. Temporal Difference (TD) learning is one of the foundational algorithms of Reinforcement Learning. It can learn from applying experience without having prior knowledge about environment's dynamics. This property is potentially useful for data stream processing systems in which the incoming workload is changing without any particular pattern.
@@ -70,12 +70,12 @@ Q(S_t,\,A_t) \longleftarrow (1-\alpha)Q(S_t,\,A_t) + \alpha\big[R_{t+1} + \gamma
 \end{algorithm}
 \footnotetext{The pseudocode has been taken from~\textcite{rlIntro}}
 
-An agent takes action based on a policy function~$\pi$ which in turn is derived -- partially or completely -- from the Q-Table. However, it shall be noted that in the beginning of episode the Q-Table is initialized to zero. In such situations, it takes very long time for agent to discover new states which is particularly harmful for data stream processing systems. This problem is usually solved by introducing small degree of randomness. The policy function decides randomly with a small probability~$\epsilon$ and in any other case~($1-\epsilon$), it behaves based on Q-Table. Other solutions do exist to solve state discovery problem. For example, Q-Table can be initialized with a random value or based on some \emph{heuristic} function that is partially derived from domain knowledge. 
+An agent takes action based on a policy function~$\pi$ which in turn is derived -- partially or completely -- from the Q-Table. However, it shall be noted that in the beginning of episode the Q-Table is initialized to zero. In such situations, it takes very long time for agent to discover new states which is particularly harmful for data stream processing systems. This problem is usually solved by introducing small degree of randomness. The policy function decides randomly with a small probability~$\epsilon$ and in any other case~($1-\epsilon$), it behaves based on Q-Table. In some cases it is desirable to initialize the Q-Table with a random value or based on some \emph{heuristic} function that is partially derived from domain knowledge.
 
 Furthermore, if two or more actions have equal expected reward, then policy function has to decide on one of them by breaking the tie. There are different strategies to solve this issue. Choosing a random action is one of them. However, in some domains this might be dangerous or harmful. Rather than choosing randomly, a simple heuristic inspired by domain knowledge can be helpful too.
 \subsection{Value Iteration}
 \label{des:val}
-As mentioned in last section, in streaming workloads the common belief is that the workload is not predictable. In other words, reward values of each action and probability of landing in a specific state after taking an action -- environment dynamics -- is unknown. However for the sake of discussion, let us assume environment dynamics is \emph{known}. In such situations, Reinforcement Learning can be solved using \emph{Dynamic Programming} techniques. In this section, the problem will be solved for environments with known dynamics. Then, some of the core ideas will be applied to adopt the solution for environments with unknown dynamics.
+In case the workload pattern is unpredictable, environment dynamics is unperceived. In other words, reward values of each action and probability of landing in a specific state after taking an action is unknown. However for the sake of discussion, let us assume environment dynamics is \emph{known}. In such situations, Reinforcement Learning can be solved using \emph{Dynamic Programming} techniques. In this section, the problem will be solved for environments with known dynamics. Then, some of the core ideas will be applied to adopt the solution for environments with unknown dynamics.
 
 Finding an optimal policy function, when environments dynamics is known can be \emph{recursively} solved by applying dynamic programming. As mentioned previously, the agent is trying to maximize expected reward by taking optimal actions. Here expected reward is defined with $\mathbb E$ and $\underset{a}{\text{max}}$ selects maximum value based on specified action.
 
