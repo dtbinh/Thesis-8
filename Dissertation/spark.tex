@@ -76,7 +76,7 @@ Note that, the term \emph{executor} is a conceptual term and implementation deta
     \footnotetext{The figure has been partially taken from~\textcite{spark-guide}}
 \end{description}
 
-\section{Resilient Distributed Datasets}
+\section{Resilient Distributed Dataset}
 \label{sp:rdd}
 \emph{Resilient Distributed Dataset} (RDD)~\cite{Zaharia:2012} is the basic building block of Spark's data processing pipeline. It is inspired by the same concepts behind \emph{shared memory} and enables \emph{iterative algorithms} and \emph{interactive analytics} to perform common operations directly on memory. RDDs are fault-tolerant and parallel data structures to let intermediate results of a Spark application to be stored in memory during multiple iterations. Existing distributed shared memory abstractions for cluster computing provide \emph{fine-grained} interface -- typically key/value -- to modify state. Unfortunately, with this approach the only way to provide fault-tolerance is the \emph{log shipping} approach that is already offered by distributed database systems.
 
@@ -179,7 +179,7 @@ In order to provide full control to application developers, Spark exposes checkp
 With checkpointing in-place, providing fault-tolerance becomes a fairly straightforward process. Note that, RDDs are immutable set of records. This feature makes it easy to flush them in a background process, since there is no \emph{concurrency} and \emph{consistency} concerns involved. Noteworthy, there is an additional fault-tolerance mechanism known as \emph{WAL-based fault-tolerance} for streaming pipelines. This topic is further discussed in Section~\ref{sp:dstream}.
 \subsection{RDDs and Spark Job Stages}
 \label{sp:stage}
-Spark's Job scheduler takes RDD locations into account to take any decisions, since some partitions of RDDs are cached into memory or persisted to stable storage. When a job is submitted, Spark's job scheduler does the following.
+In order to take any actions, Spark's job scheduler takes RDD locations into account, since some partitions of RDDs are cached into memory or persisted to stable storage. When a job is submitted, Spark's job scheduler does the following.
 \begin{itemize}
     \item \textbf{Calculating Lineage Graph}. In this step, Spark calculates the lineage graph of RDDs with corresponding transformations and dependencies.
     \item \textbf{Defining Stages}. In this step Spark defines the stages required to run the job. From developer's point of view a job is a sequence of RDDs. However, at runtime a job is modeled as \emph{Direct Acyclic Graph} (DAG) of stages. A \emph{stage} is basically the longest possible chain of RDD transformations with shuffling operations in the boundaries. Additionally, different partitions of RDDs in their corresponding stages will also be computed. 
@@ -234,7 +234,7 @@ Besides the fault-tolerance costs of this model, dealing with straggler nodes ar
 \subsection{D-Stream Processing Model}
 \label{sp:dstream-model}
 
-\emph{Discretized Streams} (D-Streams)~\cite{Zaharia:2013} is a novel technique to overcome the issues the Continuous Operator Processing Model. The basic idea behind D-Streams is to separate the computation from its state and keep the state as RDDs. This separation provides the following benefits. First, computation of messages becomes a set of \emph{stateless} and \emph{deterministic} tasks operating on RDDs. Second, RDDs already provide resiliency through replication and lineage recomputation. There is no need for further mechanisms to provide fault-tolerance. Third, it provides unified processing model for batch and stream processing workloads.
+\emph{Discretized Streams} (D-Streams)~\cite{Zaharia:2013} is a novel technique to overcome the issues of Continuous Operator Processing Model. The basic idea behind D-Streams is to separate the computation from its state and keep the state as RDDs. This separation provides the following benefits. First, computation of messages becomes a set of \emph{stateless} and \emph{deterministic} tasks operating on RDDs. Second, RDDs already provide resiliency through replication and lineage recomputation. There is no need for further mechanisms to provide fault-tolerance. Third, it provides unified processing model for batch and stream processing workloads.
 
 As a consequence of storing operator intermediate state as RDDs, a streaming computation can be modeled as series of \emph{deterministic batch computations} on small intervals -- known as micro-batch. Messages received in each batch interval is stored reliably across the cluster to form an input dataset for that interval. Once the time interval completes, this dataset is processed just like traditional batch processing using \lstinline$map$, \lstinline$filter$, \lstinline$groupByKey$, etc. Formally, a D-Stream is a sequence of \emph{immutable}, \emph{partitioned} datasets (RDDs) that can be acted on by deterministic transformations~\cite{Zaharia:2013}. These  transformations produce new D-Streams, and may create intermediate state represented as RDDs.
 

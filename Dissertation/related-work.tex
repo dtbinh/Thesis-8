@@ -51,7 +51,7 @@ In order to mitigate the problem of large state space in Reinforcement Learning,
     \item During exploration phase, the policy should be careful not to violate SLOs.
 \end{itemize}
 
-\section{Summary}
+\section{Conclusion}
 \label{related:sum}
 
 In this chapter prior work on auto-scaling scaling has been discussed and evaluated. First, threshold-based approaches are investigated. Simple threshold-based approaches are intuitive and simple to understand by application developers and are widely supported by cloud providers. However, adjusting thresholds is a tricky and error-prone process. Then, time-series analysis techniques are explored. As confirmed by other authors, advanced seasonal forecasting is a computationally intensive process, which makes it less suitable for streaming workloads. Queuing theory approaches are suitable for stationary networks with a known probability distribution for workload and service time. Reinforcement Learning techniques has the benefit that it requires zero knowledge about the environment which helps to gradually adapt to changes in environment.

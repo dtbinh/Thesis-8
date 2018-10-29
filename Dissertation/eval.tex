@@ -1,11 +1,11 @@
 \chapter{Evaluation}
 \label{eval}
-In this chapter the two implemented techniques will be evaluated under three read world workloads. In order to show the effect of each configuration parameter, multiple experiments have been designed and deployed. Table~\ref{des:tab:config} defines the configuration space. First, characteristics of workload will be discussed in Section~\ref{eval:workload}. Thereafter, there is separate section for each experiment.
+In this chapter the two implemented techniques will be evaluated under three read world workloads. In order to show the effect of each configuration parameter, multiple experiments have been designed and deployed. Table~\ref{des:tab:config} defines the configuration space. First, characteristics of workload will be discussed in Section~\ref{eval:workload}. Thereafter, there is separate section for each experiment. Finally, Section~\ref{eval:conc} concludes this chapter.
 
 \section{Workload Characteristic}
 \label{eval:workload}
 
-DEBS 2014~\cite{debs2014} has been chosen as a real world workload to test the implementation. Each workload contains data from a random location of the original workload and replayed to feed Spark cluster. All experiments were run for one hour. Figure~\ref{eval:fig:workload} shows distribution of messages in two workloads which have been captured from Spark UI.
+DEBS 2014~\cite{debs2014} has been chosen as a real world workload to test the implementation. Each workload contains data from a random location of the original workload and replayed to feed Spark cluster. All experiments were run for \emph{one} hour. Figure~\ref{eval:fig:workload} shows distribution of messages in two workloads which have been captured from Spark UI.
 \begin{figure}[!htbp]
     \centering
       \begin{subfigure}[h]{\linewidth}
@@ -53,7 +53,7 @@ Case~\ref{eval:wl-ex1} is much more CPU intensive than case~\ref{eval:wl-ex2}. I
     \label{eval:tab:history}
 \end{table}
 
-In all experiments \emph{batch size} is set to 10 seconds. The cluster uses 24 executors with minimum of 4 executors that should be respected by Auto-Scaler. All experiments start with minimum number of executors -- 4 in this case -- and run for \emph{one} hour. In case any training is required to run the experiment, training data set is separated from the original workload dataset. In all experiments -- except the last one -- four charts are illustrated. Two charts for latency and two charts for number of executors. Candlestick charts depicts minimum, 10 percentile, average, 90 percentile and maximum values. Furthermore, all experiments were run \emph{two} times and the average of them is included in charts. Note that for the sake of brevity in following experiments W1 stands for Workload 1 and W2 stands for Workload 2.
+In all experiments \emph{batch size} is set to 10 seconds. The cluster uses 24 executors with minimum of 4 executors that should be respected by Auto-Scaler. All experiments start with minimum number of executors -- 4 in this case -- and run for \emph{one} hour. In case any training is required to run the experiment, training data set is separated from the original workload dataset. In all experiments -- except the last one -- four charts are illustrated. Two charts for latency and two charts for number of executors. Candlestick charts depicts minimum, 10 percentile, average, 90 percentile and maximum values. Furthermore, all experiments were run \emph{two} times and the average of them is included in charts. Note that for the sake of brevity, in the following set of experiments W1 stands for Workload 1 and W2 stands for Workload 2.
 \clearpage
 \section{Experiment 1: Executor Strategy}
 This experiment has been designed to illustrate the strategy of adding/removing executors when taking Scale-In or Scale-Out actions. Table~\ref{eval:tab:ex1} shows the configuration of this experiment.
@@ -277,7 +277,12 @@ plot 'ex/e1/w1/latency.csv' using 1:2 w l lc 'red' lw 4 smooth csplines t 'Stati
         \label{eval:f:e1:w2:exec-c}
     \end{minipage}
 \end{figure}
-A possible conclusion would be that Queue Aware strategy is the best strategy amongst three strategies. However, it can't be proven now. More experiments shall be done. Thus, for next set of experiments Queue Aware strategy is chosen to be evaluated extensively.
+\noindent Looking at the results, reveals two points.
+\begin{itemize}
+    \item Adding executors in batch is a \emph{useful} strategy. Since adding executors causes reshuffling, it doesn't really matter to add one or many. Adding batch of executors helps to prevent sever SLO violations in one decision.
+    \item Removing executors in batch is a \emph{harmful} strategy. Because we are not sure that the decision is precise, so it is better to remove as few as possible. This can be confirmed by the behavior of linear strategy. This strategy removes executors in batch which causes sever instability (Figure~\ref{eval:f:e1:w2:lat}). Note that adding executors is not as harmful as remove them.
+\end{itemize}
+A combination of above points results in Queue Aware strategy which adds executors in batch but removes executors in a conservative manner (one by one in this case). A possible conclusion would be that Queue Aware strategy is the best strategy amongst three strategies. However, it can't be proven now. More experiments shall be done. Thus, for next set of experiments Queue Aware strategy is chosen to be evaluated extensively.
 \clearpage
 \section{Experiment 2: History Window}
 This experiment has been designed to illustrate the effect of history window on quality of decision made by Auto-Scaler. Table~\ref{eval:tab:ex2} shows the configuration of this experiment.
@@ -501,8 +506,9 @@ Figure~\ref{eval:f:e2:w1:lat},~\ref{eval:f:e2:w1:exec},~\ref{eval:f:e2:w2:lat} a
         \label{eval:f:e2:w2:exec-c}
     \end{minipage}
 \end{figure}
+\noindent Note that, short history window (like one-minute) makes Auto-Scaler too sensitive to noisy workloads. This can be confirmed by Figure~\ref{eval:f:e2:w2:exec}. As depicted, one-minute history window suffers from zig-zag decisions when it reaches 24 executors. Two-minute window to some degree suffers from this issue as well. However, three-minute window is resistant to this issue (Figure~\ref{eval:f:e2:w1:exec} and Figure~\ref{eval:f:e2:w2:exec}). 
 
-Note that, short history window (like one-minute) makes Auto-Scaler too sensitive to noisy workloads. This can be confirmed by Figure~\ref{eval:f:e2:w2:exec}. As depicted, one-minute history window suffers from zig-zag decisions when it reaches 24 executors. Two-minute window to some degree suffers from this issue as well. However, three-minute window is resistant to this issue. In general, history window of two minutes shows better results than the others. Thus, for rest of the experiments this window size will be used.
+Larger sliding window leads to more persistent decisions (Figure~\ref{eval:f:e2:w1:exec}) which leads to more stabilized behavior. However, this also decreases the \emph{reactiveness} of the Auto-Scaler which results in more executor utilization (Figure~\ref{eval:f:e2:w1:exec-c}). \emph{A smaller window leads to more reactive behavior and larger window leads to more persistent behavior}. Choosing the right history window is workload dependent. In this case, history window of two minutes shows better results than the others. Thus, for rest of the experiments this window size will be used.
 \clearpage
 \section{Experiment 3: Decision Interval}
 The Auto-Scaler implemented in thesis makes decisions in intervals defined by \lstinline|decisionInterval| parameter. This experiment has been designed to illustrate the effect of this parameter on behavior of the Auto-Scaler. Table~\ref{eval:tab:ex3} shows the configuration of this experiment.
@@ -726,8 +732,7 @@ Figure~\ref{eval:f:e3:w1:lat},~\ref{eval:f:e3:w1:exec},~\ref{eval:f:e3:w2:lat} a
         \label{eval:f:e3:w2:exec-c}
     \end{minipage}
 \end{figure}
-
-At this point selecting the best configuration becomes more difficult. Note that two and three-minute decision intervals perform extremely well for Workload 1 and poor for Workload 2. On the other hand one-minute decision interval performs reasonable in both workloads. Thus, this configuration is still preferred.
+\noindent At this point selecting the best configuration becomes more difficult. Note that two and three-minute decision intervals perform extremely well (twice as better than one-minute interval with respect to maximum executors) for Workload 1 (Figure~\ref{eval:f:e3:w1:lat-c} and Figure~\ref{eval:f:e3:w1:exec-c}) and poor for Workload 2 (Figure~\ref{eval:f:e3:w2:lat-c} and Figure~\ref{eval:f:e3:w2:exec-c}). Similar to previous experiment, \emph{lower decision interval leads to more reactive behavior, and longer decision interval leads to more persistent behavior}. Again, whether a reactive behavior is better or not turns out to be workload dependent. Since one-minute decision interval performs reasonable in both workloads, this configuration is still preferred.
 
 \clearpage
 \section{Experiment 4: State Space Initializer}
@@ -953,7 +958,7 @@ Figure~\ref{eval:f:e4:w1:lat},~\ref{eval:f:e4:w1:exec},~\ref{eval:f:e4:w2:lat} a
     \end{minipage}
 \end{figure}
 
-For Workload 1 as depicted, optimized initializer beats zero and random initializers and to a large degree it is able to respect target latency. For Workload 2, random initializer performs similar to optimized initializer. But this is only achieved by chance.
+For Workload 1 as depicted, optimized initializer beats zero and random initializers and to a large degree it is able to respect target latency. For Workload 2, random initializer performs similar to optimized initializer. But this is only achieved by chance. At the end of Workload 2, random initializer removes so many executors (Figure~\ref{eval:f:e4:w2:exec}) that leads to sever latency increase (Figure~\ref{eval:f:e4:w2:lat}) which means state space still contains wrong information.
 
 Looking at behavior of zero initializer reveals an interesting point. Since Auto-Scaler has started with minimum executors, it wasn't able to process the workload. On the other hand all states are initialized to zero. Thus, Auto-Scaler will stick to No-Action -- with a probability of $\epsilon$ will perform random action. Staying with No-Action leads to even higher latency which is a new state initialized with zero. Again, Auto-Scaler will stick to No-Action which in turn increases latency and causes Auto-Scaler to land in another new state. This process keeps going -- latency increases leading Auto-Scaler to land in a new state. This means, Auto-Scaler never sees the previous states to utilize learned information. This is the point where Queue-Aware executor strategy could potentially help to complement Auto-Scaler's actions. In case Auto-Scaler is behind schedule and by any chance takes a random Scale-Out action, Queue-Aware strategy adds a batch of executors at once which would considerably improve latency.
 
@@ -1182,11 +1187,9 @@ Figure~\ref{eval:f:e5:w1:lat},~\ref{eval:f:e5:w1:exec},~\ref{eval:f:e5:w2:lat} a
         \label{eval:f:e5:w2:exec-c}
     \end{minipage}
 \end{figure}
-For Workload 1, learning factor of 0.7 achieves a better result both in terms of latency and number of executors. It is tempting to conclude that for unpredictable workloads, it is better to apply a higher learning factor.
+\noindent For Workload 1, learning factor of 0.7 achieves a better result both in terms of latency and number of executors. It is tempting to conclude that for unpredictable workloads, it is better to apply a higher learning factor. But the above conclusion doesn't hold when we look at the result of Workload 2. In terms of latency, 0.007 is slightly below target latency which is better than 0.7 and 0.07. In terms of number of executors, it achieves an outstanding result of 8 executors on average (Figure~\ref{eval:f:e5:w2:exec-c}). Combining latency and number of executors this is the best result that has been achieved for Workload 2. 
 
-But the above conclusion doesn't hold when we look at the result of Workload 2. In terms of latency, 0.007 is slightly below target latency which is better than 0.7 and 0.07. In terms of number of executors, it achieves an outstanding result of 8 executors on average. Combining latency and number of executors this is the best result that has been achieved for Workload 2.
-
-It seems that the effect of learning factor is totally workload dependent and no generalized conclusion can be made based on these two workloads.
+Looking at executor charts (Figure~\ref{eval:f:e5:w1:exec} and Figure~\ref{eval:f:e5:w2:exec}) reveals an interesting point. \emph{A lower Learning Factor leads to more persistent -- low reactive -- decisions}. However, the effect of reactive or persistent decisions depends on the workload characteristics.
 \clearpage
 \section{Experiment 6: Discretization}
 This experiment has been designed to evaluate the effect of discretization on Auto-Scaler's decisions. Discretization is applied to both latency and incoming messages. Table~\ref{eval:tab:ex6} describes the configuration parameters of this experiment.
@@ -1410,7 +1413,11 @@ Figure~\ref{eval:f:e6:w1:lat},~\ref{eval:f:e6:w1:exec},~\ref{eval:f:e6:w2:lat} a
         \label{eval:f:e6:w2:exec-c}
     \end{minipage}
 \end{figure}
-
+\noindent Looking at executor charts (Figure~\ref{eval:f:e6:w1:exec} and Figure~\ref{eval:f:e6:w2:exec}) reveals two points.
+\begin{itemize}
+    \item \emph{Under-discretization} leads to noisy -- more reactive -- behavior.
+    \item \emph{Over-discretization} leads to more stable decisions but at the cost of low reactivity.
+\end{itemize}
 Similar to learning factor, discretization seems to be workload dependent and no generalized conclusion can be made.
 
 \clearpage
@@ -1636,11 +1643,10 @@ Figure~\ref{eval:f:e7:w1:lat},~\ref{eval:f:e7:w1:exec},~\ref{eval:f:e7:w2:lat} a
         \label{eval:f:e7:w2:exec-c}
     \end{minipage}
 \end{figure}
-
-Looking at the results and combining them with the results of \textcite{dutreilh:hal-01122123} reveals a couple of interesting points.
+\noindent Looking at the results and combining them with the results of \textcite{dutreilh:hal-01122123} reveals a couple of interesting points.
 \begin{itemize}
     \item If the sample data set is a good representative of actual workload, then Value Iteration is quite useful.
-    \item \emph{The more training, the better outcome} does not hold for streaming workloads. Since it is possible to introduce wrong information into state space at any time. As can be seen from this experiment, ten minute training was worse than five minute training.
+    \item \emph{The more training, the better outcome} does not hold for streaming workloads. Since it is possible to introduce wrong information into state space at any time. As can be seen from this experiment, ten minute training was worse than five minute training (Figure~\ref{eval:f:e7:w1:lat-c} and Figure~\ref{eval:f:e7:w2:lat-c}).
 \end{itemize}
 The major question that arises is \emph{what is the optimal period of training?} Since the workload is changing in an unpredictable manner, finding a near optimal learning period is extremely difficult and workload dependent.
 \clearpage
@@ -1864,8 +1870,7 @@ Figure~\ref{eval:f:e8:w1:lat},~\ref{eval:f:e8:w1:exec},~\ref{eval:f:e8:w2:lat} a
         \label{eval:f:e8:w2:exec-c}
     \end{minipage}
 \end{figure}
-
-Looking at results, the more we get close to 10-second target latency, the more it gets challenging for Auto-Scaler. However, there is one common behavior in both workloads. The key factor to reduce latency is to apply \emph{early} Scale-Out. This can be confirmed by Figure~\ref{eval:f:e8:w1:exec} and Figure~\ref{eval:f:e8:w2:exec}. However, as explained in Section~\ref{intro-auto-scale}, Reinforcement Learning agent has to visit a state to take an appropriate action which may be too late when the peak workload is observed. This is one of the cases where proactive -- predictive -- approaches are more useful.
+\noindent Looking at results, the more we get close to 10-second target latency, the more it gets challenging for Auto-Scaler (Figure~\ref{eval:f:e8:w2:lat-c}). However, there is one common behavior in both workloads. \emph{The key factor to reduce SLO violations is to apply early Scale-Out}. This can be confirmed by Figure~\ref{eval:f:e8:w1:exec} and Figure~\ref{eval:f:e8:w2:exec}. However, as explained in Section~\ref{intro-auto-scale}, Reinforcement Learning agent has to visit a state to take an appropriate action which may be too late when the peak workload is observed. This is one of the cases where proactive -- predictive -- approaches are more useful.
 \clearpage
 \section{Experiment 9: Overall Comparison}
 In this experiment implemented Q-Learning technique is compared to bare bone Spark with fixed number of executors and Spark Streaming's default dynamic resource manager. Furthermore, Online Parameter Optimization~\cite{Heinze:2015} which is implemented for Spark Streaming by~\textcite{Michal:2017} is also included. Table~\ref{eval:tab:ex9} describes the configuration parameters of this experiment.
@@ -1987,5 +1992,5 @@ For Q-Learning approach, two of the best cases from previous experiments were ob
 As can be seen, from 8 to 12 executors the latency drops significantly. It can be concluded that to hit target latency -- which is 30 seconds in this case -- optimal number of executors is between 8 to 12. Note that, 12 executors is slightly better than 24 executors. This could be the result of extra network communication involved in case of 24 executors.
 
 \section{Conclusion}
-
-In this chapter Temporal Difference and Value Iteration algorithms were tested extensively. In most experiments even a small change leads to a significant change in Auto-Scaler's behavior. No generalized conclusion can be made based on the effect of configuration parameters. On one side under a proper configuration, it is able to achieve a better result than Spark and fixed number of executors. On the other side, the optimal configuration should be manually discovered by system administrator. Currently there is no \emph{systematic} approach available to find the optimal configuration. This has been left as future work.
+\label{eval:conc}
+In this chapter Temporal Difference and Value Iteration algorithms were tested extensively. In most experiments even a small change leads to a significant change in Auto-Scaler's behavior. No generalized conclusion can be made based on the effect of configuration parameters. On one side under a proper configuration, it is able to achieve a better result than Spark and fixed number of executors. On the other side, the optimal configuration should be manually discovered by system administrator. Currently there is no \emph{systematic} approach available to find the optimal configuration. This has been left for future work.

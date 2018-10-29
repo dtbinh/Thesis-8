@@ -10,7 +10,7 @@ As discussed in Section~\ref{ias:alg-fam}, Auto-Scalers can be categorized into 
     \item[Threshold-Based] In this approach, one or multiple threshold values are defined~\cite{Hasan2012IntegratedAA} which specifies the behavior of the Auto-Scaler when the system load goes beyond these thresholds. However, manually defining thresholds is a tricky process~\cite{Dutreilh2010}. Spark's default dynamic resource manager~\cite{spark} and Online Parameter Optimization~\cite{Heinze:2015} are partially based on this approach and they will be evaluated in Section~\ref{eval}.
     \item[Time-Series Analysis] In this approach, a history window of workload -- depending on prediction accuracy -- is considered to predict future workload. However, in case the workload is changing in an unpredictable way -- which is not an unusual phenomena in streaming applications -- then this approach becomes less useful. As confirmed by DEBS grand challenges~\cite{debs2014}~\cite{debs2015}~\cite{debs2016}, the general assumption for streaming applications is that the workload is unpredictable. Due to this limited applicability, no time-series technique is implemented.
     \item[Queuing Theory] In this approach, the system is modeled as a queue network. Since queuing parameters -- message inter-arrival and service rates --  are static, they have to be re-calculated in a timely manner. One of the novel implementations is done by~\textcite{Lohrmann:2015}. However, authors made two unconvincing assumptions. First, worker nodes shall be homogeneous in terms of processing power and network bandwidth. Second, there should be an effective partitioning strategy in place in order to load balance outgoing messages between stages. In reality both assumptions rarely occur. Large scale stream processing clusters are built incrementally. Depending on workload, data skew does exist and imperfect hash functions are widely used by software developers. Furthermore, as confirmed by~\textcite{Rajarshi:2005}, queuing models are very complicated to build and less adaptive to changing environments. As a consequence, no queuing theory technique is implemented.
-    \item[Reinforcement Learning] Reinforcement Learning has shown its capabilities to adapt ever changing environments. However, some of the proposed solutions are conflicting with the requirement of this thesis as discussed in Section~\ref{prob-def}. The following summarizes the reasoning why each proposal is accepted or rejected by this thesis.
+    \item[Reinforcement Learning] Reinforcement Learning has shown its capabilities to adapt ever changing environments. However, some of the proposed solutions are conflicting with the requirement of this thesis as discussed in Section~\ref{prob-def}. The following summarizes the reasoning whether each proposal is accepted or not considered by this thesis.
     \begin{itemize}
         \item \textcite{Herbst:2017} proposed a solution based \emph{Bayesian Networks}. There are two major problems with this proposal. First, it needs sampling and offline training which is inapplicable for changing streaming workloads. Second, in case the model is complex, the training phase is long and computationally infeasible for streaming workloads. As mentioned, both issues are conflicting with thesis requirements.
         \item \textcite{Tesauro2006} proposes a hybrid approach to resolve performance issues of online training which consists of two components. First an online component based on queuing theory. Second, Reinforcement Learning component that is trained offline. This proposal models each node as a queue. However, the only way to apply this technique is to modify \lstinline$spark-core$ package. Thus, this solution is not implemented.
@@ -41,8 +41,8 @@ V(S_t) \longleftarrow (1-\alpha)V(S_t) + \alpha\big[R_{t+1} + \gamma\,V(S_{t+1})
 \label{des:eq:std}
 \end{equation}
 \begin{itemize}
-	\item $\bm{\alpha}$ denotes \emph{Learning Factor}. It specifies, how much the agent shall learn from new experiences. A higher $\alpha$ means learning with a faster pace. It also leads to forgetting history faster. On the other hand, a lower $\alpha$ leads to slower learning process which means the agent trusts its experience history more -- it gives more weight to history rather than new experiences. $\alpha$ is defined as a number between (0,1].
-	\item $\bm{\gamma}$ denotes \emph{Reward Factor} or \emph{Discount Factor}. It specifies, whether the agent shall optimize for \emph{future} or \emph{immediate} reward. A higher $\gamma$ leads to optimizing for future reward, whereas a lower $\gamma$ leads to optimizing for immediate reward. It is defined as a number between (0,1). As defined by Equation~\ref{des:eq:reward}, reward is cumulating at each time step which causes the sum to grow indefinitely. In order to prevent infinite reward problem, it is crucial to define $\gamma$ as a number less than one to force convergence.
+	\item $\bm{\alpha}$ denotes \emph{Learning Factor}. It specifies, how much the agent shall learn from new experiences. A higher $\alpha$ means learning with a faster pace. It also leads to forgetting history faster. On the other hand, a lower $\alpha$ leads to slower learning process which means the agent trusts its learning history more -- it gives more weight to history rather than new experiences. $\alpha$ is defined as a number between (0,1].
+	\item $\bm{\gamma}$ denotes \emph{Reward Factor} or \emph{Discount Factor}. It specifies, whether the agent shall optimize for \emph{future} or \emph{immediate} reward. A higher $\gamma$ leads to optimizing for future reward, whereas a lower $\gamma$ leads to optimizing for immediate reward. It is defined as a number between (0,1). As defined by Equation~\ref{des:eq:reward}, reward is accumulating at each time step which causes the sum to grow indefinitely. In order to prevent infinite reward problem, it is crucial to define $\gamma$ as a number less than one to force convergence.
 	\begin{equation}
 	R_t = r_{t+1}+\gamma r_{t+2}+\gamma^2 r_{t+3}+\dots=\sum_{0}^{\infty}\gamma^k r_{t+k+1}
 	\label{des:eq:reward}
@@ -132,7 +132,7 @@ After estimating $p$, $r$, Algorithm~\ref{des:a:vi} can be used to produce optim
 	\caption[Value Iteration for Estimating $\pi \approx \pi^*$]{Value Iteration for Estimating $\pi \approx \pi^*$\footnotemark}
 	\label{des:a:vi}
 \end{algorithm}
-\footnote{The pseudocode has been taken from~\textcite{rlIntro}}
+\footnotetext{The pseudocode has been taken from~\textcite{rlIntro}}
 \section{Design}
 \label{des:proj}
 
@@ -141,18 +141,18 @@ In this section technical design and structure of the thesis will be explained a
 \subsection{State Space}
 \label{des:state-space}
 
-State space defines -- models -- the environment where the agent is living. Usually, it is combination of environment's properties. As an example, For a typical web application, a sample state space could be defined as a tuple of [Number of web servers, Total workload defined as requests per second, Average round trip delay of requests]. For a Hypervisor, a sample state space can be defined as a tuple of [Number of running virtual machines, Total CPU utilization, Total used RAM]. For a data stream processing system, a sample state space can be defined as a tuple of [Number of worker nodes, Total workload defined as messages per second, Average latency of messages].
+State space defines -- models -- the environment where the agent is living. Normally, it is a combination of environment's properties. As an example, For a typical web application, a sample state space could be defined as a tuple of [Number of web servers, Total workload defined as requests per second, Average round trip delay of requests]. For a Hypervisor, a sample state space can be defined as a tuple of [Number of running virtual machines, Total CPU utilization, Total used RAM]. For a data stream processing system, a sample state space can be defined as a tuple of [Number of worker nodes, Total workload defined as messages per second, Average latency of messages].
 
 As state space contains more precise information, it gets bigger and bigger. Thus, in most systems it is \emph{discretized} to some degree to reduce its size. State space reduction has a couple of benefits.
 \begin{description}[leftmargin=0pt]
     \item[Change Observation] For example, in most systems a 1\% increase/decrease in CPU utilization is not considered as a noticeable change but 5\% is.
-    \item[Absorbing Sudden Bursts] In some applications, there might be a sudden change in one aspect of the system for a slightly short time. For example 20\% increase in CPU utilization for 5 seconds may not be considered as sustained workload increase.
+    \item[Absorbing Sudden Bursts] In some applications, there might be a sudden change in one aspect of the system for a short period of time. For example 20\% increase in CPU utilization for 5 seconds may not be considered as sustained workload increase.
     \item[Preventing Zig-Zag Decisions] If state space is discretized to fine-grained states, it might lead to consecutive contradictory decisions -- A phenomena known as \emph{Zig-Zag} decisions. For example, Auto-Scaler may decide to perform a scale-in action in one step and scale-out action in next step. A reasonable way to prevent this never ending loop is to discretize the state space into coarse-grained states.
 \end{description}
 However, it shall be noted that \emph{over discretizing} the state space may have negative impacts on target system. Section~\ref{eval} contains an experiment to evaluate discretization impact. In this thesis, a combination of latency and direction of workload is incorporated in to state space.
 \begin{description}[leftmargin=0pt]
-    \item[Latency] Each micro-batch is associated with two latencies. First, \emph{Processing Latency} -- time that takes to process a single micro-batch from start to end. second, \emph{Scheduling Latency} -- time that each micro-batch stays in a queue \emph{waiting} to be processed. In this project, total latency (processing latency + scheduling latency) is stored as an average value calculated over a window of time.
-    \item[Workload Direction] It is reasonable to consider average number of messages that are being processed in state space. However, in order to reduce state space only its \emph{direction} is stored. That is, instead of storing a pure number as average number of messages processed per window of time, only a boolean value indicating that incoming messages are increased to decreased -- compared to last window -- is stored.
+    \item[Latency] Each micro-batch is associated with two latencies. First, \emph{Processing Latency} -- the time that takes to process a single micro-batch from start to end. Second, \emph{Scheduling Latency} -- the time that each micro-batch stays in a queue \emph{waiting} to be processed. In this project, total latency (processing latency + scheduling latency) is stored as an average value calculated over a window of time.
+    \item[Workload Direction] It is reasonable to consider average number of messages that are being processed in state space. However, in order to reduce state space only its \emph{direction} is stored. That is, instead of storing a pure number as average number of messages processed per window of time, only a \emph{boolean} value indicating that incoming messages are increased or decreased -- compared to last window -- is stored.
 \end{description}
 
 As mentioned in Section~\ref{intro-auto-scale} each state is associated with three actions -- No-Action, Scale-In and Scale-Out. Each action has corresponding reward -- Q-Value-- attached to it. Figure~\ref{des:l:state-space} depicts this relationship.
@@ -342,7 +342,7 @@ Three different policies have been implemented in this thesis. Figure~\ref{des:f
 \begin{description}[leftmargin=0pt]
     \item[Greedy Policy] This policy takes action in two phases. First, it applies monotonicity property. After that, it selects the best possible action. Best action here means the action with largest/lowest Q-Value, depending on how reward function has been implemented.
     \item[One Minus Epsilon Policy] This policy wrap any other policy and adds some degree of randomness to it. That is, with a probability of $\epsilon$ it returns a random action and with a probability of $1-\epsilon$ it hands over the process to underlying policy. Underlying policy is not necessarily an optimal -- greedy -- policy.
-    \item[Decreasing One Minus Epsilon Policy] This policy is similar to previous policy. The different is that randomness~($\epsilon$) is decreasing over time until it reaches zero after which it unconditionally hands over to underlying policy.
+    \item[Decreasing One Minus Epsilon Policy] This policy is similar to previous policy. The difference is that randomness degree~($\epsilon$) is decreasing over time until it reaches zero after which it unconditionally hands over to underlying policy.
 \end{description}
 \begin{figure}[H]
     \centering
@@ -386,18 +386,18 @@ Three different policies have been implemented in this thesis. Figure~\ref{des:f
 
 \subsection{Reward Function}
 
-Reward function is used as a mechanism to return environment's feedback to agent. Reward is usually abstracted as floating point number. Depending on how a \emph{good action} is defined, the agent might get a negative or positive reward. Both reward functions are based on the same behavior as state space initializers~\ref{des:state-init}. Specifically, rewards are assigned based on general rules.
+Reward function is used as a mechanism to return environment's feedback to agent. Reward is usually abstracted as floating point number. Depending on how a \emph{good action} is defined, the agent might get a negative or positive reward. Reward function is based on the same behavior as state space initializers defined at Section~\ref{des:state-init}. Specifically, it is defined based on following general rules.
 \begin{enumerate}
     \item \label{des:rules:1} If the taken action didn't improve the latency -- compared to last state, generally negative reward should be returned. There are exceptions to this rule.
     \item If latency and workload are increasing simultaneously, then rule~\ref{des:rules:1} does not apply. Thus, Scale-Out gets positive reward.
-    \item If the agent is at region 3 -- refer to Figure~\ref{des:f:ss-region}, then No-Action gets positive reward to help the agent stabilize.
+    \item If the agent is in region 3 -- refer to Figure~\ref{des:f:ss-region}, then No-Action gets positive reward to help the agent stabilize.
     \item When the agent is in region 4, reward function prioritizes Scale-In. That is, when latency and workload are decreasing, No-Action gets negative reward to encourage the agent apply Scale-In action. We call this \textbf{Prefer Scale-In When Load is Decreasing} reward function in the rest of thesis.
 \end{enumerate}
 \subsection{Executor Strategy}
 Deciding when to add/remove resources is one problem -- which is solved by policy function -- and deciding \emph{how many} resources to add/remove is another problem. The strategy heavily depends on workload's characteristics. As a consequence multiple strategies have been implemented in this thesis. Figure~\ref{des:f:exec} depict the class diagram and Table~\ref{des:tab:exec} summarizes them.
 \begin{description}[leftmargin=0pt]
     \item[Static Strategy] This strategy adds or removes executors by a static -- fixed -- number. No further measure is considered.
-    \item[Linear Strategy] This strategy adds or removes executors, with a linear coefficient. The ration behind this strategy is that, if multiple consecutive Scale-Out decision is taken, then most probably the workload has been increased considerably. Thus, at each step the number of added executors are increased by a fixed factor. As an example, if in case of consecutive Scale-Out actions, this strategy adds 1, 2, 4, 6, 8, \dots executors at each step. Additionally, if a Scale-In occurs between consecutive Scale-Out actions, then the coefficient factor is reset to one. The same also applies when consecutive Scale-In actions occur. 
+    \item[Linear Strategy] This strategy adds or removes executors, with a linear coefficient. The ration behind this strategy is that, if multiple consecutive Scale-Out decision is taken, then most probably the workload has been increased considerably. Thus, at each step the number of added executors are increased by a fixed factor. As an example, in case of consecutive Scale-Out actions, this strategy adds 1, 2, 4, 6, 8, \dots executors at each step. Additionally, if a Scale-In occurs between consecutive Scale-Out actions, then the coefficient factor is reset to one. The same also applies when consecutive Scale-In actions occur. 
     \item[Queue Aware Strategy] As mentioned in Section~\ref{des:state-init}, all micro-batches are associated with scheduling latency. This strategy builds a queue of batches that are waiting to be processed. Addition of executors depends upon the length of waiting queue. Thus, if cluster is struggling to process batches and many of them are queued in waiting queue, then this strategy adds more executors in one decision -- the precise number depends on queue length. However, removing executors is done with caution. That is, removing executors is done using static strategy with a fixed number. The result is exponentially increasing - statically decreasing strategy.
 \end{description}
 \begin{figure}[H]
@@ -461,7 +461,7 @@ In this section configuration parameters that are being utilized by the project 
         \lstinline|windowSize| & Sliding window size that is utilized for making decision. \\
         \lstinline|learningFactor| & Learning factor of the agent. \\
         \lstinline|discountFactor| & Discount or reward factor of the agent. \\
-        \lstinline|initializationMode| & Different modes of state space. One of \lstinline|zero|, \lstinline|random| or \lstinline|optimal|. \\
+        \lstinline|initializationMode| & Defines state space initializer. One of \lstinline|zero|, \lstinline|random| or \lstinline|optimal|. \\
         \lstinline|epsilon| & The value of $\epsilon$ used for randomized policy. \\
         \lstinline|epsilonStep| & $\epsilon$ is reduced by this amount when used in decreasing random policy. \\
         \lstinline|valueIterationInitializationCount| & Iterations that Value Iteration algorithm performs to initialize state space.\\
@@ -469,7 +469,7 @@ In this section configuration parameters that are being utilized by the project 
         \lstinline|policy| & Defines the policy function.\\
         \lstinline|reward| & Defines the reward function.\\
         \lstinline|decisionInterval| & The interval of time that the agent makes decision. \\
-        \lstinline|executorStrategy| & Defines the executor strategy. One of \lstinline|static|, \lstinline|linear|, \lstinline|relative|. \\
+        \lstinline|executorStrategy| & Defines the executor strategy. One of \lstinline|static|, \lstinline|linear|, \lstinline|q-aware|. \\
         \lstinline|seed| & Seed value to control the randomized behavior in consecutive runs.\\
         \bottomrule
     \end{tabularx}
